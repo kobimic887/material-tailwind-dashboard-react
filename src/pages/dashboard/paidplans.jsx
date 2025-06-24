@@ -24,11 +24,18 @@ export function PaidPlans() {
   // Check if Stripe is properly configured
   const isStripeConfigured = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
+  // Handle toggle change
+  const handleToggleChange = () => {
+    const newValue = !isYearly;
+    console.log('Toggle changed from', isYearly, 'to', newValue);
+    setIsYearly(newValue);
+  };
+
   // Check for payment success/cancel from URL params
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success')) {
-      setMessage('Payment successful! Your subscription is now active.');
+      setMessage('Payment received! Your subscription is now active.');
       setMessageType('success');
     } else if (urlParams.get('canceled')) {
       setMessage('Payment was canceled. You can try again anytime.');
@@ -120,7 +127,28 @@ export function PaidPlans() {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/create-checkout-session', {
+      const result = await createCheckoutSession(plan, isYearly);
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // Redirect to checkout
+      window.location.href = result.url;
+      
+    } catch (error) {
+      console.error('Error:', error);
+      setMessage(`Failed to start checkout: ${error.message}`);
+      setMessageType('error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to create checkout session
+  const createCheckoutSession = async (plan, isYearly) => {
+    try {
+      const response = await fetch('http://localhost:3002/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -133,19 +161,14 @@ export function PaidPlans() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
       }
 
-      const { url } = await response.json();
-      
-      // Redirect to Stripe Checkout
-      window.location.href = url;
+      return await response.json();
     } catch (error) {
-      console.error('Error:', error);
-      setMessage('Failed to start checkout process. Please try again.');
-      setMessageType('error');
-    } finally {
-      setLoading(false);
+      console.error('Error creating checkout session:', error);
+      return { error: error.message };
     }
   };
 
@@ -198,12 +221,20 @@ export function PaidPlans() {
             <Typography className={`text-lg font-medium ${!isYearly ? 'text-blue-600' : 'text-gray-500'}`}>
               Billed Monthly
             </Typography>
-            <Switch
-              checked={isYearly}
-              onChange={(e) => setIsYearly(e.target.checked)}
-              color="blue"
-              className="h-6 w-12"
-            />
+            <div className="relative">
+              <button
+                onClick={handleToggleChange}
+                className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  isYearly ? 'bg-blue-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    isYearly ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
             <div className="flex items-center gap-2">
               <Typography className={`text-lg font-medium ${isYearly ? 'text-blue-600' : 'text-gray-500'}`}>
                 Billed Yearly
@@ -248,9 +279,9 @@ export function PaidPlans() {
                           /{isYearly ? 'year' : 'month'}
                         </Typography>
                       </div>
-                      {isYearly && (
+                      {isYearly && plan.yearlyPrice && plan.monthlyPrice && (
                         <Typography className="text-green-600 text-sm mt-1">
-                          Save ${(plan.monthlyPrice * 12 - plan.yearlyPrice).toFixed(0)}/year
+                          Save ${((plan.monthlyPrice * 12) - plan.yearlyPrice).toFixed(0)}/year
                         </Typography>
                       )}
                     </div>

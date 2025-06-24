@@ -3,8 +3,9 @@
   "private": true,
   "version": "2.1.0",
   "type": "module",  "scripts": {
-    "dev": "concurrently \"npm run stripe-server\" \"vite\" --names \"stripe,vite\" --prefix-colors \"yellow,blue\"",
-    "dev-only": "vite",
+    "dev": "concurrently \"node simple-stripe-server.js\" \"vite\" --names \"stripe,vite\" --prefix-colors \"yellow,blue\"",
+    "dev-vite-only": "vite",
+    "dev-stripe-only": "node simple-stripe-server.js",
     "build": "vite build",
     "preview": "vite preview",
     "stripe-server": "node stripe-server.cjs"
