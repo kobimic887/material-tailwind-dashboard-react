@@ -2,6 +2,28 @@
 
 ![version](https://img.shields.io/badge/version-2.1.0-blue.svg) [![GitHub issues open](https://img.shields.io/github/issues/creativetimofficial/material-tailwind-dashboard-react.svg)](https://github.com/creativetimofficial/material-tailwind-dashboard-react/issues?q=is%3Aopen+is%3Aissue) [![GitHub issues closed](https://img.shields.io/github/issues-closed-raw/creativetimofficial/material-tailwind-dashboard-react.svg)](https://github.com/creativetimofficial/material-tailwind-dashboard-react/issues?q=is%3Aissue+is%3Aclosed)
 
+## 🚀 New Features Added
+
+This fork includes additional professional features:
+
+### 🧪 **2D Molecule Viewer & Drawing Tool**
+- Professional chemical drawing interface with accurate molecular geometry
+- CPK color scheme for atoms and proper bond visualization
+- Interactive molecule editing and drawing capabilities
+- Export functionality for molecular structures
+
+### 💳 **Stripe Payment Integration**
+- Modern pricing page design inspired by neurosnap.ai
+- Secure Stripe payment processing with pre-built checkout forms
+- Monthly/yearly billing toggle with "Most Popular" plan highlighting
+- Complete payment flow with success/failure handling
+
+### 🔧 **Development Features**
+- Unified development workflow with single `npm run dev` command
+- Secure environment variable configuration
+- No secrets in repository - all sensitive data in `.env` file
+- Ready for production deployment
+
 ![Image](https://s3.amazonaws.com/creativetim_bucket/products/488/original/material-tailwind-dashboard-react.jpg)
 
 Material Tailwind Dashboard React is our newest free Material Tailwind Admin Template based on Tailwind CSS and React. If you’re a developer looking to create an admin dashboard that is developer-friendly, rich with features, and highly customisable, here is your match. Our innovative Material Tailwind, Tailwind CSS & React dashboard comes with a beautiful design inspired by Google's Material Design and it will help you create stunning websites & web apps to delight your clients.
@@ -93,6 +115,36 @@ Quick start options:
 
 1. Download and Install NodeJs LTS version from [NodeJs Official Page](https://nodejs.org/en/download/).
 2. Navigate to the root ./ directory of the product and run `npm install` or `yarn install` or `pnpm install` to install our local dependencies.
+
+## 🔧 Additional Setup for New Features
+
+### Environment Configuration
+1. Copy the environment template:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Add your Stripe API keys to `.env`:
+   ```
+   VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+   STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+   ```
+
+### Development Commands
+- **Start everything**: `npm run dev` (starts both frontend and Stripe server)
+- **Frontend only**: `npm run build` then `npm run preview`
+- **Stripe server only**: `npm run stripe-server`
+
+### Testing Payments
+- Use Stripe test card: `4242 4242 4242 4242`
+- Any future expiry date and CVC will work
+- Visit `/dashboard/paid-plans` to test the payment flow
+
+### New Pages Available
+- **Molecule Viewer**: `/dashboard/molecule-viewer` - Professional 2D chemical drawing tool
+- **Paid Plans**: `/dashboard/paid-plans` - Stripe-integrated pricing page
+
+For complete setup instructions, see `DEVELOPMENT_SETUP_COMPLETE.md`.
 
 ## Documentation
 
