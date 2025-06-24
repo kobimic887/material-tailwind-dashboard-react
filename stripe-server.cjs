@@ -1,11 +1,23 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+const path = require('path');
+
+// Load environment variables
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+// Validate Stripe configuration
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error('ERROR: STRIPE_SECRET_KEY environment variable is not set');
+  console.error('Please create a .env file with your Stripe secret key');
+  process.exit(1);
+}
 
 // Check if Stripe secret key is available
 if (!process.env.STRIPE_SECRET_KEY) {
   console.error('ERROR: STRIPE_SECRET_KEY environment variable is not set');
   console.error('Please create a .env file with your Stripe secret key');
+  console.error('Current working directory:', process.cwd());
+  console.error('Looking for .env at:', path.join(__dirname, '.env'));
   process.exit(1);
 }
 
