@@ -13,13 +13,16 @@ import { CheckIcon, XMarkIcon, CheckCircleIcon } from "@heroicons/react/24/outli
 import { loadStripe } from '@stripe/stripe-js';
 
 // Initialize Stripe
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51RdEJXRoUpt5JJL5UJhyggws1ET7O0L54fJGG8pR6Ndg30rlbUGRIZhhRD2ego47TjMTqqVlaLendVMlLgw2EM5o00ABLhg6Hg');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 export function PaidPlans() {
   const [isYearly, setIsYearly] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState(''); // 'success' or 'error'
+
+  // Check if Stripe is properly configured
+  const isStripeConfigured = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
   // Check for payment success/cancel from URL params
   useEffect(() => {
@@ -99,8 +102,14 @@ export function PaidPlans() {
       buttonText: 'Contact Sales',
       buttonColor: 'gray'
     }
-  ];
-  const handlePlanSelection = async (plan) => {
+  ];  const handlePlanSelection = async (plan) => {
+    // Check if Stripe is configured
+    if (!isStripeConfigured) {
+      setMessage('Stripe is not configured. Please check the setup instructions.');
+      setMessageType('error');
+      return;
+    }
+
     if (plan.name === 'Enterprise') {
       // Handle enterprise contact separately
       window.open('mailto:sales@yourdomain.com?subject=Enterprise Plan Inquiry&body=I am interested in the Enterprise plan for molecular research tools.');
@@ -141,7 +150,25 @@ export function PaidPlans() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 py-12 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Stripe Configuration Error */}
+        {!isStripeConfigured && (
+          <div className="mb-8">
+            <Alert
+              color="red"
+              icon={<XMarkIcon className="h-5 w-5" />}
+            >
+              <div>
+                <Typography className="font-semibold mb-2">Stripe Not Configured</Typography>
+                <Typography className="text-sm">
+                  Stripe payment integration is not properly configured. Please check the STRIPE_SETUP.md file for setup instructions.
+                </Typography>
+              </div>
+            </Alert>
+          </div>
+        )}
+
         {/* Success/Error Messages */}
         {message && (
           <div className="mb-8">
