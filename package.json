@@ -2,7 +2,8 @@
   "name": "material-tailwind-dashboard-react",
   "private": true,
   "version": "2.1.0",
-  "type": "module",  "scripts": {
+  "type": "module",
+  "scripts": {
     "dev": "concurrently \"node simple-stripe-server.js\" \"vite\" --names \"stripe,vite\" --prefix-colors \"yellow,blue\"",
     "dev-vite-only": "vite",
     "dev-stripe-only": "node simple-stripe-server.js",
@@ -25,6 +26,7 @@
     "ketcher-react": "^3.2.0",
     "ketcher-standalone": "^3.2.0",
     "molecule-2d-for-react": "^0.2.3",
+    "molstar": "^4.18.0",
     "prop-types": "15.8.1",
     "react": "18.2.0",
     "react-apexcharts": "1.4.1",
@@ -42,6 +44,7 @@
     "postcss": "8.4.31",
     "prettier": "3.0.3",
     "prettier-plugin-tailwindcss": "0.5.6",
+    "sass": "^1.89.2",
     "tailwindcss": "3.3.4",
     "vite": "4.5.0",
     "vite-plugin-node-polyfills": "^0.23.0"
