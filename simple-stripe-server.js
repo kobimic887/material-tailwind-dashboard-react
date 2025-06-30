@@ -23,6 +23,37 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Proxy endpoint for API test (to bypass CORS)
+app.get('/api-proxy', async (req, res) => {
+  try {
+    console.log('🔄 Proxying request to api.chemtest.tech:3000');
+    
+    const response = await fetch('http://api.chemtest.tech:3000');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.text();
+    console.log('✅ API proxy successful');
+    
+    res.json({
+      success: true,
+      data: data,
+      timestamp: new Date().toISOString(),
+      source: 'api.chemtest.tech:3000'
+    });
+    
+  } catch (error) {
+    console.error('❌ API proxy error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Create checkout session
 app.post('/create-checkout-session', async (req, res) => {
   try {

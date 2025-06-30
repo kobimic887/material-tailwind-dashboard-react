@@ -9,8 +9,9 @@ import {
   BeakerIcon,
   Square2StackIcon,
   CubeTransparentIcon,
+  CloudIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Tables, Notifications, PaidPlans, Simulation , MoleculeViewer, Molecule2D, Molstar3D} from "@/pages/dashboard";
+import { Home, Profile, Tables, Notifications, PaidPlans, Simulation , MoleculeViewer, Molecule2D, Molstar3D, ApiTest} from "@/pages/dashboard";
 
 
 
@@ -79,6 +80,12 @@ export const routes = [
         name: "3D molstar viewer",
         path: "/molstar3d",
         element: <Molstar3D />,
+      },
+      { 
+        icon: <CloudIcon {...icon} />,
+        name: "API test",
+        path: "/apitest",
+        element: <ApiTest />,
       },
     ],
   },
