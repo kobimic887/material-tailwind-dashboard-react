@@ -18,10 +18,10 @@ export async function onRequest(context) {
   }
   
   try {
-    console.log('🔄 Proxying request to api.chemtest.tech:3000');
+    console.log('🔄 Proxying request to api.chemtest.tech');
     
     // Make the API call to the external service
-    const response = await fetch('http://api.chemtest.tech:3000', {
+    const response = await fetch('http://api.chemtest.tech', {
       method: 'GET',
       headers: {
         'User-Agent': 'Cloudflare-Pages-Function/1.0',
@@ -40,7 +40,7 @@ export async function onRequest(context) {
       success: true,
       data: data,
       timestamp: new Date().toISOString(),
-      source: 'api.chemtest.tech:3000',
+      source: 'api.chemtest.tech',
       environment: 'cloudflare-pages'
     }), {
       status: 200,
