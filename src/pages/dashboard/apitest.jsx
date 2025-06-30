@@ -20,13 +20,25 @@ export function ApiTest() {
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
 
+  const isDevelopment = window.location.hostname === 'localhost';
+  const proxyEndpoint = isDevelopment 
+    ? 'http://localhost:3002/api-proxy' 
+    : '/api-proxy (Cloudflare Pages Function)';
+
   const fetchApiData = async () => {
     setLoading(true);
     setError('');
     
     try {
-      // Use proxy endpoint to bypass CORS
-      const response = await fetch('http://localhost:3002/api-proxy');
+      // Determine the correct endpoint based on environment
+      const isDevelopment = window.location.hostname === 'localhost';
+      const apiUrl = isDevelopment 
+        ? 'http://localhost:3002/api-proxy'  // Development proxy
+        : '/api-proxy';                      // Cloudflare Pages function
+      
+      console.log(`Using API endpoint: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -122,7 +134,10 @@ export function ApiTest() {
                 API Endpoint: api.chemtest.tech:3000 (via proxy)
               </Typography>
               <Typography variant="small" color="gray" className="mb-1">
-                Proxy: http://localhost:3002/api-proxy
+                Proxy: {proxyEndpoint}
+              </Typography>
+              <Typography variant="small" color="blue-gray" className="mb-1">
+                Environment: {isDevelopment ? 'Development' : 'Production'}
               </Typography>
               {lastUpdated && (
                 <Typography variant="small" color="gray">
