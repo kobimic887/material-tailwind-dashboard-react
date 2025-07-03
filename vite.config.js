@@ -11,6 +11,7 @@ export default defineConfig({
     global: 'window',
   },
   server: {
+    host:'0.0.0.0',
     https: false,
     proxy: {
       '/api': {

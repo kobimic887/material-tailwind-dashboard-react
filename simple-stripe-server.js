@@ -54,6 +54,20 @@ app.get('/api-proxy', async (req, res) => {
   }
 });
 
+// Simple test endpoint for http://13.51.13.81:3000/api/hello
+app.get('/test-hello', async (req, res) => {
+  try {
+    const response = await fetch('http://13.51.13.81:3000/api/hello');
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    const data = await response.text();
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Create checkout session
 app.post('/create-checkout-session', async (req, res) => {
   try {

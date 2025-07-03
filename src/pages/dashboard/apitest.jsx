@@ -7,6 +7,7 @@ import {
   Button,
   Alert,
   Spinner,
+  Input,
 } from "@material-tailwind/react";
 import { 
   CloudIcon,
@@ -19,42 +20,29 @@ export function ApiTest() {
   const [response, setResponse] = useState(null);
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
-
-  const isDevelopment = window.location.hostname === 'localhost';
-  const proxyEndpoint = isDevelopment 
-    ? 'http://localhost:3002/api-proxy' 
-    : '/api-proxy (Cloudflare Pages Function)';
+  const [apiUrl, setApiUrl] = useState('/api/httpbin');
+  const [useHttpbin, setUseHttpbin] = useState(true);
 
   const fetchApiData = async () => {
     setLoading(true);
     setError('');
-    
     try {
-      // Determine the correct endpoint based on environment
-      const isDevelopment = window.location.hostname === 'localhost';
-      const apiUrl = isDevelopment 
-        ? 'http://localhost:3002/api-proxy'  // Development proxy
-        : '/api-proxy';                      // Cloudflare Pages function
-      
-      console.log(`Using API endpoint: ${apiUrl}`);
-      
-      const response = await fetch(apiUrl);
-      
+      let fetchUrl = apiUrl;
+      if (useHttpbin) {
+        fetchUrl = '/api/httpbin';
+      }
+      const response = await fetch(fetchUrl);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
       const result = await response.json();
-      
-      if (result.success) {
+      if (result.success !== false) {
         setResponse(result.data);
-        setLastUpdated(result.timestamp);
+        setLastUpdated(result.timestamp || new Date().toISOString());
       } else {
-        throw new Error(result.error || 'Unknown error from proxy');
+        throw new Error(result.error || 'Unknown error from API');
       }
-      
     } catch (err) {
-      console.error('API request failed:', err);
       setError(`Failed to fetch data: ${err.message}`);
       setResponse(null);
     } finally {
@@ -65,105 +53,39 @@ export function ApiTest() {
   // Auto-fetch on component mount
   useEffect(() => {
     fetchApiData();
+    // eslint-disable-next-line
   }, []);
 
   return (
     <div className="mt-12">
-      <div className="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
-        <Card className="border border-blue-gray-100 shadow-sm">
-          <CardHeader
-            variant="gradient"
-            color="blue"
-            className="mb-4 grid h-28 place-items-center"
-          >
-            <CloudIcon className="w-10 h-10 text-white" />
-          </CardHeader>
-          <CardBody className="px-6 text-center">
-            <Typography variant="h5" className="mb-2" color="blue-gray">
-              API Test
-            </Typography>
-            <Typography className="font-normal text-blue-gray-600">
-              Test connection to api.chemtest.tech:3000
-            </Typography>
-          </CardBody>
-        </Card>
-
-        <Card className="border border-blue-gray-100 shadow-sm">
-          <CardHeader
-            variant="gradient"
-            color="green"
-            className="mb-4 grid h-28 place-items-center"
-          >
-            <CodeBracketIcon className="w-10 h-10 text-white" />
-          </CardHeader>
-          <CardBody className="px-6 text-center">
-            <Typography variant="h5" className="mb-2" color="blue-gray">
-              Live Response
-            </Typography>
-            <Typography className="font-normal text-blue-gray-600">
-              Real-time API response data
-            </Typography>
-          </CardBody>
-        </Card>
-
-        <Card className="border border-blue-gray-100 shadow-sm">
-          <CardHeader
-            variant="gradient"
-            color="orange"
-            className="mb-4 grid h-28 place-items-center"
-          >
-            <ArrowPathIcon className="w-10 h-10 text-white" />
-          </CardHeader>
-          <CardBody className="px-6 text-center">
-            <Typography variant="h5" className="mb-2" color="blue-gray">
-              Auto Refresh
-            </Typography>
-            <Typography className="font-normal text-blue-gray-600">
-              Click refresh to get latest data
-            </Typography>
-          </CardBody>
-        </Card>
+      <div className="mb-6 flex items-center gap-4">
+        <label className="flex items-center mr-4">
+          <input
+            type="checkbox"
+            checked={useHttpbin}
+            onChange={e => setUseHttpbin(e.target.checked)}
+            className="mr-2"
+          />
+          Use /api/httpbin (guaranteed to work)
+        </label>
+        <Input
+          label="API URL"
+          value={apiUrl}
+          onChange={e => setApiUrl(e.target.value)}
+          className="w-full max-w-xl"
+          disabled={useHttpbin}
+        />
+        <Button
+          size="sm"
+          color="blue"
+          onClick={fetchApiData}
+          disabled={loading}
+          className="flex items-center gap-2"
+        >
+          {loading ? <Spinner className="h-4 w-4" /> : <ArrowPathIcon className="h-4 w-4" />}
+          {loading ? 'Loading...' : 'Fetch'}
+        </Button>
       </div>
-
-      {/* Controls */}
-      <Card className="mb-6">
-        <CardBody>
-          <div className="flex items-center justify-between">
-            <div>
-              <Typography variant="h6" color="blue-gray">
-                API Endpoint: api.chemtest.tech:3000 (via proxy)
-              </Typography>
-              <Typography variant="small" color="gray" className="mb-1">
-                Proxy: {proxyEndpoint}
-              </Typography>
-              <Typography variant="small" color="blue-gray" className="mb-1">
-                Environment: {isDevelopment ? 'Development' : 'Production'}
-              </Typography>
-              {lastUpdated && (
-                <Typography variant="small" color="gray">
-                  Last updated: {new Date(lastUpdated).toLocaleString()}
-                </Typography>
-              )}
-            </div>
-            <Button
-              size="sm"
-              color="blue"
-              onClick={fetchApiData}
-              disabled={loading}
-              className="flex items-center gap-2"
-            >
-              {loading ? (
-                <Spinner className="h-4 w-4" />
-              ) : (
-                <ArrowPathIcon className="h-4 w-4" />
-              )}
-              {loading ? 'Loading...' : 'Refresh'}
-            </Button>
-          </div>
-        </CardBody>
-      </Card>
-
-      {/* Error Alert */}
       {error && (
         <Alert color="red" className="mb-6">
           <div className="flex items-center gap-2">
@@ -172,8 +94,6 @@ export function ApiTest() {
           </div>
         </Alert>
       )}
-
-      {/* Response Display */}
       <Card>
         <CardHeader
           variant="gradient"
@@ -196,13 +116,13 @@ export function ApiTest() {
                 Raw Response:
               </Typography>
               <pre className="whitespace-pre-wrap text-sm font-mono bg-white p-4 rounded border overflow-auto max-h-96">
-                {response}
+                {typeof response === 'object' ? JSON.stringify(response, null, 2) : String(response)}
               </pre>
             </div>
           ) : (
             <div className="text-center py-12">
               <Typography color="gray">
-                No data available. Click refresh to fetch from the API.
+                No data available. Click fetch to get data from the API.
               </Typography>
             </div>
           )}
