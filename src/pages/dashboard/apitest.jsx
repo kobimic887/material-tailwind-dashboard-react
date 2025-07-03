@@ -63,7 +63,7 @@ export function ApiTest() {
         searchMode: 3,
         smiles: "",
         codes: [searchCode],
-        requestid: crypto.randomUUID(),
+        requestid:  "7b09275b-da07-491f-93d2-784f0a868528",
         orderBy: 1,
         page: 0,
         order: "desc",
