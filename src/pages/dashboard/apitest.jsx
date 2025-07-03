@@ -20,7 +20,7 @@ export function ApiTest() {
   const [response, setResponse] = useState(null);
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [apiUrl, setApiUrl] = useState('/api/httpbin');
+  const [apiUrl, setApiUrl] = useState('/api/hello');
   const [useHttpbin, setUseHttpbin] = useState(true);
 
   const fetchApiData = async () => {
@@ -29,7 +29,7 @@ export function ApiTest() {
     try {
       let fetchUrl = apiUrl;
       if (useHttpbin) {
-        fetchUrl = '/api/httpbin';
+        fetchUrl = '/api/hello';
       }
       const response = await fetch(fetchUrl);
       if (!response.ok) {
@@ -66,7 +66,7 @@ export function ApiTest() {
             onChange={e => setUseHttpbin(e.target.checked)}
             className="mr-2"
           />
-          Use /api/httpbin (guaranteed to work)
+          Use /api/hello (guaranteed to work)
         </label>
         <Input
           label="API URL"
