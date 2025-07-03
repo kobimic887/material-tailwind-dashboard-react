@@ -101,15 +101,50 @@ export function ApiTest() {
   return (
     <div className="mt-12">
       <div className="mb-6 flex items-center gap-4">
-        <label className="flex items-center mr-4">
-          <input
-            type="checkbox"
-            checked={useHttpbin}
-            onChange={e => setUseHttpbin(e.target.checked)}
-            className="mr-2"
-          />
-          Use /api/hello (guaranteed to work)
-        </label>
+      <div className="mb-6 flex items-center gap-4">
+        <Input
+          label="Search Code"
+          value={searchCode}
+          onChange={e => setSearchCode(e.target.value)}
+          className="w-full max-w-xs"
+        />
+        <Button
+          size="sm"
+          color="green"
+          onClick={handleSearch}
+          disabled={searchLoading || !searchCode}
+          className="flex items-center gap-2"
+        >
+          {searchLoading ? <Spinner className="h-4 w-4" /> : <CloudIcon className="h-4 w-4" />}
+          {searchLoading ? 'Searching...' : 'Search'}
+        </Button>
+      </div>
+      {searchError && (
+        <Alert color="red" className="mb-6">
+          <div className="flex items-center gap-2">
+            <Typography variant="h6">Search Error:</Typography>
+            <Typography>{searchError}</Typography>
+          </div>
+        </Alert>
+      )}
+      {searchResult && (
+        <Card className="mb-6">
+          <CardHeader
+            variant="gradient"
+            color="green"
+            className="mb-4 grid h-12 place-items-center"
+          >
+            <Typography variant="h6" color="white">
+              Search Result
+            </Typography>
+          </CardHeader>
+          <CardBody>
+            <pre className="whitespace-pre-wrap text-sm font-mono bg-white p-4 rounded border overflow-auto max-h-96">
+              {JSON.stringify(searchResult, null, 2)}
+            </pre>
+          </CardBody>
+        </Card>
+      )}
         <Input
           label="API URL"
           value={apiUrl}
@@ -170,50 +205,7 @@ export function ApiTest() {
           )}
         </CardBody>
       </Card>
-      <div className="mb-6 flex items-center gap-4">
-        <Input
-          label="Search Code"
-          value={searchCode}
-          onChange={e => setSearchCode(e.target.value)}
-          className="w-full max-w-xs"
-        />
-        <Button
-          size="sm"
-          color="green"
-          onClick={handleSearch}
-          disabled={searchLoading || !searchCode}
-          className="flex items-center gap-2"
-        >
-          {searchLoading ? <Spinner className="h-4 w-4" /> : <CloudIcon className="h-4 w-4" />}
-          {searchLoading ? 'Searching...' : 'Search'}
-        </Button>
-      </div>
-      {searchError && (
-        <Alert color="red" className="mb-6">
-          <div className="flex items-center gap-2">
-            <Typography variant="h6">Search Error:</Typography>
-            <Typography>{searchError}</Typography>
-          </div>
-        </Alert>
-      )}
-      {searchResult && (
-        <Card className="mb-6">
-          <CardHeader
-            variant="gradient"
-            color="green"
-            className="mb-4 grid h-12 place-items-center"
-          >
-            <Typography variant="h6" color="white">
-              Search Result
-            </Typography>
-          </CardHeader>
-          <CardBody>
-            <pre className="whitespace-pre-wrap text-sm font-mono bg-white p-4 rounded border overflow-auto max-h-96">
-              {JSON.stringify(searchResult, null, 2)}
-            </pre>
-          </CardBody>
-        </Card>
-      )}
+
     </div>
   );
 }
