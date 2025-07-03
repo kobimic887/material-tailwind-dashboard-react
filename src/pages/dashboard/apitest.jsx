@@ -94,7 +94,7 @@ export function ApiTest() {
 
   // Auto-fetch on component mount
   useEffect(() => {
-    fetchApiData();
+    //fetchApiData();
     // eslint-disable-next-line
   }, []);
 
