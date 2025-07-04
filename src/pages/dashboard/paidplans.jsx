@@ -148,7 +148,7 @@ export function PaidPlans() {
   // Helper function to create checkout session
   const createCheckoutSession = async (plan, isYearly) => {
     try {
-      const response = await fetch('https://localhost:3001/create-checkout-session', {
+      const response = await fetch(`https://${window.location.hostname}:3001/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
