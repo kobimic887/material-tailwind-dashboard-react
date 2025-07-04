@@ -80,6 +80,6 @@ app.get('/checkout-session/:sessionId', async (req, res) => {
 
 const PORT = 3001; // Use a different port to avoid conflicts
 app.listen(PORT, () => {
-  console.log(`🚀 Stripe API server running on https://${req.headers.origin}:${PORT}`);
+  console.log(`🚀 Stripe API server running on https://${window.location.hostname}:${PORT}`);
   console.log(`✅ Ready to handle checkout sessions`);
 });
