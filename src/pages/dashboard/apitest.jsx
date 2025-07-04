@@ -77,7 +77,7 @@ export function ApiTest() {
         subset: 0,
         headers: {}
       };
-      const res = await fetch(`http://${window.location.hostname}:3000/api/shop`, {
+      const res = await fetch(`https://${window.location.hostname}:3000/api/shop`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
