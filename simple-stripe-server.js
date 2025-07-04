@@ -1,3 +1,5 @@
+import https from 'https';
+import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -50,8 +52,8 @@ app.post('/create-checkout-session', async (req, res) => {
         },
       ],
       mode: 'subscription',
-      success_url: `${req.headers.origin || 'https://${req.headers.origin}:5173'}/dashboard/paidplans?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.origin || 'http://${req.headers.origin}:5173'}/dashboard/paidplans?canceled=true`,
+      success_url: `${req.headers.origin || `https://${req.headers.origin}:5173`}/dashboard/paidplans?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.origin || `http://${req.headers.origin}:5173`}/dashboard/paidplans?canceled=true`,
       metadata: {
         plan: planName,
         billing: isYearly ? 'yearly' : 'monthly'
@@ -78,8 +80,13 @@ app.get('/checkout-session/:sessionId', async (req, res) => {
   }
 });
 
+
+
 const PORT = 3001; // Use a different port to avoid conflicts
-app.listen(PORT, () => {
-  console.log(`🚀 Stripe API server running on https://${window.location.hostname}:${PORT}`);
-  console.log(`✅ Ready to handle checkout sessions`);
+const httpsOptions = {
+  key: fs.readFileSync('/etc/letsencrypt/live/chem.software/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/chem.software/fullchain.pem')
+};
+https.createServer(httpsOptions, app).listen(PORT, '0.0.0.0', () => {
+  console.log(`HTTPS Server running on port ${PORT}`);
 });
