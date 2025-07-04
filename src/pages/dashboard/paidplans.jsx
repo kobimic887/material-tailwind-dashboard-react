@@ -119,7 +119,7 @@ export function PaidPlans() {
 
     if (plan.name === 'Enterprise') {
       // Handle enterprise contact separately
-      window.open('mailto:sales@yourdomain.com?subject=Enterprise Plan Inquiry&body=I am interested in the Enterprise plan for molecular research tools.');
+      window.open('mailto:sales@asinex.com?subject=Enterprise Plan Inquiry&body=I am interested in the Enterprise plan for molecular research tools.');
       return;
     }
 
@@ -148,7 +148,7 @@ export function PaidPlans() {
   // Helper function to create checkout session
   const createCheckoutSession = async (plan, isYearly) => {
     try {
-      const response = await fetch('http://localhost:3002/create-checkout-session', {
+      const response = await fetch('https://localhost:3001/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

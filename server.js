@@ -16,9 +16,6 @@ app.use(express.static(path.join(__dirname, 'dist')));
 // If not, use a proxy to the backend server
 // Example: app.use('/api', stripeServer);
 
-// If you want to proxy to another server:
-// app.use('/api', createProxyMiddleware({ target: 'http://localhost:3002', changeOrigin: true }));
-
 // Basic test endpoint for GET requests
 app.get('/api/hello', (req, res) => {
   res.json({ success: true, data: 'Hello from Express!', timestamp: new Date().toISOString() });
