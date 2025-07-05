@@ -77,9 +77,13 @@ export function ApiTest() {
         subset: 0,
         headers: {}
       };
+      const token = localStorage.getItem('auth_token');
       const res = await fetch(`https://${window.location.hostname}:3000/api/shop`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
