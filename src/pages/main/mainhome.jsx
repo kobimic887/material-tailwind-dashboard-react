@@ -12,7 +12,14 @@ export function MainHome() {
           backgroundImage: `url('${pyxisImages.hero}')`,
         }}
       >
-        <div className="absolute inset-0 bg-black/40" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `url('/img/pyx_header_small@3x-scaled.jpg') center center / cover no-repeat, rgba(0,0,0,0.4)`,
+            backgroundBlendMode: 'darken',
+            zIndex: 1
+          }}
+        />
         <div className="relative z-10 max-w-3xl mx-auto px-4">
           <Typography variant="h2" color="white" className="mb-4 font-bold drop-shadow-lg">
             Accelerate and advance your medicine R&D process with our Compound Libraries

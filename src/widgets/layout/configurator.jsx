@@ -168,7 +168,7 @@ export function Configurator() {
               target="_black"
             >
               <Button variant="outlined" color="blue-gray" fullWidth>
-                Material Tailwind PRO
+                Pyxis Discover
               </Button>
             </a>
           </div>

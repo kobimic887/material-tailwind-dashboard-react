@@ -65,15 +65,10 @@ export function Sidenav({ brandImg, brandName, routes }) {
                 <NavLink to={`/${layout}${path}`}>
                   {({ isActive }) => (
                     <Button
-                      variant={isActive ? "gradient" : "text"}
-                      color={
-                        isActive
-                          ? sidenavColor
-                          : sidenavType === "dark"
-                          ? "white"
-                          : "blue-gray"
-                      }
-                      className="flex items-center gap-4 px-4 capitalize"
+                      variant="text"
+                      color={isActive ? undefined : (sidenavType === "dark" ? "white" : "blue-gray")}
+                      className={`flex items-center gap-4 px-4 capitalize${isActive ? ' !bg-[#b4b239] !text-white' : ''}`}
+                      style={isActive ? { backgroundColor: '#b4b239', color: '#fff' } : {}}
                       fullWidth
                     >
                       {icon}
@@ -97,7 +92,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
 
 Sidenav.defaultProps = {
   brandImg: "/img/logo-ct.png",
-  brandName: "Material Tailwind React",
+  brandName: "Pyxis Discover",
 };
 
 Sidenav.propTypes = {

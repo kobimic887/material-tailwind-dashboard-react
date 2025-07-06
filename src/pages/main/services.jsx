@@ -7,6 +7,14 @@ export default function Services() {
     <div className="bg-white">
       <div className="w-full h-[260px] flex flex-col justify-center items-center text-center relative bg-blue-gray-900">
         <div className="absolute inset-0 bg-blue-gray-900/80" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `url('/img/pyx_header_small@3x-scaled.jpg') center center / cover no-repeat, rgba(30,41,59,0.8)`,
+            backgroundBlendMode: 'darken',
+            zIndex: 1
+          }}
+        />
         <div className="relative z-10 max-w-2xl mx-auto px-4">
           <Typography variant="h2" color="white" className="mb-4 font-bold drop-shadow-lg">
             Virtual Screening & Synthesis on Demand
