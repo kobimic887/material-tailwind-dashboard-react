@@ -11,12 +11,12 @@ import {
   CubeTransparentIcon,
   CloudIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Tables, Notifications, PaidPlans, Simulation , MoleculeViewer, Molecule2D, Molstar3D, ApiTest} from "@/pages/dashboard";
-
-
+import { DashboardHome, Profile, Tables, Notifications, PaidPlans, Simulation , MoleculeViewer, Molecule2D, Molstar3D, ApiTest} from "@/pages/dashboard";
+import { MainHome } from "@/pages/main";
 
 import { SignIn, SignUp } from "@/pages/auth";
 import { EyeIcon, GiftIcon } from "@heroicons/react/24/outline";
+
 
 
 const icon = {
@@ -24,15 +24,26 @@ const icon = {
 };
 
 export const routes = [
+{
+  title: "main",
+  layout: "main",
+  pages: [   
+    {
+      icon: <ServerStackIcon {...icon} />,
+      name: "mainHome",
+      path: "/mainHome",
+      element: <MainHome />,
+    },
+  ],
+},
   {
     layout: "dashboard",
     pages: [
-     
       {
         icon: <HomeIcon {...icon} />,
         name: "dashboard",
-        path: "/home",
-        element: <Home />,
+        path: "/dashboardHome",
+        element: <DashboardHome />,
       },
       {
         icon: <UserCircleIcon {...icon} />,
@@ -107,6 +118,7 @@ export const routes = [
       },
     ],
   },
+  
 ];
 
 export default routes;

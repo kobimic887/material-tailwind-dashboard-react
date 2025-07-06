@@ -6,7 +6,7 @@ import {
   Button,
   Typography,
 } from "@material-tailwind/react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export function SignIn() {
   const [username, setUsername] = useState("");
@@ -14,6 +14,7 @@ export function SignIn() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,6 +33,7 @@ export function SignIn() {
         localStorage.setItem("auth_token", data.token);
       }
       setSuccess(true);
+      navigate("/dashboard/dashboardhome");
     } catch (err) {
       setError(err.message);
     } finally {
