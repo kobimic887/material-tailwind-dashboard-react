@@ -86,5 +86,5 @@ const httpsOptions = {
   cert: fs.readFileSync('/etc/letsencrypt/live/chem.software/fullchain.pem')
 };
 https.createServer(httpsOptions, app).listen(PORT, '0.0.0.0', () => {
-  console.log(`Stripe HTTPS server running on port ${PORT}`);
+  console.log(`cjs Stripe HTTPS server running on port ${PORT}`);
 });

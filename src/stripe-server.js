@@ -77,5 +77,5 @@ const httpsOptions = {
   cert: fs.readFileSync('/etc/letsencrypt/live/chem.software/fullchain.pem')
 };
 https.createServer(httpsOptions, app).listen(PORT, '0.0.0.0', () => {
-  console.log(`HTTPS Server running on port ${PORT}`);
+  console.log(`js HTTPS Server running on port ${PORT}`);
 });
