@@ -11,31 +11,83 @@ import {
   CubeTransparentIcon,
   CloudIcon,
 } from "@heroicons/react/24/solid";
-import { DashboardHome, Profile, Tables, Notifications, PaidPlans, Simulation , MoleculeViewer, Molecule2D, Molstar3D, ApiTest} from "@/pages/dashboard";
-import { MainHome } from "@/pages/main";
+import {
+  DashboardHome,
+  Profile,
+  Tables,
+  Notifications,
+  PaidPlans,
+  Simulation,
+  MoleculeViewer,
+  Molecule2D,
+  Molstar3D,
+  ApiTest,
+} from "@/pages/dashboard";
+import {
+  MainHome,
+  DiscoverLibraries,
+  Services,
+  AboutUs,
+  ContactUs,
+  Insights,
+} from "@/pages/main";
 
 import { SignIn, SignUp } from "@/pages/auth";
 import { EyeIcon, GiftIcon } from "@heroicons/react/24/outline";
-
-
 
 const icon = {
   className: "w-5 h-5 text-inherit",
 };
 
 export const routes = [
-{
-  title: "main",
-  layout: "main",
-  pages: [   
-    {
-      icon: <ServerStackIcon {...icon} />,
-      name: "mainHome",
-      path: "/mainHome",
-      element: <MainHome />,
-    },
-  ],
-},
+  {
+    title: "main",
+    layout: "main",
+    pages: [
+      {
+          hideFromMenu: true,
+        icon: <ServerStackIcon {...icon} />,
+        name: "mainHome",
+        path: "/mainHome",
+        element: <MainHome />,
+      },
+      {
+          hideFromMenu: true,
+        icon: <ServerStackIcon {...icon} />,
+        name: "discover-libraries",
+        path: "/discover-libraries",
+        element: <DiscoverLibraries />,
+      },
+      {
+          hideFromMenu: true,
+        icon: <ServerStackIcon {...icon} />,
+        name: "services",
+        path: "/services",
+        element: <Services />,
+      },
+      {
+          hideFromMenu: true,
+        icon: <ServerStackIcon {...icon} />,
+        name: "about-us",
+        path: "/about-us",
+        element: <AboutUs />,
+      },
+      {
+          hideFromMenu: true,
+        icon: <ServerStackIcon {...icon} />,
+        name: "contact-us",
+        path: "/contact-us",
+        element: <ContactUs />,
+      },
+      {
+          hideFromMenu: true,
+        icon: <ServerStackIcon {...icon} />,
+        name: "insights",
+        path: "/insights",
+        element: <Insights />,
+      },
+    ],
+  },
   {
     layout: "dashboard",
     pages: [
@@ -46,12 +98,14 @@ export const routes = [
         element: <DashboardHome />,
       },
       {
+          hideFromMenu: true,
         icon: <UserCircleIcon {...icon} />,
         name: "profile",
         path: "/profile",
         element: <Profile />,
       },
       {
+          hideFromMenu: true,
         icon: <TableCellsIcon {...icon} />,
         name: "tables",
         path: "/tables",
@@ -63,36 +117,37 @@ export const routes = [
         path: "/notifications",
         element: <Notifications />,
       },
-  { 
+      {
         icon: <GiftIcon {...icon} />,
         name: "paidplans",
         path: "/paidplans",
         element: <PaidPlans />,
       },
-{ 
+      {
         icon: <EyeIcon {...icon} />,
         name: "simulation",
         path: "/simulation",
         element: <Simulation />,
-      },      { 
+      },
+      {
         icon: <BeakerIcon {...icon} />,
         name: "molecule viewer",
         path: "/moleculeviewer",
         element: <MoleculeViewer />,
       },
-      { 
+      {
         icon: <Square2StackIcon {...icon} />,
         name: "2D molecule viewer",
         path: "/molecule2d",
         element: <Molecule2D />,
       },
-      { 
+      {
         icon: <CubeTransparentIcon {...icon} />,
         name: "3D molstar viewer",
         path: "/molstar3d",
         element: <Molstar3D />,
       },
-      { 
+      {
         icon: <CloudIcon {...icon} />,
         name: "API test",
         path: "/apitest",
@@ -101,7 +156,7 @@ export const routes = [
     ],
   },
   {
-    title: "auth pages",
+    
     layout: "auth",
     pages: [
       {
@@ -109,16 +164,17 @@ export const routes = [
         name: "sign in",
         path: "/sign-in",
         element: <SignIn />,
+        hideFromMenu: true,
       },
-      {
+      {        
         icon: <RectangleStackIcon {...icon} />,
         name: "sign up",
         path: "/sign-up",
         element: <SignUp />,
+        hideFromMenu: true,
       },
     ],
   },
-  
 ];
 
 export default routes;
