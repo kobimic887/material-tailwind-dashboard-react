@@ -2,9 +2,6 @@ const express = require('express');
 const path = require('path');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
-// Import your backend server(s)
-const stripeServer = require('./simple-stripe-server.js');
-// If you have other backend servers, require them here
 
 const app = express();
 

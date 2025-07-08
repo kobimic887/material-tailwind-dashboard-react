@@ -107,7 +107,7 @@ export function ApiTest() {
     setSimError("");
     setSimResult(null);
     try {
-      const params = new URLSearchParams({ pdbId: simPdbId, smiles: simSmiles });
+      const params = new URLSearchParams({ pdbid: simPdbId, smiles: simSmiles });
       const token = localStorage.getItem('auth_token');
       const res = await fetch(`https://${window.location.hostname}:3000/api/simulation?${params.toString()}`, {
         method: "GET",
