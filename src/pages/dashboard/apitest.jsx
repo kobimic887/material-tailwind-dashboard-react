@@ -27,6 +27,12 @@ export function ApiTest() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
 
+  const [simPdbId, setSimPdbId] = useState("");
+  const [simSmiles, setSimSmiles] = useState("");
+  const [simResult, setSimResult] = useState(null);
+  const [simLoading, setSimLoading] = useState(false);
+  const [simError, setSimError] = useState("");
+  
   const fetchApiData = async () => {
     setLoading(true);
     setError('');
@@ -96,6 +102,29 @@ export function ApiTest() {
     }
   };
 
+  const handleSimulation = async () => {
+    setSimLoading(true);
+    setSimError("");
+    setSimResult(null);
+    try {
+      const params = new URLSearchParams({ pdbId: simPdbId, smiles: simSmiles });
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`https://${window.location.hostname}:3000/api/simulation?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      const result = await res.json();
+      setSimResult(result);
+    } catch (err) {
+      setSimError(`Failed to simulate: ${err.message}`);
+    } finally {
+      setSimLoading(false);
+    }
+  };
+
   // Auto-fetch on component mount
   useEffect(() => {
     //fetchApiData();
@@ -144,6 +173,56 @@ export function ApiTest() {
           <CardBody>
             <pre className="whitespace-pre-wrap text-sm font-mono bg-white p-4 rounded border overflow-auto max-h-96">
               {JSON.stringify(searchResult, null, 2)}
+            </pre>
+          </CardBody>
+        </Card>
+      )}
+      <div className="mb-6 flex items-center gap-4">
+        <Input
+          label="PDB ID"
+          value={simPdbId}
+          onChange={e => setSimPdbId(e.target.value)}
+          className="w-full max-w-xs"
+        />
+        <Input
+          label="SMILES"
+          value={simSmiles}
+          onChange={e => setSimSmiles(e.target.value)}
+          className="w-full max-w-xs"
+        />
+        <Button
+          size="sm"
+          color="blue"
+          onClick={handleSimulation}
+          disabled={simLoading || !simPdbId || !simSmiles}
+          className="flex items-center gap-2"
+        >
+          {simLoading ? <Spinner className="h-4 w-4" /> : <CloudIcon className="h-4 w-4" />}
+          {simLoading ? 'Simulating...' : 'Simulate'}
+        </Button>
+      </div>
+      {simError && (
+        <Alert color="red" className="mb-6">
+          <div className="flex items-center gap-2">
+            <Typography variant="h6">Simulation Error:</Typography>
+            <Typography>{simError}</Typography>
+          </div>
+        </Alert>
+      )}
+      {simResult && (
+        <Card className="mb-6">
+          <CardHeader
+            variant="gradient"
+            color="blue"
+            className="mb-4 grid h-12 place-items-center"
+          >
+            <Typography variant="h6" color="white">
+              Simulation Result
+            </Typography>
+          </CardHeader>
+          <CardBody>
+            <pre className="whitespace-pre-wrap text-sm font-mono bg-white p-4 rounded border overflow-auto max-h-96">
+              {JSON.stringify(simResult, null, 2)}
             </pre>
           </CardBody>
         </Card>
