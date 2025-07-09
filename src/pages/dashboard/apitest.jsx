@@ -201,6 +201,12 @@ export function ApiTest() {
           {simLoading ? 'Simulating...' : 'Simulate'}
         </Button>
       </div>
+      {simLoading && (
+        <div className="flex justify-center items-center mb-6">
+          <Spinner className="h-8 w-8 text-blue-500" />
+          <Typography className="ml-2">Running simulation...</Typography>
+        </div>
+      )}
       {simError && (
         <Alert color="red" className="mb-6">
           <div className="flex items-center gap-2">
