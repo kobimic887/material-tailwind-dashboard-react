@@ -233,12 +233,9 @@ export function ApiTest() {
             {simResult.simulationKey && (
               <a download
                 color="green"
-                className="mt-4"
-      
+              className="mt-2 inline-block px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition" 
                 href={`https://${window.location.hostname}:3000/api/sanitized/${simResult.simulationKey}`}
-                target="_blank"
-      
-              >
+                target="_blank"          >
                 View Sanitized Result
               </a>
             )}
