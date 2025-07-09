@@ -230,6 +230,18 @@ export function ApiTest() {
             <pre className="whitespace-pre-wrap text-sm font-mono bg-white p-4 rounded border overflow-auto max-h-96">
               {JSON.stringify(simResult, null, 2)}
             </pre>
+            {simResult.simulationKey && (
+              <Button
+                color="green"
+                className="mt-4"
+                as="a"
+                href={`https://${window.location.hostname}:3000/api/sanitized/${simResult.simulationKey}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View Sanitized Result
+              </Button>
+            )}
           </CardBody>
         </Card>
       )}
