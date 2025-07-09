@@ -45,12 +45,10 @@ export function MainHome() {
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 px-4">
           <img src={pyxisImages.macrocyclicChemspace} alt="Macrocyclic ChemSpace" className="w-full md:w-1/2 rounded-lg shadow-md object-cover" />
           <div className="flex-1">
-            <Typography variant="h4" color="blue-gray" className="mb-2">
-              Macrocyclic ChemSpace
-            </Typography>
-            <Typography variant="paragraph" className="mb-2 text-blue-gray-700">
+           
+            {/* <Typography variant="paragraph" className="mb-2 text-blue-gray-700">
               3-tier ChemSpace:
-            </Typography>
+            </Typography> */}
             <ul className="list-disc ml-6 text-blue-gray-700 text-base mb-2">
               <li>10,000 Off-the-shelf molecules (1mg, ready-to-ship, 10μmol format)</li>
               <li>1,000,000 Synthesis-on-demand molecules (3-day turnaround)</li>
@@ -59,9 +57,11 @@ export function MainHome() {
             <Typography variant="small" className="mb-2 block text-blue-gray-600">
               All scaffolds are drug-like, synthetically tractable, and compatible with machine learning and automation.
             </Typography>
-            <Button size="sm" color="blue" variant="outlined" className="mt-2" as="a" href="https://www.pyxis-discovery.com/wp-content/uploads/2025/01/Macrocycles-Final-10k-Compounds.zip" target="_blank" rel="noopener noreferrer">
+            <a href="/pdbs/Macrocycles-Final-10k-Compounds.zip"
+              download
+              className="mt-2 inline-block px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition"           >
               Download 10,000 Macrocyclic ChemSpace (SDF)
-            </Button>
+            </a>
           </div>
         </div>
       </section>
@@ -71,9 +71,9 @@ export function MainHome() {
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-8 px-4">
           <img src={pyxisImages.cnsMacrocycles} alt="CNS Macrocycles" className="w-full md:w-1/2 rounded-lg shadow-md object-cover" />
           <div className="flex-1">
-            <Typography variant="h4" color="blue-gray" className="mb-2">
+            {/* <Typography variant="h4" color="blue-gray" className="mb-2">
               Macrocycles for CNS
-            </Typography>
+            </Typography> */}
             <Typography variant="paragraph" className="mb-2 text-blue-gray-700">
               Uniquely designed macrocycles for CNS drug discovery, offering excellent solubility, cellular permeability, and diverse shapes for modulating CNS targets.
             </Typography>
@@ -81,9 +81,11 @@ export function MainHome() {
               <li>2,870 in-stock macrocycles (0.5μmol in DMSO, 90% purity)</li>
               <li>Pre-plated, ready for screening</li>
             </ul>
-            <Button size="sm" color="blue" variant="outlined" className="mt-2" as="a" href="https://www.pyxis-discovery.com/wp-content/uploads/2024/11/Macrocycles-Final-Compounds-0.5umol.zip" target="_blank" rel="noopener noreferrer">
+            <a href="/pdbs/Macrocycles-Final-Compounds-0.5umol.zip"
+              download          
+              className="mt-2 inline-block px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition"            >
               Download CNS Macrocycles (SDF)
-            </Button>
+            </a>
           </div>
         </div>
       </section>
@@ -93,9 +95,9 @@ export function MainHome() {
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 px-4">
           <img src={pyxisImages.molecularGlues} alt="Molecular Glues" className="w-full md:w-1/2 rounded-lg shadow-md object-cover" />
           <div className="flex-1">
-            <Typography variant="h4" color="blue-gray" className="mb-2">
+            {/* <Typography variant="h4" color="blue-gray" className="mb-2">
               Macrocycles as Molecular Glues
-            </Typography>
+            </Typography> */}
             <Typography variant="paragraph" className="mb-2 text-blue-gray-700">
               Diversity-oriented macrocyclic library for unbiased molecular glue screening, targeting protein-protein interactions and non-traditional binding sites.
             </Typography>
@@ -103,9 +105,11 @@ export function MainHome() {
               <li>1,277 in-stock macrocycles (0.5μmol in DMSO, 90% purity)</li>
               <li>Pre-plated, ready for screening</li>
             </ul>
-            <Button size="sm" color="blue" variant="outlined" className="mt-2" as="a" href="https://www.pyxis-discovery.com/wp-content/uploads/2024/11/protac-in-vitro-1277.zip" target="_blank" rel="noopener noreferrer">
+            <a href="/pdbs/protac-in-vitro-1277.zip"             
+            download
+            className="mt-2 inline-block px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition" >         
               Download Molecular Glues Library (SDF)
-            </Button>
+            </a>
           </div>
         </div>
       </section>
@@ -124,9 +128,11 @@ export function MainHome() {
             <ul className="list-disc ml-6 text-blue-gray-700 text-base mb-2">
               <li>13,948 on-demand macrocycles (2μmol dry, 90% purity, 4-week turnaround)</li>
             </ul>
-            <Button size="sm" color="blue" variant="outlined" className="mt-2" as="a" href="https://www.pyxis-discovery.com/wp-content/uploads/2024/11/macrocyclic-covalent-library-13948.zip" target="_blank" rel="noopener noreferrer">
+            <a href="/pdbs/macrocyclic-covalent-library-13948.zip" 
+              download          
+              className="mt-2 inline-block px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition">          
               Download Covalent Macrocycles Library (SDF)
-            </Button>
+            </a>
           </div>
         </div>
       </section>
@@ -137,7 +143,7 @@ export function MainHome() {
           <Typography variant="h5" color="blue-gray" className="mb-2">
             Looking for advice or a screening partner?
           </Typography>
-          <Button size="lg" color="green" as="a" href="https://www.pyxis-discovery.com/contact/" target="_blank" rel="noopener noreferrer">
+          <Button size="lg" color="green" as="a" href="https://www.pyxis-discovery.com/contact/" target="_blank" rel="noreferrer">
             Contact Pyxis Discovery
           </Button>
         </div>

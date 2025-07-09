@@ -30,7 +30,7 @@ export function MainNavbar() {
   const [controller, dispatch] = useMaterialTailwindController();
   const { fixedNavbar, openSidenav } = controller;
   const { pathname } = useLocation();
-  const [layout, page] = pathname.split("/").filter((el) => el !== "");
+  const [layout, page] =  pathname.split("/").filter((el) => el !== "");
 
   return (
     <Navbar
@@ -45,7 +45,7 @@ export function MainNavbar() {
     >
       <div className="flex flex-col-reverse justify-between gap-6 md:flex-row md:items-center">
         <div className="capitalize">
-          {/* <Breadcrumbs
+          {/* { <Breadcrumbs
             className={`bg-transparent p-0 transition-all ${
               fixedNavbar ? "mt-1" : ""
             }`}
@@ -66,10 +66,10 @@ export function MainNavbar() {
             >
               {page}
             </Typography>
-          </Breadcrumbs> */}
-          {/* <Typography variant="h6" color="blue-gray">
-            {page}
-          </Typography> */}
+          </Breadcrumbs> } */}
+          { <Typography variant="h6" color="blue-gray">
+           Pyxis Discover
+          </Typography> }
         </div>
         <div className="flex items-center">
           <div className="mr-auto md:mr-4 md:w-56">
