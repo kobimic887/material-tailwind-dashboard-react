@@ -32,7 +32,9 @@ export default function AboutUs() {
             />
           </div>
           <div className="col-lg-6">
-            <h2 className="fw-bold mb-3">Who We Are</h2>
+            <h2 className="fw-bold mb-3" style={{ fontSize: "3rem" }}>
+              Who We Are
+            </h2>
             <p className="lead">
               Pyxis Discovery is a chemistry-driven company specializing in the
               design and synthesis of macrocyclic compound libraries for drug
@@ -84,7 +86,9 @@ export default function AboutUs() {
             />
           </div>
           <div className="col-lg-6 order-lg-1">
-            <h2 className="fw-bold mb-3">Our Team</h2>
+            <h2 className="fw-bold mb-3" style={{ fontSize: "3rem" }}>
+              Our Team
+            </h2>
             <p>
               Pyxis Discovery was founded by a group of experienced scientists
               with backgrounds in medicinal chemistry, computational chemistry,
@@ -97,7 +101,9 @@ export default function AboutUs() {
         {/* Our Approach */}
         <div className="row mb-5">
           <div className="col">
-            <h2 className="fw-bold mb-3">Our Approach</h2>
+            <h2 className="fw-bold mb-3" style={{ fontSize: "3rem" }}>
+              Our Approach
+            </h2>
             <p>
               We embrace scaffold-based chemical space exploration, focusing on
               drug-like, synthetically tractable macrocycles. Our libraries are
@@ -111,7 +117,9 @@ export default function AboutUs() {
         {/* Contact Section */}
         <div className="row">
           <div className="col text-center">
-            <h2 className="fw-bold mb-3">Contact Us</h2>
+            <h2 className="fw-bold mb-3" style={{ fontSize: "3rem" }}>
+              Contact Us
+            </h2>
             <p>
               Interested in learning more about Pyxis Discovery or collaborating
               with us?

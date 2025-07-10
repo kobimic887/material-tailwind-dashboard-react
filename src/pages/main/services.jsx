@@ -34,7 +34,7 @@ export default function Services() {
             />
           </div>
           <div className="col-lg-6">
-            <h2 className="fw-bold mb-3">Structure Based Selections</h2>
+            <h2 className="fw-bold mb-3" style={{ fontSize: '3rem' }}>Structure Based Selections</h2>
             <p className="lead">
               With the development and free availability of AlphaFold, an interest in ultra large chemical libraries has spiked. Responding to demand, we created a unique database of{" "}
               <a href="https://www.pyxis-discovery.com/wp-content/uploads/2025/02/Macrocycles-Final-1M-Compounds.zip" className="text-blue-600 underline">
@@ -63,7 +63,7 @@ export default function Services() {
             />
           </div>
           <div className="col-lg-6">
-            <h2 className="fw-bold mb-3">Query Based Selections</h2>
+            <h2 className="fw-bold mb-3" style={{ fontSize: '3rem' }}>Query Based Selections</h2>
             <p className="lead">
               The rapidly growing size of tangible chemical space can create technical challenges in handling and navigating structurally-rich datasets. To facilitate this, we offer ready-to-go products and services for analog and molecule selection.{" "}
               <a href="https://www.pyxis-discovery.com/wp-content/uploads/2025/01/Macrocycles-Final-10k-Compounds.zip" className="text-blue-600 underline">
@@ -96,7 +96,7 @@ export default function Services() {
             />
           </div>
           <div className="col-lg-6">
-            <h2 className="fw-bold mb-3">Property Based Filtering</h2>
+            <h2 className="fw-bold mb-3" style={{ fontSize: '3rem' }}>Property Based Filtering</h2>
             <p className="lead">
               Pyxis has years of experience in designing cell-permeable and CNS-like compounds, as demonstrated in our{" "}
               <a href="https://pubs.acs.org/doi/10.1021/acs.jmedchem.1c02090" className="text-blue-600 underline">
@@ -133,7 +133,7 @@ export default function Services() {
             />
           </div>
           <div className="col-lg-6">
-            <h2 className="fw-bold mb-3">Synthesis on Demand</h2>
+            <h2 className="fw-bold mb-3" style={{ fontSize: '3rem' }}>Synthesis on Demand</h2>
             <p className="lead">
               Our unique platform of high throughput experimentation allows us to instantly and cost-efficiently produce molecules for your research. Consult our databases of{" "}
               <a href="https://www.pyxis-discovery.com/wp-content/uploads/2025/02/Macrocycles-Final-1M-Compounds.zip" className="text-blue-600 underline">
@@ -154,7 +154,7 @@ export default function Services() {
         {/* Contact/CTA Section */}
         <div className="row">
           <div className="col text-center">
-            <h2 className="fw-bold mb-3">Looking for advice or a screening partner?</h2>
+            <h2 className="fw-bold mb-3" style={{ fontSize: '3rem' }}>Looking for advice or a screening partner?</h2>
             <a href="https://www.pyxis-discovery.com/contact/" target="_blank" rel="noopener noreferrer" className="btn btn-success ms-2" role="button">
               Contact Pyxis Discovery
             </a>

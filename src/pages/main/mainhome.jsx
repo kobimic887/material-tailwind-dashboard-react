@@ -24,7 +24,7 @@ export function MainHome() {
 
       {/* Scaffold-based Chemical Space Section */}
       <section className="container py-5">
-        <h2 className="fw-bold mb-4">Pyxis embraces the concept of scaffold-based chemical space exploration</h2>
+        <h2 className="fw-bold mb-4" style={{ fontSize: '3rem' }}>Pyxis embraces the concept of scaffold-based chemical space exploration</h2>
         <p className="lead text-blue-gray-700 mb-2">
           This library design approach offers several advantages over alternative methods of chemical space enrichment as it is easy to combine with existing machine learning and statistical modelling algorithms and chemistry process automation. All Pyxis scaffolds are drug-like and synthetically tractable, featuring Fsp3-rich linkers and ring-systems found in known drugs or natural products. The peripheral building blocks can be attached to the core scaffold in a step-by-step fashion using well-validated protocols of parallel chemistry.
         </p>
@@ -101,7 +101,7 @@ export function MainHome() {
             <img src={pyxisImages.covalentMacrocycles} alt="Covalent Macrocycles" className="img-fluid rounded shadow" style={{ maxHeight: 400, objectFit: "cover", width: "100%" }} />
           </div>
           <div className="col-lg-6">
-            <h2 className="fw-bold mb-3">Macrocycles for Covalent Drug Discovery</h2>
+            <h2 className="fw-bold mb-3" style={{ fontSize: '3rem' }}>Macrocycles for Covalent Drug Discovery</h2>
             <p className="lead text-blue-gray-700 mb-2">
               Cysteine-oriented electrophilic macrocycles for covalent drug discovery, enabling SAR exploration and targeting challenging proteins.
             </p>
@@ -118,7 +118,7 @@ export function MainHome() {
       {/* Contact/CTA Section */}
       <section className="bg-blue-gray-50 py-5">
         <div className="container text-center">
-          <h2 className="fw-bold mb-3">Looking for advice or a screening partner?</h2>
+          <h2 className="fw-bold mb-3" style={{ fontSize: '3rem' }}>Looking for advice or a screening partner?</h2>
           <a href="https://www.pyxis-discovery.com/contact/" target="_blank" rel="noreferrer" className="btn btn-success ms-2" role="button">
             Contact Pyxis Discovery
           </a>

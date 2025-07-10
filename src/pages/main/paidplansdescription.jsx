@@ -210,164 +210,109 @@ export function PaidPlansDescription() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="about-us-page min-h-screen bg-gray-50 py-5 px-4">
+      <div className="container max-w-7xl mx-auto">
         {/* Stripe Configuration Error */}
         {!isStripeConfigured && (
           <div className="mb-8">
-            <Alert
-              color="red"
-              icon={<XMarkIcon className="h-5 w-5" />}
-            >
-              <div>
-                <Typography className="font-semibold mb-2">Stripe Not Configured</Typography>
-                <Typography className="text-sm">
-                  Stripe payment integration is not properly configured. Please check the STRIPE_SETUP.md file for setup instructions.
-                </Typography>
-              </div>
-            </Alert>
+            <div className="alert alert-danger d-flex align-items-center" role="alert">
+              <span className="fw-bold me-2">Stripe Not Configured</span>
+              <span>
+                Stripe payment integration is not properly configured. Please check the STRIPE_SETUP.md file for setup instructions.
+              </span>
+            </div>
           </div>
         )}
 
         {/* Success/Error Messages */}
         {message && (
           <div className="mb-8">
-            <Alert
-              color={messageType === 'success' ? 'green' : 'red'}
-              icon={messageType === 'success' ? <CheckCircleIcon className="h-5 w-5" /> : <XMarkIcon className="h-5 w-5" />}
-              onClose={() => setMessage('')}
-              dismissible
-            >
-              {message}
-            </Alert>
+            <div className={`alert ${messageType === 'success' ? 'alert-success' : 'alert-danger'} d-flex align-items-center`} role="alert">
+              <span className="fw-bold me-2">{messageType === 'success' ? 'Success:' : 'Error:'}</span>
+              <span>{message}</span>
+              <button type="button" className="btn-close ms-auto" aria-label="Close" onClick={() => setMessage('')}></button>
+            </div>
           </div>
         )}
 
         {/* Header Section */}
         <div className="text-center mb-16">
-          <Typography variant="h1" className="mb-4 text-4xl lg:text-5xl font-bold text-gray-900">
-            Choose Your Plan
-          </Typography>
-          <Typography variant="lead" className="mb-8 text-xl text-gray-600 max-w-3xl mx-auto">
+          <h1 className="display-3 fw-bold mb-4">Choose Your Plan</h1>
+          <p className="lead mb-8 text-xl text-gray-600 max-w-3xl mx-auto">
             Elevate your molecular research without breaking the bank! Our pricing options make 
             advanced computational tools accessible to every researcher and scientist.
-          </Typography>
-          
+          </p>
           {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4 mb-12">
-            <Typography className={`text-lg font-medium ${!isYearly ? 'text-blue-600' : 'text-gray-500'}`}>
-              Billed Monthly
-            </Typography>
-            <div className="relative">
-              <button
-                onClick={handleToggleChange}
-                className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                  isYearly ? 'bg-blue-600' : 'bg-gray-300'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    isYearly ? 'translate-x-7' : 'translate-x-1'
-                  }`}
-                />
-              </button>
+          <div className="d-flex align-items-center justify-content-center gap-4 mb-12">
+            <span className={`fs-5 fw-medium ${!isYearly ? 'text-primary' : 'text-secondary'}`}>Billed Monthly</span>
+            <div className="form-check form-switch mx-3">
+              <input className="form-check-input" type="checkbox" id="billingToggle" checked={isYearly} onChange={handleToggleChange} />
+              <label className="form-check-label" htmlFor="billingToggle"></label>
             </div>
-            <div className="flex items-center gap-2">
-              <Typography className={`text-lg font-medium ${isYearly ? 'text-blue-600' : 'text-gray-500'}`}>
-                Billed Yearly
-              </Typography>
-              <Chip
-                value="Save up to 20%"
-                className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1"
-              />
-            </div>
+            <span className={`fs-5 fw-medium ${isYearly ? 'text-primary' : 'text-secondary'}`}>Billed Yearly</span>
+            <span className="badge bg-success ms-2">Save up to 20%</span>
           </div>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        <div className="row g-4 max-w-7xl mx-auto">
           {plans.map((plan, index) => (
-            <div key={index} className="relative">
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                  <Chip
-                    value="Most Popular"
-                    className="bg-blue-600 text-white font-semibold px-4 py-2"
-                  />
-                </div>
-              )}
-              
-              <Card className={`h-full ${plan.popular ? 'ring-2 ring-blue-600 shadow-xl scale-105' : 'shadow-lg hover:shadow-xl'} transition-all duration-300`}>
-                <CardBody className="p-8">
-                  <div className="text-center mb-8">
-                    <Typography variant="h4" className="mb-2 font-bold text-gray-900">
-                      {plan.name}
-                    </Typography>
-                    <Typography className="text-gray-600 mb-6">
-                      {plan.subtitle}
-                    </Typography>
-                    
-                    <div className="mb-4">
-                      <div className="flex items-baseline justify-center">
-                        <Typography variant="h2" className="text-4xl font-bold text-gray-900">
-                          ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
-                        </Typography>
-                        <Typography className="text-gray-500 ml-2">
-                          /{isYearly ? 'year' : 'month'}
-                        </Typography>
-                      </div>
-                      {isYearly && plan.yearlyPrice && plan.monthlyPrice && (
-                        <Typography className="text-green-600 text-sm mt-1">
-                          Save ${((plan.monthlyPrice * 12) - plan.yearlyPrice).toFixed(0)}/year
-                        </Typography>
-                      )}
+            <div key={index} className="col-lg-4 col-md-6 col-12">
+              <div className={`card h-100 ${plan.popular ? 'border-primary shadow-lg scale-105' : 'shadow-sm'} transition-all duration-300`}>
+                {plan.popular && (
+                  <span className="badge bg-primary position-absolute top-0 start-50 translate-middle-x mt-2">Most Popular</span>
+                )}
+                <div className="card-body p-4 text-center">
+                  <h4 className="fw-bold mb-2 text-dark">{plan.name}</h4>
+                  <p className="text-secondary mb-3">{plan.subtitle}</p>
+                  <div className="mb-4">
+                    <div className="d-flex align-items-baseline justify-content-center">
+                      <span className="display-6 fw-bold text-dark">${isYearly ? plan.yearlyPrice : plan.monthlyPrice}</span>
+                      <span className="text-muted ms-2">/{isYearly ? 'year' : 'month'}</span>
                     </div>
-                    
-                    <Typography className="text-gray-600 text-sm mb-6">
-                      {plan.description}
-                    </Typography>
-                  </div>
-
-                  <div className="space-y-4 mb-8">
-                    {plan.features.map((feature, idx) => (
-                      <div key={idx} className="flex items-start gap-3">
-                        <CheckIcon className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                        <Typography className="text-gray-700 text-sm">
-                          {feature}
-                        </Typography>
+                    {isYearly && plan.yearlyPrice && plan.monthlyPrice && (
+                      <div className="text-success small mt-1">
+                        Save ${((plan.monthlyPrice * 12) - plan.yearlyPrice).toFixed(0)}/year
                       </div>
+                    )}
+                  </div>
+                  <p className="text-secondary small mb-4">{plan.description}</p>
+                  <ul className="list-unstyled mb-4">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="d-flex align-items-center mb-2">
+                        <span className="badge bg-success me-2">✓</span>
+                        <span className="text-dark small">{feature}</span>
+                      </li>
                     ))}
-                  </div>                  <Button
+                  </ul>
+                  <button
                     onClick={() => handlePlanSelection(plan)}
-                    color={plan.buttonColor}
-                    size="lg"
-                    className="w-full"
-                    variant={plan.popular ? "filled" : "outlined"}
+                    className={`btn btn-lg w-100 fw-bold ${plan.popular ? 'btn-primary' : plan.buttonColor === 'gray' ? 'btn-secondary' : `btn-${plan.buttonColor}`}`}
                     disabled={loading}
                   >
                     {loading ? (
-                      <div className="flex items-center justify-center">
-                        <Spinner className="h-4 w-4 mr-2" />
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                         Processing...
-                      </div>
+                      </>
                     ) : (
                       plan.buttonText
                     )}
-                  </Button>
-                </CardBody>
-              </Card>
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>
 
         {/* Additional Info Section */}
-        <div className="mt-16 text-center">
-          <Typography className="text-gray-600 mb-4">
+        <div className="mt-5 text-center">
+          <p className="text-secondary mb-2">
             All plans include a 14-day free trial. No credit card required to start.
-          </Typography>
-          <Typography className="text-gray-500 text-sm">
-            Questions about our plans? <a href="#" className="text-blue-600 hover:underline">Contact our sales team</a>
-          </Typography>
+          </p>
+          <p className="text-muted small">
+            Questions about our plans? <a href="#" className="text-primary text-decoration-underline">Contact our sales team</a>
+          </p>
         </div>
       </div>
     </div>
