@@ -10,12 +10,9 @@ import {
   Spinner,
 } from "@material-tailwind/react";
 import { CheckIcon, XMarkIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
-import { loadStripe } from '@stripe/stripe-js';
 
-// Initialize Stripe
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
-export function PaidPlans() {
+export function PaidPlansDescription() {
   const [isYearly, setIsYearly] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -45,104 +42,145 @@ export function PaidPlans() {
 
   const plans = [
     {
-      name: 'Starter',
-      subtitle: 'Perfect for students and basic research',
-      monthlyPrice: 9.99,
-      yearlyPrice: 99.99,
+      name: 'Free',
+      subtitle: 'Get started with pyxis-discover-no credit card required',
+      monthlyPrice: 0.00,
+      yearlyPrice: 0.00,
+      popular: false,
+      description: 'Academic use only, 3 credits/month, 3 parallel jobs, limited models/settings.',
+      features: [
+        'Academic Use',
+        '3 credits/month',
+        '3 parallel jobs',
+        'Limited models & settings'
+      ],
+      buttonText: 'Try Free',
+      buttonColor: 'green'
+    },
+    {
+      name: 'Budget',
+      subtitle: 'Affordable access for students and researchers',
+      monthlyPrice: 6.42,
+      yearlyPrice: 77.04,
       popular: false,
       description: 'Affordable access for students and researchers with light computational needs.',
       features: [
-        'Up to 50 molecular simulations/month',
-        '2D molecule visualization',
-        'Basic SMILES parsing',
-        'Email support',
-        'Standard processing priority',
-        'Export results as PNG/SVG',
-        'Basic molecular properties'
+        'Academic Use',
+        '84 credits/year',
+        '7 parallel jobs',
+        'Low job priority',
+        'Most models & settings',
+        'Email Support',
+        'Guaranteed Confidentiality',
+        'Unlimited Data Storage',
+        'Full Pipelines Access',
+        'Full API Access',
+        'Max 5k Residues Protein Folding',
+        'Access to Molecular Dynamics',
+        'Folding Simulation Not Included'
       ],
-      buttonText: 'Start Free Trial',
+      buttonText: 'Try Free',
       buttonColor: 'blue-gray'
     },
     {
-      name: 'Professional',
+      name: 'Standard',
       subtitle: 'Best for active research projects',
-      monthlyPrice: 29.99,
-      yearlyPrice: 299.99,
-      popular: true,
-      description: 'The best choice for active research projects needing more computational power.',
+      monthlyPrice: 12.08,
+      yearlyPrice: 144.96,
+      popular: false,
+      description: 'The best choice for active research projects needing more power.',
       features: [
-        'Up to 500 molecular simulations/month',
-        'Advanced 3D molecular modeling',
-        'SMILES and InChI support',
-        'Priority email support',
-        'High processing priority',
-        'Export in multiple formats',
-        'Advanced molecular properties',
-        'Batch processing capabilities',
-        'API access',
-        'Collaboration tools'
+        'Academic Use',
+        '168 credits/year',
+        '14 parallel jobs',
+        'Medium job priority',
+        'Most models & settings',
+        'Email Support',
+        'Guaranteed Confidentiality',
+        'Unlimited Data Storage',
+        'Full Pipelines Access',
+        'Full API Access',
+        'Max 5k Residues Protein Folding',
+        'Access to Molecular Dynamics',
+        'Folding Simulation Not Included'
       ],
-      buttonText: 'Start Free Trial',
+      buttonText: 'Try Free',
       buttonColor: 'blue'
     },
     {
-      name: 'Enterprise',
-      subtitle: 'For large-scale research institutions',
-      monthlyPrice: 99.99,
-      yearlyPrice: 999.99,
-      popular: false,
-      description: 'Designed for serious academic research with unlimited computational demands.',
+      name: 'Academic',
+      subtitle: 'For serious academic research',
+      monthlyPrice: 21.25,
+      yearlyPrice: 255.00,
+      popular: true,
+      description: 'Designed for serious academic research with higher compute demands.',
       features: [
-        'Unlimited molecular simulations',
-        'Full 3D molecular dynamics',
-        'All molecular formats supported',
-        'Dedicated support manager',
-        'Highest processing priority',
-        'Custom export formats',
-        'Complete molecular analysis suite',
-        'Advanced batch processing',
-        'Full API access with webhooks',
-        'Team collaboration tools',
-        'Custom integrations',
-        'On-premises deployment option'
+        'Academic Use',
+        '300 credits/year',
+        '30 parallel jobs',
+        'Medium job priority',
+        'Most models & settings',
+        'Preferred Support',
+        'Guaranteed Confidentiality',
+        'Unlimited Data Storage',
+        'Full Pipelines Access',
+        'Full API Access',
+        'Max 5k Residues Protein Folding',
+        'Access to Molecular Dynamics',
+        'Folding Simulation Not Included'
       ],
-      buttonText: 'Contact Sales',
+      buttonText: 'Try Free',
+      buttonColor: 'indigo'
+    },
+    {
+      name: 'Professional',
+      subtitle: 'The powerhouse plan for professionals',
+      monthlyPrice: 66.67,
+      yearlyPrice: 800.04,
+      popular: false,
+      description: 'The powerhouse plan for professionals needing large-scale computation.',
+      features: [
+        'Commercial Use',
+        '720 credits/year',
+        '60 parallel jobs',
+        'High job priority',
+        'All models & settings',
+        'Priority Support',
+        'Guaranteed Confidentiality',
+        'Unlimited Data Storage',
+        'Full Pipelines Access',
+        'Full API Access',
+        'Max 5k Residues Protein Folding',
+        'Access to Molecular Dynamics',
+        'Folding Simulation Not Included'
+      ],
+      buttonText: 'Try Free',
+      buttonColor: 'purple'
+    },
+    {
+      name: 'Enterprise',
+      subtitle: 'Custom solutions for businesses and large-scale projects',
+      monthlyPrice: null,
+      yearlyPrice: null,
+      popular: false,
+      description: 'Commercial use rights, unlimited users, unlimited parallel jobs, custom models/pipelines/visualizations. Contact for pricing.',
+      features: [
+        'Commercial Use',
+        'Unlimited users',
+        'Unlimited parallel jobs',
+        'Custom models, pipelines, visualizations',
+        'Pyxis-discover Teams',
+        'Contact for pricing'
+      ],
+      buttonText: 'Contact Us',
       buttonColor: 'gray'
     }
   ];  const handlePlanSelection = async (plan) => {
-    // Check if Stripe is configured
-    if (!isStripeConfigured) {
-      setMessage('Stripe is not configured. Please check the setup instructions.');
-      setMessageType('error');
-      return;
-    }
-
-    if (plan.name === 'Enterprise') {
-      // Handle enterprise contact separately
-      window.open('mailto:sales@asinex.com?subject=Enterprise Plan Inquiry&body=I am interested in the Enterprise plan for molecular research tools.');
-      return;
-    }
 
     setLoading(true);
-    setMessage('');
+    setMessage('Please register , and choose the plan you see fit');
 
-    try {
-      const result = await createCheckoutSession(plan, isYearly);
-      
-      if (result.error) {
-        throw new Error(result.error);
-      }
 
-      // Redirect to checkout
-      window.location.href = result.url;
-      
-    } catch (error) {
-      console.error('Error:', error);
-      setMessage(`Failed to start checkout: ${error.message}`);
-      setMessageType('error');
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Helper function to create checkout session
@@ -337,4 +375,4 @@ export function PaidPlans() {
   );
 }
 
-export default PaidPlans;
+export default PaidPlansDescription;

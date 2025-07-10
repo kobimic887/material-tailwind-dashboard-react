@@ -24,12 +24,12 @@ import {
   ApiTest,
 } from "@/pages/dashboard";
 import {
-  MainHome,
-  DiscoverLibraries,
+  MainHome,  
   Services,
   AboutUs,
   ContactUs,
   Insights,
+  PaidPlansDescription
 } from "@/pages/main";
 
 import { SignIn, SignUp } from "@/pages/auth";
@@ -50,13 +50,6 @@ export const routes = [
         name: "mainHome",
         path: "/mainHome",
         element: <MainHome />,
-      },
-      {
-          hideFromMenu: true,
-        icon: <ServerStackIcon {...icon} />,
-        name: "discover-libraries",
-        path: "/discover-libraries",
-        element: <DiscoverLibraries />,
       },
       {
           hideFromMenu: true,
@@ -85,6 +78,13 @@ export const routes = [
         name: "insights",
         path: "/insights",
         element: <Insights />,
+      },
+      {
+          hideFromMenu: true,
+        icon: <ServerStackIcon {...icon} />,
+        name: "paidplansdescription",
+        path: "/paidplansdescription",
+        element: <PaidPlansDescription />,
       },
     ],
   },

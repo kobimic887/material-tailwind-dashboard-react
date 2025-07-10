@@ -34,7 +34,7 @@ const filters = [
 ];
 
 const additionalLinks = [
-  { label: "neurosnap", url: "https://checm.software/" },
+  { label: "pyxis-discover", url: "https://checm.software/" },
   { label: "Tools", url: "https://checm.software/services" },
   { label: "Blog", url: "https://checm.software/blog" },
   { label: "Contact Us", url: "https://checm.software/support" },

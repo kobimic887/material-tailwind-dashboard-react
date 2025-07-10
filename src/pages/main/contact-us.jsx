@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Input, Textarea, Button, Typography } from "@material-tailwind/react";
+import { Button, Typography } from "@material-tailwind/react";
 
 export default function ContactUs() {
   const [form, setForm] = useState({
@@ -27,18 +27,14 @@ export default function ContactUs() {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-8">
-      <Typography variant="h3" className="mb-4 font-bold">
-        Contact Us
-      </Typography>
-      <Typography className="mb-6 text-blue-gray-700">
+    <div className="max-w-xl mx-auto p-8 font-sans">
+      <h1 className="display-3 fw-bold mb-4">Contact Us</h1>
+      <p className="lead mb-6 text-blue-gray-700">
         Our committed team is always available to answer questions and assist you.
-      </Typography>
+      </p>
       <div className="mb-6">
-        <Typography variant="small" className="font-bold">
-          Pyxis Discovery
-        </Typography>
-        <Typography variant="small">
+        <p className="fw-bold mb-1">Pyxis Discovery</p>
+        <p className="mb-0">
           Matrix Innovation Center
           <br />
           Science Park 408
@@ -46,8 +42,8 @@ export default function ContactUs() {
           1098XH Amsterdam
           <br />
           The Netherlands
-        </Typography>
-        <Typography variant="small" className="mt-2">
+        </p>
+        <p className="mt-2 mb-0">
           Email:{" "}
           <a
             href="mailto:info@pyxis-discovery.com"
@@ -55,7 +51,7 @@ export default function ContactUs() {
           >
             info@pyxis-discovery.com
           </a>
-        </Typography>
+        </p>
       </div>
       {submitted ? (
         <div className="bg-green-100 text-green-800 p-4 rounded mb-4">
@@ -64,51 +60,56 @@ export default function ContactUs() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <Input
-              label="Name *"
+            <input
+              type="text"
               name="name"
+              placeholder="Name *"
               value={form.name}
               onChange={handleChange}
               required
-              crossOrigin="anonymous"
+              className="form-control form-control-lg"
             />
           </div>
           <div>
-            <Input
-              label="Email *"
-              name="email"
+            <input
               type="email"
+              name="email"
+              placeholder="Email *"
               value={form.email}
               onChange={handleChange}
               required
-              crossOrigin="anonymous"
+              className="form-control form-control-lg"
             />
           </div>
           <div>
-            <Input
-              label="Subject *"
+            <input
+              type="text"
               name="subject"
+              placeholder="Subject *"
               value={form.subject}
               onChange={handleChange}
               required
-              crossOrigin="anonymous"
+              className="form-control form-control-lg"
             />
           </div>
           <div>
-            <Textarea
-              label="Message *"
+            <textarea
               name="message"
+              placeholder="Message *"
               value={form.message}
               onChange={handleChange}
               required
               rows={5}
-              className="resize-none"
+              className="form-control form-control-lg resize-none"
             />
           </div>
-          {error && <div className="text-red-600 text-sm">{error}</div>}
-          <Button type="submit" color="blue" className="w-full">
+          {error && <div className="text-danger text-sm">{error}</div>}
+          <button
+            type="submit"
+            className="btn btn-success w-100 fw-bold py-2 text-lg"
+          >
             Send
-          </Button>
+          </button>
         </form>
       )}
     </div>
