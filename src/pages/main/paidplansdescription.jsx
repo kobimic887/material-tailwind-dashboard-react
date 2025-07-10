@@ -176,9 +176,8 @@ export function PaidPlansDescription() {
       buttonColor: 'gray'
     }
   ];  const handlePlanSelection = async (plan) => {
-
-    setLoading(true);
-    setMessage('Please register , and choose the plan you see fit');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setMessage('Please register first, and then choose the plan on the dashboard');
 
 
   };
