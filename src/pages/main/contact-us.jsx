@@ -4,33 +4,70 @@ import { Button, Typography } from "@material-tailwind/react";
 export default function ContactUs() {
   const [form, setForm] = useState({
     name: "",
-    email: "",
+    recipientEmail: "",
     subject: "",
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.subject || !form.message) {
+    if (!form.name || !form.recipientEmail || !form.subject || !form.message) {
       setError("All fields are required.");
       return;
     }
+    
+    // Email validation for recipient
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.recipientEmail)) {
+      setError("Please enter a valid recipient email address.");
+      return;
+    }
+
     setError("");
-    setSubmitted(true);
-    // Here you would send the form data to your backend or email service
+    setLoading(true);
+    
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSubmitted(true);
+        setForm({
+          name: "",
+          recipientEmail: "",
+          subject: "",
+          message: "",
+        });
+      } else {
+        setError(result.error || 'Failed to send email. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      setError('Failed to send email. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="max-w-xl mx-auto p-8 font-sans">
-      <h1 className="display-3 fw-bold mb-4">Contact Us</h1>
+      <h1 className="display-3 fw-bold mb-4">Email Client</h1>
       <p className="lead mb-6 text-blue-gray-700">
-        Our committed team is always available to answer questions and assist you.
+        Send an email directly to any recipient using our email service.
       </p>
       <div className="mb-6">
         <p className="fw-bold mb-1">Pyxis Discovery</p>
@@ -63,7 +100,7 @@ export default function ContactUs() {
             <input
               type="text"
               name="name"
-              placeholder="Name *"
+              placeholder="Your Name *"
               value={form.name}
               onChange={handleChange}
               required
@@ -73,9 +110,9 @@ export default function ContactUs() {
           <div>
             <input
               type="email"
-              name="email"
-              placeholder="Email *"
-              value={form.email}
+              name="recipientEmail"
+              placeholder="Send to Email (e.g., kolicyg@gmail.com) *"
+              value={form.recipientEmail}
               onChange={handleChange}
               required
               className="form-control form-control-lg"
@@ -106,9 +143,10 @@ export default function ContactUs() {
           {error && <div className="text-danger text-sm">{error}</div>}
           <button
             type="submit"
+            disabled={loading}
             className="btn btn-success w-100 fw-bold py-2 text-lg"
           >
-            Send
+            {loading ? "Sending..." : "Send Email"}
           </button>
         </form>
       )}

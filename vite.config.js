@@ -15,10 +15,9 @@ export default defineConfig({
     https: false,
     proxy: {
       '/api': {
-        target: 'https://152.42.134.22:5000',
+        target: 'http://127.0.0.1:3001', // Use IPv4 instead of localhost
         changeOrigin: true,
-        secure: false, // Accept self-signed certificates
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        secure: false,
       },
     },
   },
