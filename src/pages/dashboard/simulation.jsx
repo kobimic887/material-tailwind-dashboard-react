@@ -92,7 +92,10 @@ export function Simulation() {
         },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`HTTP ${res.status}: ${res.statusText} - ${errorText}`);
+      }
       const result = await res.json();
       setSearchResult(result);
     } catch (err) {
