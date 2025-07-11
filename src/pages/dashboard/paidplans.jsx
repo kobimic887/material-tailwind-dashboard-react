@@ -35,6 +35,7 @@ export function PaidPlans() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success')) {
+      issueSimulationTokens();
       setMessage('Payment received! Your subscription is now active.');
       setMessageType('success');
     } else if (urlParams.get('canceled')) {
@@ -221,6 +222,8 @@ export function PaidPlans() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        
         },
         body: JSON.stringify({
           planName: plan.name,
@@ -238,6 +241,31 @@ export function PaidPlans() {
     } catch (error) {
       console.error('Error creating checkout session:', error);
       return { error: error.message };
+    }
+  };
+
+  // Helper to issue simulation tokens after payment
+  const issueSimulationTokens = async () => {
+    try {
+      const response = await fetch(`https://${window.location.hostname}:3000/api/issueSimulationTokens`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        // Optionally, include user info or token if needed
+        // body: JSON.stringify({ userId: ... })
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to issue simulation tokens');
+      }
+      const data = await response.json();
+      console.log('Simulation tokens issued:', data);
+      // Optionally, show a message or update UI
+    } catch (error) {
+      console.error('Error issuing simulation tokens:', error);
+      // Optionally, show an error message
     }
   };
 

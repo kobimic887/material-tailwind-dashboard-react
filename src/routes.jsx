@@ -21,8 +21,7 @@ import {
   MoleculeViewer,
   Molecule2D,
   Molstar3D,
-  ApiTest,
-} from "@/pages/dashboard";
+  } from "@/pages/dashboard";
 import {
   MainHome,  
   Services,
@@ -147,12 +146,7 @@ export const routes = [
         path: "/molstar3d",
         element: <Molstar3D />,
       },
-      {
-        icon: <CloudIcon {...icon} />,
-        name: "API test",
-        path: "/apitest",
-        element: <ApiTest />,
-      },
+      
     ],
   },
   {

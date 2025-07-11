@@ -45,7 +45,7 @@ This command will:
 ### Key Features Implemented:
 
 #### 1. Professional Paid Plans Page
-- Modern pricing design inspired by neurosnap.ai
+- Modern pricing design inspired by pyxis-discover.com
 - Monthly/yearly billing toggle
 - "Most Popular" plan highlighting
 - Feature comparison lists

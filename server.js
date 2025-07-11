@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const signupHandler = require('./src/api/signup.js').default;
 
 
 const app = express();
@@ -27,6 +28,25 @@ app.get('/api/proxy', async (req, res) => {
     res.json({ success: true, data });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Mount the /api/signup POST route in Express
+app.post('/api/signup', (req, res) => {
+  // Parse JSON body if not already handled
+  if (!req.body || Object.keys(req.body).length === 0) {
+    let data = '';
+    req.on('data', chunk => { data += chunk; });
+    req.on('end', () => {
+      try {
+        req.body = JSON.parse(data);
+        signupHandler(req, res);
+      } catch (e) {
+        res.status(400).json({ error: 'Invalid JSON' });
+      }
+    });
+  } else {
+    signupHandler(req, res);
   }
 });
 

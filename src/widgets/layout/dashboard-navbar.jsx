@@ -1,4 +1,4 @@
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import {
   Navbar,
   Typography,
@@ -11,6 +11,7 @@ import {
   MenuList,
   MenuItem,
   Avatar,
+  Chip,
 } from "@material-tailwind/react";
 import {
   UserCircleIcon,
@@ -25,12 +26,76 @@ import {
   setOpenConfigurator,
   setOpenSidenav,
 } from "@/context";
+import React, { useState, useEffect } from "react";
 
 export function DashboardNavbar() {
   const [controller, dispatch] = useMaterialTailwindController();
   const { fixedNavbar, openSidenav } = controller;
   const { pathname } = useLocation();
   const [layout, page] = pathname.split("/").filter((el) => el !== "");
+
+  // User info state
+  const [user, setUser] = useState({ name: "", simulationTokens: 0 });
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Example: get user info and tokens from localStorage (customize as needed)
+    const storedUser = JSON.parse(localStorage.getItem("user_info")) || {};
+    const simulationTokens = Number(
+      localStorage.getItem("simulation_tokens")
+    ) || 0;
+    setUser({
+      name: storedUser.name || storedUser.username || "User",
+      simulationTokens,
+    });
+
+    // Validate auth token
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      navigate("/main/mainhome", { replace: true });
+      return;
+    }
+    // Optionally, validate token with backend
+    fetch(`https://${window.location.hostname}:3000/api/validate-token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Invalid token");
+        return res.json();
+      })
+      .then((data) => {
+        if (!data.valid) {
+          navigate("/main/mainhome", { replace: true });
+        } else {
+          // If backend returns user info and tokens, update localStorage and state
+          if (data.user) {
+            localStorage.setItem("user_info", JSON.stringify(data.user));
+          }
+          if (typeof data.user.simulationTokens !== 'undefined') {
+            localStorage.setItem("simulation_tokens", data.user.simulationTokens);
+          }
+          setUser({
+            name: (data.user && (data.user.name || data.user.username)) || "User",
+            simulationTokens: data.user.simulationTokens || 0,
+          });
+        }
+      })
+      .catch(() => {
+        navigate("/main/mainhome", { replace: true });
+      });
+  }, [navigate]);
+
+  const handleSignOut = () => {
+    // Clear tokens and user info (customize as needed)
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_info");
+    localStorage.removeItem("simulation_tokens");
+    window.location.href = "/auth/sign-in";
+  };
 
   return (
     <Navbar
@@ -83,30 +148,39 @@ export function DashboardNavbar() {
           >
             <Bars3Icon strokeWidth={3} className="h-6 w-6 text-blue-gray-500" />
           </IconButton>
-          <Link to="/auth/sign-in">
+          {/* Replace sign-in link with user info and sign out */}
+          <div className="flex items-center gap-4 mr-4">
+            <Typography variant="small" color="blue-gray" className="font-medium">
+              Hello:{" "}
+              <Chip
+                value={user.name}
+                color="blue"
+                className="inline-block px-2 py-1 text-xs font-bold ml-1 align-middle"
+              />{" "}
+              | You have{" "}
+              <Chip
+                value={`${user.simulationTokens} `}
+                color="green"
+                className="inline-block px-2 py-1 text-xs font-bold ml-1 align-middle"
+              /> Simulation Tokens left
+            </Typography>
             <Button
               variant="text"
               color="blue-gray"
-              className="hidden items-center gap-1 px-4 xl:flex normal-case"
+              className="items-center gap-1 px-4 normal-case"
+              onClick={handleSignOut}
             >
               <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
-              Sign In
+              Sign Out
             </Button>
-            <IconButton
-              variant="text"
-              color="blue-gray"
-              className="grid xl:hidden"
-            >
-              <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
-            </IconButton>
-          </Link>
+          </div>
           <Menu>
             <MenuHandler>
               <IconButton variant="text" color="blue-gray">
                 <BellIcon className="h-5 w-5 text-blue-gray-500" />
               </IconButton>
             </MenuHandler>
-            <MenuList className="w-max border-0">
+            {/* <MenuList className="w-max border-0">
               <MenuItem className="flex items-center gap-3">
                 <Avatar
                   src="https://demos.creative-tim.com/material-dashboard/assets/img/team-2.jpg"
@@ -176,7 +250,7 @@ export function DashboardNavbar() {
                   </Typography>
                 </div>
               </MenuItem>
-            </MenuList>
+            </MenuList> */}
           </Menu>
           <IconButton
             variant="text"
