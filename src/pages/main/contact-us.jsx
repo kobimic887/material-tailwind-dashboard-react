@@ -111,7 +111,7 @@ export default function ContactUs() {
             <input
               type="email"
               name="recipientEmail"
-              placeholder="Send to Email (e.g., kolicyg@gmail.com) *"
+              placeholder="Send to Email *"
               value={form.recipientEmail}
               onChange={handleChange}
               required
