@@ -180,7 +180,7 @@ export function Simulation() {
           </CardBody>
         </Card>
       )}
-      <div className="mb-6 flex items-center gap-4">
+      <div className="mb-6 flex flex-col gap-4 max-w-3xl">
         <Input
           label="PDB ID"
           value={simPdbId}
@@ -191,21 +191,15 @@ export function Simulation() {
           label="SMILES"
           value={simSmiles}
           onChange={e => setSimSmiles(e.target.value)}
-          className="w-full max-w-xs"
+          className="w-full max-w-3xl"
         />
         <Button
           size="sm"
           color="blue"
           onClick={handleSimulation}
           disabled={simLoading || !simPdbId || !simSmiles}
-          className=" items-center gap-2"
+          className="items-center gap-2 w-full max-w-xs"
         >
-          <span className={simLoading ? '' : 'invisible'}>
-            <Spinner className="h-4 w-4" />
-          </span>
-          <span className={simLoading ? 'invisible' : ''}>
-            <CloudIcon className="h-4 w-4" />
-          </span>
           {simLoading ? 'Simulating...' : 'Simulate'}
         </Button>
       </div>
@@ -227,15 +221,15 @@ export function Simulation() {
         <Card className="mb-6">
           <CardHeader
             variant="gradient"
-            color="blue"
+            
             className="mb-4 grid h-12 place-items-center"
           >
-            <Typography variant="h6" color="white">
+            <Typography variant="h6" color="black">
               Simulation Result
             </Typography>
           </CardHeader>
           <CardBody>
-            <pre className="whitespace-pre-wrap text-sm font-mono bg-white p-4 rounded border overflow-auto max-h-96">
+            <pre className="whitespace-pre-wrap text-sm font-mono bg-white p-4 rounded border overflow-auto max-h-48">
               {JSON.stringify(simResult, null, 2)}
             </pre>
             {simResult.simulationKey && (
@@ -249,7 +243,7 @@ export function Simulation() {
             )}
           </CardBody>
                     <CardBody>
-            <pre className="whitespace-pre-wrap text-sm font-mono bg-white p-4 rounded border overflow-auto max-h-96">
+            <pre className="whitespace-pre-wrap text-sm font-mono bg-white p-4 rounded border overflow-auto max-h-48">
               {JSON.stringify(simResult, null, 2)}
             </pre>
             {simResult.simulationKey && (
