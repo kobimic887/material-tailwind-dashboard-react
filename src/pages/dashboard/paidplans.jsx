@@ -203,12 +203,12 @@ export function PaidPlans() {
   // Helper function to create checkout session
   const createCheckoutSession = async (plan, isYearly) => {
     try {
+      const token = localStorage.getItem('auth_token');
       const response = await fetch(`https://${window.location.hostname}:3000/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        
         },
         body: JSON.stringify({
           planName: plan.name,
@@ -232,11 +232,12 @@ export function PaidPlans() {
   // Helper to issue simulation tokens after payment
   const issueSimulationTokens = async () => {
     try {
+      const token = localStorage.getItem('auth_token');
       const response = await fetch(`https://${window.location.hostname}:3000/api/issueSimulationTokens`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         // Optionally, include user info or token if needed
         // body: JSON.stringify({ userId: ... })
