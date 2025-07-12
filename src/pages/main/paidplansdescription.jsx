@@ -41,22 +41,7 @@ export function PaidPlansDescription() {
   }, []);
 
   const plans = [
-    {
-      name: 'Free',
-      subtitle: 'Get started with pyxis-discover-no credit card required',
-      monthlyPrice: 0.00,
-      yearlyPrice: 0.00,
-      popular: false,
-      description: 'Academic use only, 3 credits/month, 3 parallel jobs, limited models/settings.',
-      features: [
-        'Academic Use',
-        '3 credits/month',
-        '3 parallel jobs',
-        'Limited models & settings'
-      ],
-      buttonText: 'Try Free',
-      buttonColor: 'green'
-    },
+  
     {
       name: 'Budget',
       subtitle: 'Affordable access for students and researchers',
@@ -79,7 +64,7 @@ export function PaidPlansDescription() {
         'Access to Molecular Dynamics',
         'Folding Simulation Not Included'
       ],
-      buttonText: 'Try Free',
+      buttonText: 'Purchase',
       buttonColor: 'blue-gray'
     },
     {
@@ -104,7 +89,7 @@ export function PaidPlansDescription() {
         'Access to Molecular Dynamics',
         'Folding Simulation Not Included'
       ],
-      buttonText: 'Try Free',
+      buttonText: 'Purchase',
       buttonColor: 'blue'
     },
     {
@@ -129,7 +114,7 @@ export function PaidPlansDescription() {
         'Access to Molecular Dynamics',
         'Folding Simulation Not Included'
       ],
-      buttonText: 'Try Free',
+      buttonText: 'Purchase',
       buttonColor: 'indigo'
     },
     {
@@ -154,7 +139,7 @@ export function PaidPlansDescription() {
         'Access to Molecular Dynamics',
         'Folding Simulation Not Included'
       ],
-      buttonText: 'Try Free',
+      buttonText: 'Purchase',
       buttonColor: 'purple'
     },
     {
