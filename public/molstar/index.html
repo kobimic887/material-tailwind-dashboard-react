@@ -329,7 +329,31 @@
                 loadPDB();
             }
         });
-        
+
+        // Listen for postMessage events from parent React component
+        window.addEventListener('message', async function(event) {
+            if (event.data && event.data.type === 'loadStructureFromUrl') {
+                if (!viewer) {
+                    console.error('Molstar viewer not initialized');
+                    return;
+                }
+                
+                const { url, format } = event.data;
+                
+                showLoading(true);
+                
+                try {
+                    await viewer.loadStructureFromUrl(url, format);
+                    showStatus(`Successfully loaded ${format.toUpperCase()} structure from API`, 'success');
+                } catch (error) {
+                    console.error('Failed to load structure from URL:', error);
+                    showStatus(`Failed to load ${format.toUpperCase()} structure from API`, 'error');
+                } finally {
+                    showLoading(false);
+                }
+            }
+        });
+
         // Initialize viewer when page loads
         window.addEventListener('load', initViewer);
     </script>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardBody,
@@ -32,6 +33,8 @@ export function Simulation() {
   const [simResult, setSimResult] = useState(null);
   const [simLoading, setSimLoading] = useState(false);
   const [simError, setSimError] = useState("");
+  
+  const navigate = useNavigate();
   
   const fetchApiData = async () => {
     setLoading(true);
@@ -128,6 +131,21 @@ export function Simulation() {
     }
   };
 
+  // Redirect to Molstar3D when simulation results are available
+  useEffect(() => {
+    if (simResult && simResult.simulationKey) {
+      const pdbUrl = `https://${window.location.hostname}:3000/api/sanitizedpdb/${simResult.simulationKey}`;
+      const sdfUrl = `https://${window.location.hostname}:3000/api/sanitizedsdf/${simResult.simulationKey}`;
+      
+      // Store URLs in localStorage and navigate to Molstar3D
+      localStorage.setItem('molstar_pdb_url', pdbUrl);
+      localStorage.setItem('molstar_sdf_url', sdfUrl);
+      localStorage.setItem('molstar_simulation_key', simResult.simulationKey);
+      
+      navigate('/dashboard/molstar3d');
+    }
+  }, [simResult, navigate]);
+
   // Auto-fetch on component mount
   useEffect(() => {
     //fetchApiData();
@@ -136,7 +154,7 @@ export function Simulation() {
 
   return (
     <div className="h-[80vh] flex flex-col pt-8 pb-8 bg-gray-50">
-        <div className="mb-6 flex items-center gap-4">
+      <div className="mb-6 flex items-center gap-4">
         <Input
           label="Search Code"
           value={searchCode}
@@ -221,7 +239,6 @@ export function Simulation() {
         <Card className="mb-6">
           <CardHeader
             variant="gradient"
-            
             className="mb-4 grid h-12 place-items-center"
           >
             <Typography variant="h6" color="black">
@@ -233,27 +250,22 @@ export function Simulation() {
               {JSON.stringify(simResult, null, 2)}
             </pre>
             {simResult.simulationKey && (
-              <a download
-                color="green"
-              className="mt-2 inline-block px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition" 
-                href={`https://${window.location.hostname}:3000/api/sanitizedpdb/${simResult.simulationKey}`}
-                target="_blank"          >
-                View Sanitized pdb Result
-              </a>
-            )}
-          </CardBody>
-                    <CardBody>
-            <pre className="whitespace-pre-wrap text-sm font-mono bg-white p-4 rounded border overflow-auto max-h-48">
-              {JSON.stringify(simResult, null, 2)}
-            </pre>
-            {simResult.simulationKey && (
-              <a download
-                color="green"
-              className="mt-2 inline-block px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition" 
-                href={`https://${window.location.hostname}:3000/api/sanitizedsdf/${simResult.simulationKey}`}
-                target="_blank"          >
-                View Sanitized sdf Result
-              </a>
+              <div className="mt-4 flex gap-2">
+                <a download
+                  className="inline-block px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition"
+                  href={`https://${window.location.hostname}:3000/api/sanitizedpdb/${simResult.simulationKey}`}
+                  target="_blank"
+                >
+                  View Sanitized PDB Result
+                </a>
+                <a download
+                  className="inline-block px-4 py-2 border border-green-500 text-green-500 rounded hover:bg-green-50 transition"
+                  href={`https://${window.location.hostname}:3000/api/sanitizedsdf/${simResult.simulationKey}`}
+                  target="_blank"
+                >
+                  View Sanitized SDF Result
+                </a>
+              </div>
             )}
           </CardBody>
         </Card>
