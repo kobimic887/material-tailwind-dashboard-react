@@ -160,11 +160,11 @@ export function Molstar3D() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      <Card className="m-4 flex-1">
+      <Card className="m-4 flex-1 flex flex-col" style={{ minHeight: '70vh' }}>
         <CardHeader
           variant="gradient"
           color="blue"
-          className="mb-4 grid h-16 place-items-center"
+          className="mb-4 grid h-16 place-items-center flex-shrink-0"
         >
           <div className="flex items-center justify-between w-full px-4">
             <Typography variant="h5" color="white">
@@ -211,18 +211,22 @@ export function Molstar3D() {
           </div>
         </CardHeader>
         
-        <div className="flex-1 flex flex-col">
-          <CardBody className="p-0 flex-1">
-            <iframe
-              ref={molstarRef}
-              src="/molstar/index.html"
-              className="w-full h-full border-0"
-              title="Molstar 3D Viewer"
-            />
-          </CardBody>
-          
-          {/* SDF Results Table */}
-          <div className="p-4 border-t border-gray-200 bg-white max-h-96 overflow-y-auto">
+        {/* Molstar Iframe - Double Height */}
+        <CardBody className="p-0 flex-1" style={{ minHeight: '600px' }}>
+          <iframe
+            ref={molstarRef}
+            src="/molstar/index.html"
+            className="w-full h-full border-0"
+            title="Molstar 3D Viewer"
+            style={{ minHeight: '600px' }}
+          />
+        </CardBody>
+      </Card>
+      
+      {/* SDF Results Table - Below the iframe */}
+      {sdfData.length > 0 && (
+        <Card className="mx-4 mb-4 flex-shrink-0">
+          <div className="p-4 bg-white max-h-96 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <Typography variant="h6" color="blue-gray">
                 SDF Docking Results
@@ -235,124 +239,139 @@ export function Molstar3D() {
                   </Typography>
                 </div>
               )}
-              {sdfData.length > 0 && (
-                <Chip
-                  value={`${sdfData.length} molecules`}
-                  variant="gradient"
-                  color="blue"
-                  size="sm"
-                />
-              )}
+              <Chip
+                value={`${sdfData.length} molecules`}
+                variant="gradient"
+                color="blue"
+                size="sm"
+              />
             </div>
             
-            {sdfData.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-max table-auto text-left">
-                  <thead>
-                    <tr>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                          ID
-                        </Typography>
-                      </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                          Name
-                        </Typography>
-                      </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                          Model
-                        </Typography>
-                      </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                          Score
-                        </Typography>
-                      </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                          TORSDO
-                        </Typography>
-                      </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                          Ligand ID
-                        </Typography>
-                      </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                          SMILES
-                        </Typography>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sdfData.map((molecule, index) => {
-                      const isLast = index === sdfData.length - 1;
-                      const classes = isLast ? "p-3" : "p-3 border-b border-blue-gray-50";
-                      const scoreValue = parseFloat(molecule.score);
-                      const scoreColor = scoreValue < -7 ? "green" : scoreValue < -5 ? "amber" : "red";
-                      
-                      return (
-                        <tr key={molecule.id} className="hover:bg-blue-gray-50 transition-colors">
-                          <td className={classes}>
-                            <Typography variant="small" color="blue-gray" className="font-medium">
-                              {molecule.id}
-                            </Typography>
-                          </td>
-                          <td className={classes}>
-                            <Typography variant="small" color="blue-gray" className="font-normal">
-                              {molecule.name}
-                            </Typography>
-                          </td>
-                          <td className={classes}>
-                            <Typography variant="small" color="blue-gray" className="font-normal">
-                              {molecule.model}
-                            </Typography>
-                          </td>
-                          <td className={classes}>
-                            <Chip
-                              value={molecule.score}
-                              variant="ghost"
-                              color={scoreColor}
-                              size="sm"
-                              className="font-mono"
-                            />
-                          </td>
-                          <td className={classes}>
-                            <Typography variant="small" color="blue-gray" className="font-normal">
-                              {molecule.torsdo}
-                            </Typography>
-                          </td>
-                          <td className={classes}>
-                            <Typography variant="small" color="blue-gray" className="font-normal">
-                              {molecule.ligand_id}
-                            </Typography>
-                          </td>
-                          <td className={classes}>
-                            <Typography variant="small" color="blue-gray" className="font-mono text-xs max-w-xs truncate" title={molecule.smiles}>
-                              {molecule.smiles}
-                            </Typography>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              !isLoading && (
-                <div className="text-center py-8">
-                  <Typography variant="small" color="gray">
-                    No SDF data available. Load an SDF file to see docking results.
-                  </Typography>
-                </div>
-              )
-            )}
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-max table-auto text-left">
+                <thead>
+                  <tr>
+                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                        ID
+                      </Typography>
+                    </th>
+                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                        Name
+                      </Typography>
+                    </th>
+                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                        Model
+                      </Typography>
+                    </th>
+                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                        Score
+                      </Typography>
+                    </th>
+                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                        TORSDO
+                      </Typography>
+                    </th>
+                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                        Ligand ID
+                      </Typography>
+                    </th>
+                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                        SMILES
+                      </Typography>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sdfData.map((molecule, index) => {
+                    const isLast = index === sdfData.length - 1;
+                    const classes = isLast ? "p-3" : "p-3 border-b border-blue-gray-50";
+                    const scoreValue = parseFloat(molecule.score);
+                    const scoreColor = scoreValue < -7 ? "green" : scoreValue < -5 ? "amber" : "red";
+                    
+                    return (
+                      <tr key={molecule.id} className="hover:bg-blue-gray-50 transition-colors">
+                        <td className={classes}>
+                          <Typography variant="small" color="blue-gray" className="font-medium">
+                            {molecule.id}
+                          </Typography>
+                        </td>
+                        <td className={classes}>
+                          <Typography variant="small" color="blue-gray" className="font-normal">
+                            {molecule.name}
+                          </Typography>
+                        </td>
+                        <td className={classes}>
+                          <Typography variant="small" color="blue-gray" className="font-normal">
+                            {molecule.model}
+                          </Typography>
+                        </td>
+                        <td className={classes}>
+                          <Chip
+                            value={molecule.score}
+                            variant="ghost"
+                            color={scoreColor}
+                            size="sm"
+                            className="font-mono"
+                          />
+                        </td>
+                        <td className={classes}>
+                          <Typography variant="small" color="blue-gray" className="font-normal">
+                            {molecule.torsdo}
+                          </Typography>
+                        </td>
+                        <td className={classes}>
+                          <Typography variant="small" color="blue-gray" className="font-normal">
+                            {molecule.ligand_id}
+                          </Typography>
+                        </td>
+                        <td className={classes}>
+                          <Typography variant="small" color="blue-gray" className="font-mono text-xs max-w-xs truncate" title={molecule.smiles}>
+                            {molecule.smiles}
+                          </Typography>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      )}
+      
+      {/* Loading/Empty State for SDF Data */}
+      {!sdfData.length && !isLoading && (
+        <Card className="mx-4 mb-4 flex-shrink-0">
+          <div className="p-4 bg-white">
+            <div className="text-center py-8">
+              <Typography variant="small" color="gray">
+                No SDF data available. Click "Test SDF" or load an SDF file to see docking results.
+              </Typography>
+            </div>
+          </div>
+        </Card>
+      )}
+      
+      {/* Loading State */}
+      {isLoading && (
+        <Card className="mx-4 mb-4 flex-shrink-0">
+          <div className="p-4 bg-white">
+            <div className="flex items-center justify-center gap-2 py-8">
+              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <Typography variant="small" color="gray">
+                Loading SDF data...
+              </Typography>
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
