@@ -7,6 +7,8 @@ export function Molstar3D() {
   const navigate = useNavigate();
   const [sdfData, setSdfData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState(''); // 'success', 'error', or ''
 
   // Function to parse SDF data
   const parseSdfData = (sdfText) => {
@@ -80,6 +82,27 @@ export function Molstar3D() {
       loadSdfData(sdfUrl);
     }
 
+    // Listen for messages from Molstar iframe
+    const handleMessage = (event) => {
+      if (event.data.type === 'smilesLoaded') {
+        setMessage(`Successfully loaded ${event.data.name || 'molecule'} into Molstar viewer`);
+        setMessageType('success');
+        setTimeout(() => {
+          setMessage('');
+          setMessageType('');
+        }, 3000);
+      } else if (event.data.type === 'smilesLoadError') {
+        setMessage(`Failed to load molecule: ${event.data.error}`);
+        setMessageType('error');
+        setTimeout(() => {
+          setMessage('');
+          setMessageType('');
+        }, 5000);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
     if (pdbUrl && sdfUrl && simulationKey) {
       const handleIframeLoad = () => {
         // Wait a bit more for Molstar to fully initialize
@@ -117,8 +140,13 @@ export function Molstar3D() {
         if (molstarRef.current) {
           molstarRef.current.removeEventListener('load', handleIframeLoad);
         }
+        window.removeEventListener('message', handleMessage);
       };
     }
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
   }, []);
 
   const handleBackToSimulation = () => {
@@ -152,15 +180,50 @@ export function Molstar3D() {
     }
   };
 
+  // Function to load SMILES structure into Molstar
+  const loadSmilesIntoMolstar = (smiles, moleculeName) => {
+    if (molstarRef.current && smiles && smiles !== 'N/A') {
+      console.log('Loading SMILES into Molstar:', smiles, 'for molecule:', moleculeName);
+      
+      // Show loading feedback
+      setMessage(`Loading ${moleculeName} into Molstar viewer...`);
+      setMessageType('info');
+      
+      // Send SMILES data to Molstar iframe
+      molstarRef.current.contentWindow.postMessage({
+        type: 'loadSmilesStructure',
+        smiles: smiles,
+        name: moleculeName
+      }, '*');
+      
+      // Clear message after a delay
+      setTimeout(() => {
+        setMessage('');
+        setMessageType('');
+      }, 3000);
+    }
+  };
+
   const loadTestSDF = () => {
     // For testing, we'll load a sample SDF file
     const testSdfUrl = '/pdbs/sample-docking-results.sdf';
     loadSdfData(testSdfUrl);
   };
 
+  // Function to send SMILES to Molstar for visualization
+  const sendSmilesToMolstar = (smiles) => {
+    if (molstarRef.current && smiles && smiles !== 'N/A') {
+      console.log('Sending SMILES to Molstar:', smiles);
+      molstarRef.current.contentWindow.postMessage({
+        type: 'loadSmilesStructure',
+        smiles: smiles
+      }, '*');
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      <Card className="m-4 flex-1 flex flex-col" style={{ minHeight: '70vh' }}>
+      <Card className="relative bg-clip-border rounded-xl bg-white text-gray-700 shadow-md m-4 flex-1 flex flex-col" style={{ minHeight: '85vh' }}>
         <CardHeader
           variant="gradient"
           color="blue"
@@ -211,14 +274,38 @@ export function Molstar3D() {
           </div>
         </CardHeader>
         
+        {/* Message Display for SMILES Loading */}
+        {message && (
+          <div className="px-4 pb-2">
+            <div className={`p-3 rounded-lg flex items-center gap-2 ${
+              messageType === 'info' ? 'bg-blue-50 border border-blue-200' : 
+              messageType === 'success' ? 'bg-green-50 border border-green-200' : 
+              messageType === 'error' ? 'bg-red-50 border border-red-200' : 
+              'bg-gray-50 border border-gray-200'
+            }`}>
+              {messageType === 'info' && (
+                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              )}
+              <Typography variant="small" className={
+                messageType === 'info' ? 'text-blue-700' : 
+                messageType === 'success' ? 'text-green-700' : 
+                messageType === 'error' ? 'text-red-700' : 
+                'text-gray-700'
+              }>
+                {message}
+              </Typography>
+            </div>
+          </div>
+        )}
+
         {/* Molstar Iframe - Double Height */}
-        <CardBody className="p-0 flex-1" style={{ minHeight: '600px' }}>
+        <CardBody className="p-0 flex-1" style={{ minHeight: '800px' }}>
           <iframe
             ref={molstarRef}
             src="/molstar/index.html"
             className="w-full h-full border-0"
             title="Molstar 3D Viewer"
-            style={{ minHeight: '600px' }}
+            style={{ minHeight: '800px' }}
           />
         </CardBody>
       </Card>
@@ -228,9 +315,14 @@ export function Molstar3D() {
         <Card className="mx-4 mb-4 flex-shrink-0">
           <div className="p-4 bg-white max-h-96 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <Typography variant="h6" color="blue-gray">
-                SDF Docking Results
-              </Typography>
+              <div>
+                <Typography variant="h6" color="blue-gray">
+                  SDF Docking Results
+                </Typography>
+                <Typography variant="small" color="gray" className="mt-1">
+                  Click on any row to load the molecule into the 3D viewer
+                </Typography>
+              </div>
               {isLoading && (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -240,7 +332,7 @@ export function Molstar3D() {
                 </div>
               )}
               <Chip
-                value={`${sdfData.length} molecules`}
+                value={`Top 2 of ${sdfData.length} molecules`}
                 variant="gradient"
                 color="blue"
                 size="sm"
@@ -255,32 +347,13 @@ export function Molstar3D() {
                       <Typography variant="small" color="blue-gray" className="font-bold leading-none">
                         ID
                       </Typography>
-                    </th>
-                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                        Name
-                      </Typography>
-                    </th>
-                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                        Model
-                      </Typography>
-                    </th>
+                    </th>           
                     <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
                       <Typography variant="small" color="blue-gray" className="font-bold leading-none">
                         Score
                       </Typography>
-                    </th>
-                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                        TORSDO
-                      </Typography>
-                    </th>
-                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                        Ligand ID
-                      </Typography>
-                    </th>
+                    </th>    
+           
                     <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
                       <Typography variant="small" color="blue-gray" className="font-bold leading-none">
                         SMILES
@@ -289,29 +362,33 @@ export function Molstar3D() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sdfData.map((molecule, index) => {
-                    const isLast = index === sdfData.length - 1;
+                  {sdfData
+                    .filter((molecule, index, self) => {
+                      // Filter for unique molecules based on SMILES
+                      return index === self.findIndex(m => m.smiles === molecule.smiles && m.smiles !== 'N/A');
+                    })
+                    .sort((a, b) => parseFloat(a.score) - parseFloat(b.score)) // Sort by score (most negative first)
+                    .slice(0, 2) // Take only top 2 unique molecules
+                    .map((molecule, index) => {
+                    const isLast = index === 1; // Only 2 items, so last is index 1
                     const classes = isLast ? "p-3" : "p-3 border-b border-blue-gray-50";
                     const scoreValue = parseFloat(molecule.score);
                     const scoreColor = scoreValue < -7 ? "green" : scoreValue < -5 ? "amber" : "red";
                     
                     return (
-                      <tr key={molecule.id} className="hover:bg-blue-gray-50 transition-colors">
+                      <tr 
+                        key={molecule.id} 
+                        className="hover:bg-blue-gray-50 transition-colors cursor-pointer"
+                        onClick={() => loadSmilesIntoMolstar(molecule.smiles, molecule.name)}
+                        title={`Click to load ${molecule.name} into Molstar viewer`}
+                      >
                         <td className={classes}>
                           <Typography variant="small" color="blue-gray" className="font-medium">
                             {molecule.id}
                           </Typography>
                         </td>
-                        <td className={classes}>
-                          <Typography variant="small" color="blue-gray" className="font-normal">
-                            {molecule.name}
-                          </Typography>
-                        </td>
-                        <td className={classes}>
-                          <Typography variant="small" color="blue-gray" className="font-normal">
-                            {molecule.model}
-                          </Typography>
-                        </td>
+                       
+                       
                         <td className={classes}>
                           <Chip
                             value={molecule.score}
@@ -321,16 +398,7 @@ export function Molstar3D() {
                             className="font-mono"
                           />
                         </td>
-                        <td className={classes}>
-                          <Typography variant="small" color="blue-gray" className="font-normal">
-                            {molecule.torsdo}
-                          </Typography>
-                        </td>
-                        <td className={classes}>
-                          <Typography variant="small" color="blue-gray" className="font-normal">
-                            {molecule.ligand_id}
-                          </Typography>
-                        </td>
+                
                         <td className={classes}>
                           <Typography variant="small" color="blue-gray" className="font-mono text-xs max-w-xs truncate" title={molecule.smiles}>
                             {molecule.smiles}

@@ -351,6 +351,58 @@
                 } finally {
                     showLoading(false);
                 }
+            } else if (event.data && event.data.type === 'loadSmilesStructure') {
+                if (!viewer) {
+                    console.error('Molstar viewer not initialized');
+                    return;
+                }
+                
+                const { smiles, name } = event.data;
+                
+                showLoading(true);
+                
+                try {
+                    // Use a chemical structure service to convert SMILES to 3D structure
+                    const sdfUrl = `https://cactus.nci.nih.gov/chemical/structure/${encodeURIComponent(smiles)}/sdf`;
+                    
+                    await viewer.loadStructureFromUrl(sdfUrl, 'sdf');
+                    showStatus(`Successfully loaded molecule: ${name || 'Unknown'} from SMILES`, 'success');
+                    
+                    // Send success message back to parent
+                    window.parent.postMessage({
+                        type: 'smilesLoaded',
+                        name: name || 'Unknown',
+                        smiles: smiles
+                    }, '*');
+                } catch (error) {
+                    console.error('Failed to load SMILES structure:', error);
+                    
+                    // Try alternative approach using PubChem
+                    try {
+                        const pubchemUrl = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(smiles)}/SDF`;
+                        await viewer.loadStructureFromUrl(pubchemUrl, 'sdf');
+                        showStatus(`Successfully loaded molecule: ${name || 'Unknown'} from SMILES (PubChem)`, 'success');
+                        
+                        // Send success message back to parent
+                        window.parent.postMessage({
+                            type: 'smilesLoaded',
+                            name: name || 'Unknown',
+                            smiles: smiles
+                        }, '*');
+                    } catch (pubchemError) {
+                        console.error('Failed to load from PubChem:', pubchemError);
+                        showStatus(`Failed to load molecule: ${name || 'Unknown'} from SMILES`, 'error');
+                        
+                        // Send error message back to parent
+                        window.parent.postMessage({
+                            type: 'smilesLoadError',
+                            error: `Failed to load molecule from SMILES: ${smiles}`,
+                            smiles: smiles
+                        }, '*');
+                    }
+                } finally {
+                    showLoading(false);
+                }
             }
         });
 
