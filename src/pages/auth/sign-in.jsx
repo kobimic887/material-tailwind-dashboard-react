@@ -14,12 +14,19 @@ export function SignIn() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess(false);
+    
+    if (!termsAccepted) {
+      setError("Please accept the Terms and Conditions to continue");
+      return;
+    }
+    
     setLoading(true);
     try {
       const res = await fetch(`https://${window.location.hostname}:3000/api/signin`, {
@@ -111,6 +118,8 @@ export function SignIn() {
             />
           </div>
           <Checkbox
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
             label={
               <Typography
                 variant="small"

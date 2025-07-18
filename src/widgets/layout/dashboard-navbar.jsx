@@ -20,6 +20,8 @@ import {
   ClockIcon,
   CreditCardIcon,
   Bars3Icon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/solid";
 import {
   useMaterialTailwindController,
@@ -33,6 +35,7 @@ export function DashboardNavbar() {
   const { fixedNavbar, openSidenav } = controller;
   const { pathname } = useLocation();
   const [layout, page] = pathname.split("/").filter((el) => el !== "");
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   // User info state
   const [user, setUser] = useState({ name: "", simulationTokens: 0 });
@@ -108,7 +111,7 @@ export function DashboardNavbar() {
       fullWidth
       blurred={fixedNavbar}
     >
-      <div className="flex flex-col-reverse justify-between gap-6 md:flex-row md:items-center">
+      <div className="flex flex-col-reverse justify-between gap-2 md:gap-6 md:flex-row md:items-center">
         <div className="capitalize">
           <Breadcrumbs
             className={`bg-transparent p-0 transition-all ${fixedNavbar ? "mt-1" : ""}`}
@@ -132,25 +135,44 @@ export function DashboardNavbar() {
               </Typography>
             )}
           </Breadcrumbs>
-          <Typography variant="h6" color="blue-gray">
+          <Typography variant="h6" color="blue-gray" className="text-lg md:text-xl">
             {page || "Home"}
           </Typography>
         </div>
-        <div className="flex items-center">
-          <div className="mr-auto md:mr-4 md:w-56">
+        <div className="flex items-center justify-between w-full md:w-auto">
+          {/* Mobile Search Toggle */}
+          <div className="flex items-center gap-2">
+            <IconButton
+              variant="text"
+              color="blue-gray"
+              className="grid xl:hidden"
+              onClick={() => setOpenSidenav(dispatch, !openSidenav)}
+            >
+              <Bars3Icon strokeWidth={3} className="h-6 w-6 text-blue-gray-500" />
+            </IconButton>
+            
+            <IconButton
+              variant="text"
+              color="blue-gray"
+              className="grid md:hidden"
+              onClick={() => setShowMobileSearch(!showMobileSearch)}
+            >
+              {showMobileSearch ? (
+                <XMarkIcon className="h-5 w-5 text-blue-gray-500" />
+              ) : (
+                <MagnifyingGlassIcon className="h-5 w-5 text-blue-gray-500" />
+              )}
+            </IconButton>
+          </div>
+
+          {/* Desktop Search */}
+          <div className="mr-auto md:mr-4 md:w-56 hidden md:block">
             <Input label="Search" />
           </div>
-          <IconButton
-            variant="text"
-            color="blue-gray"
-            className="grid xl:hidden"
-            onClick={() => setOpenSidenav(dispatch, !openSidenav)}
-          >
-            <Bars3Icon strokeWidth={3} className="h-6 w-6 text-blue-gray-500" />
-          </IconButton>
+          
           {/* Replace sign-in link with user info and sign out */}
-          <div className="flex items-center gap-4 mr-4">
-            <Typography variant="small" color="blue-gray" className="font-medium">
+          <div className="flex items-center gap-2 md:gap-4 mr-2 md:mr-4">
+            <Typography variant="small" color="blue-gray" className="font-medium hidden sm:block">
               Hello:{" "}
               <Chip
                 value={user.name}
@@ -164,14 +186,27 @@ export function DashboardNavbar() {
                 className="inline-block px-2 py-1 text-xs font-bold ml-1 align-middle"
               /> Simulation Tokens left
             </Typography>
+            {/* Mobile user info - compact */}
+            <div className="flex items-center gap-1 sm:hidden">
+              <Chip
+                value={user.name}
+                color="blue"
+                className="px-2 py-1 text-xs font-bold"
+              />
+              <Chip
+                value={`${user.simulationTokens}`}
+                color="green"
+                className="px-2 py-1 text-xs font-bold"
+              />
+            </div>
             <Button
               variant="text"
               color="blue-gray"
-              className="items-center gap-1 px-4 normal-case"
+              className="items-center gap-1 px-2 md:px-4 normal-case min-w-0"
               onClick={handleSignOut}
             >
               <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
-              Sign Out
+              <span className="hidden sm:inline">Sign Out</span>
             </Button>
           </div>
           <Menu>
@@ -260,6 +295,13 @@ export function DashboardNavbar() {
             <Cog6ToothIcon className="h-5 w-5 text-blue-gray-500" />
           </IconButton>
         </div>
+        
+        {/* Mobile Search Bar */}
+        {showMobileSearch && (
+          <div className="mt-4 md:hidden">
+            <Input label="Search" />
+          </div>
+        )}
       </div>
     </Navbar>
   );

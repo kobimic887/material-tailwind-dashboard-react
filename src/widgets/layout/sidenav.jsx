@@ -19,14 +19,22 @@ export function Sidenav({ brandImg, brandName, routes }) {
   };
 
   return (
-    <aside
-      className={`${sidenavTypes[sidenavType]} ${
-        openSidenav ? "translate-x-0" : "-translate-x-80"
-      } fixed inset-0 z-50 my-4 ml-4 h-[calc(100vh-32px)] w-72 rounded-xl transition-transform duration-300 xl:translate-x-0 border border-blue-gray-100`}
-    >
-      <div
-        className={`relative`}
+    <>
+      {/* Mobile Overlay */}
+      {openSidenav && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 xl:hidden" 
+          onClick={() => setOpenSidenav(dispatch, false)}
+        />
+      )}
+      <aside
+        className={`${sidenavTypes[sidenavType]} ${
+          openSidenav ? "translate-x-0" : "-translate-x-80"
+        } fixed inset-0 z-50 my-4 ml-4 h-[calc(100vh-32px)] w-72 rounded-xl transition-transform duration-300 xl:translate-x-0 border border-blue-gray-100`}
       >
+        <div
+          className={`relative z-50`}
+        >
         <Link to="/" className="py-6 px-8 text-center">
           <Typography
             variant="h6"
@@ -37,13 +45,13 @@ export function Sidenav({ brandImg, brandName, routes }) {
         </Link>
         <IconButton
           variant="text"
-          color="white"
+          color={sidenavType === "dark" ? "white" : "blue-gray"}
           size="sm"
           ripple={false}
           className="absolute right-0 top-0 grid rounded-br-none rounded-tl-none xl:hidden"
           onClick={() => setOpenSidenav(dispatch, false)}
         >
-          <XMarkIcon strokeWidth={2.5} className="h-5 w-5 text-white" />
+          <XMarkIcon strokeWidth={2.5} className="h-5 w-5" />
         </IconButton>
       </div>
       <div className="m-4">
@@ -70,6 +78,12 @@ export function Sidenav({ brandImg, brandName, routes }) {
                       className={`flex items-center gap-4 px-4 capitalize${isActive ? ' !bg-[#b4b239] !text-white' : ''}`}
                       style={isActive ? { backgroundColor: '#b4b239', color: '#fff' } : {}}
                       fullWidth
+                      onClick={() => {
+                        // Close mobile menu when item is clicked
+                        if (window.innerWidth < 1280) {
+                          setOpenSidenav(dispatch, false);
+                        }
+                      }}
                     >
                       {icon}
                       <Typography
@@ -87,6 +101,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
         ))}
       </div>
     </aside>
+    </>
   );
 }
 

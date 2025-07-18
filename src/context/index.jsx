@@ -32,7 +32,7 @@ export function reducer(state, action) {
 
 export function MaterialTailwindControllerProvider({ children }) {
   const initialState = {
-    openSidenav: false,
+    openSidenav: typeof window !== 'undefined' ? window.innerWidth >= 1280 : false, // Open on desktop (xl breakpoint), closed on mobile
     sidenavColor: "blue",
     sidenavType: "white",
     transparentNavbar: true,
@@ -41,6 +41,26 @@ export function MaterialTailwindControllerProvider({ children }) {
   };
 
   const [controller, dispatch] = React.useReducer(reducer, initialState);
+  
+  // Handle window resize to auto-manage sidenav on desktop/mobile
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1280) {
+        // Desktop: keep sidenav open
+        if (!controller.openSidenav) {
+          dispatch({ type: "OPEN_SIDENAV", value: true });
+        }
+      } else {
+        // Mobile: close sidenav
+        if (controller.openSidenav) {
+          dispatch({ type: "OPEN_SIDENAV", value: false });
+        }
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [controller.openSidenav]);
   const value = React.useMemo(
     () => [controller, dispatch],
     [controller, dispatch]
