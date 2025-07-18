@@ -223,223 +223,228 @@ export function Molstar3D() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      <Card className="relative bg-clip-border rounded-xl bg-white text-gray-700 shadow-md m-4 flex-1 flex flex-col" style={{ minHeight: '85vh' }}>
-        <CardHeader
-          variant="gradient"
-          color="blue"
-          className="mb-4 grid h-16 place-items-center flex-shrink-0"
-        >
-          <div className="flex items-center justify-between w-full px-4">
-            <Typography variant="h5" color="white">
-              Molstar 3D Structure Viewer
-            </Typography>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outlined"
-                color="white"
-                onClick={loadPDBStructure}
-                className="border-white text-white hover:bg-white hover:text-blue-500"
-              >
-                Load PDB
-              </Button>
-              <Button
-                size="sm"
-                variant="outlined"
-                color="white"
-                onClick={loadSDFStructure}
-                className="border-white text-white hover:bg-white hover:text-blue-500"
-              >
-                Load SDF
-              </Button>
-              <Button
-                size="sm"
-                variant="outlined"
-                color="white"
-                onClick={loadTestSDF}
-                className="border-white text-white hover:bg-white hover:text-blue-500"
-              >
-                Test SDF
-              </Button>
-              <Button
-                size="sm"
-                variant="outlined"
-                color="white"
-                onClick={handleBackToSimulation}
-                className="border-white text-white hover:bg-white hover:text-blue-500"
-              >
-                Back to Simulation
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        
-        {/* Message Display for SMILES Loading */}
-        {message && (
-          <div className="px-4 pb-2">
-            <div className={`p-3 rounded-lg flex items-center gap-2 ${
-              messageType === 'info' ? 'bg-blue-50 border border-blue-200' : 
-              messageType === 'success' ? 'bg-green-50 border border-green-200' : 
-              messageType === 'error' ? 'bg-red-50 border border-red-200' : 
-              'bg-gray-50 border border-gray-200'
-            }`}>
-              {messageType === 'info' && (
-                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              )}
-              <Typography variant="small" className={
-                messageType === 'info' ? 'text-blue-700' : 
-                messageType === 'success' ? 'text-green-700' : 
-                messageType === 'error' ? 'text-red-700' : 
-                'text-gray-700'
-              }>
-                {message}
+      {/* Main Molstar Card */}
+      <div className="flex-1 flex flex-col">
+        <Card className="relative bg-clip-border rounded-xl bg-white text-gray-700 shadow-md m-4 flex-1 flex flex-col" style={{ minHeight: '85vh' }}>
+          <CardHeader
+            variant="gradient"
+            color="blue"
+            className="mb-4 grid h-16 place-items-center flex-shrink-0"
+          >
+            <div className="flex items-center justify-between w-full px-4">
+              <Typography variant="h5" color="white">
+                Molstar 3D Structure Viewer
               </Typography>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outlined"
+                  color="white"
+                  onClick={loadPDBStructure}
+                  className="border-white text-white hover:bg-white hover:text-blue-500"
+                >
+                  Load PDB
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outlined"
+                  color="white"
+                  onClick={loadSDFStructure}
+                  className="border-white text-white hover:bg-white hover:text-blue-500"
+                >
+                  Load SDF
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outlined"
+                  color="white"
+                  onClick={loadTestSDF}
+                  className="border-white text-white hover:bg-white hover:text-blue-500"
+                >
+                  Test SDF
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outlined"
+                  color="white"
+                  onClick={handleBackToSimulation}
+                  className="border-white text-white hover:bg-white hover:text-blue-500"
+                >
+                  Back to Simulation
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Molstar Iframe - Double Height */}
-        <CardBody className="p-0 flex-1" style={{ minHeight: '800px' }}>
-          <iframe
-            ref={molstarRef}
-            src="/molstar/index.html"
-            className="w-full h-full border-0"
-            title="Molstar 3D Viewer"
-            style={{ minHeight: '800px' }}
-          />
-        </CardBody>
-      </Card>
-      
-      {/* SDF Results Table - Below the iframe */}
-      {sdfData.length > 0 && (
-        <Card className="mx-4 mb-4 flex-shrink-0">
-          <div className="p-4 bg-white max-h-96 overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <Typography variant="h6" color="blue-gray">
-                  SDF Docking Results
-                </Typography>
-                <Typography variant="small" color="gray" className="mt-1">
-                  Click on any row to load the molecule into the 3D viewer
+          </CardHeader>
+          
+          {/* Message Display for SMILES Loading */}
+          {message && (
+            <div className="px-4 pb-2">
+              <div className={`p-3 rounded-lg flex items-center gap-2 ${
+                messageType === 'info' ? 'bg-blue-50 border border-blue-200' : 
+                messageType === 'success' ? 'bg-green-50 border border-green-200' : 
+                messageType === 'error' ? 'bg-red-50 border border-red-200' : 
+                'bg-gray-50 border border-gray-200'
+              }`}>
+                {messageType === 'info' && (
+                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                )}
+                <Typography variant="small" className={
+                  messageType === 'info' ? 'text-blue-700' : 
+                  messageType === 'success' ? 'text-green-700' : 
+                  messageType === 'error' ? 'text-red-700' : 
+                  'text-gray-700'
+                }>
+                  {message}
                 </Typography>
               </div>
-              {isLoading && (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                  <Typography variant="small" color="gray">
-                    Loading...
+            </div>
+          )}
+
+          {/* Molstar Iframe - Double Height */}
+          <CardBody className="p-0 flex-1" style={{ minHeight: '800px' }}>
+            <iframe
+              ref={molstarRef}
+              src="/molstar/index.html"
+              className="w-full h-full border-0"
+              title="Molstar 3D Viewer"
+              style={{ minHeight: '800px' }}
+            />
+          </CardBody>
+        </Card>
+      </div>
+      
+      {/* SDF Results Table - Always Below the iframe */}
+      <div className="flex-shrink-0">
+        {sdfData.length > 0 && (
+          <Card className="mx-4 mb-4">
+            <div className="p-4 bg-white max-h-96 overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <Typography variant="h6" color="blue-gray">
+                    SDF Docking Results
+                  </Typography>
+                  <Typography variant="small" color="gray" className="mt-1">
+                    Click on any row to load the molecule into the 3D viewer
                   </Typography>
                 </div>
-              )}
-              <Chip
-                value={`Top 2 of ${sdfData.length} molecules`}
-                variant="gradient"
-                color="blue"
-                size="sm"
-              />
+                {isLoading && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <Typography variant="small" color="gray">
+                      Loading...
+                    </Typography>
+                  </div>
+                )}
+                <Chip
+                  value={`Top 2 of ${sdfData.length} molecules`}
+                  variant="gradient"
+                  color="blue"
+                  size="sm"
+                />
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-max table-auto text-left">
+                  <thead>
+                    <tr>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                          ID
+                        </Typography>
+                      </th>           
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                          Score
+                        </Typography>
+                      </th>    
+             
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                          SMILES
+                        </Typography>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sdfData
+                      .filter((molecule, index, self) => {
+                        // Filter for unique molecules based on SMILES
+                        return index === self.findIndex(m => m.smiles === molecule.smiles && m.smiles !== 'N/A');
+                      })
+                      .sort((a, b) => parseFloat(a.score) - parseFloat(b.score)) // Sort by score (most negative first)
+                      .slice(0, 2) // Take only top 2 unique molecules
+                      .map((molecule, index) => {
+                      const isLast = index === 1; // Only 2 items, so last is index 1
+                      const classes = isLast ? "p-3" : "p-3 border-b border-blue-gray-50";
+                      const scoreValue = parseFloat(molecule.score);
+                      const scoreColor = scoreValue < -7 ? "green" : scoreValue < -5 ? "amber" : "red";
+                      
+                      return (
+                        <tr 
+                          key={molecule.id} 
+                          className="hover:bg-blue-gray-50 transition-colors cursor-pointer"
+                          onClick={() => loadSmilesIntoMolstar(molecule.smiles, molecule.name)}
+                          title={`Click to load ${molecule.name} into Molstar viewer`}
+                        >
+                          <td className={classes}>
+                            <Typography variant="small" color="blue-gray" className="font-medium">
+                              {molecule.id}
+                            </Typography>
+                          </td>
+                         
+                         
+                          <td className={classes}>
+                            <Chip
+                              value={molecule.score}
+                              variant="ghost"
+                              color={scoreColor}
+                              size="sm"
+                              className="font-mono"
+                            />
+                          </td>
+                  
+                          <td className={classes}>
+                            <Typography variant="small" color="blue-gray" className="font-mono text-xs max-w-xs truncate" title={molecule.smiles}>
+                              {molecule.smiles}
+                            </Typography>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-max table-auto text-left">
-                <thead>
-                  <tr>
-                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                        ID
-                      </Typography>
-                    </th>           
-                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                        Score
-                      </Typography>
-                    </th>    
-           
-                    <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
-                      <Typography variant="small" color="blue-gray" className="font-bold leading-none">
-                        SMILES
-                      </Typography>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sdfData
-                    .filter((molecule, index, self) => {
-                      // Filter for unique molecules based on SMILES
-                      return index === self.findIndex(m => m.smiles === molecule.smiles && m.smiles !== 'N/A');
-                    })
-                    .sort((a, b) => parseFloat(a.score) - parseFloat(b.score)) // Sort by score (most negative first)
-                    .slice(0, 2) // Take only top 2 unique molecules
-                    .map((molecule, index) => {
-                    const isLast = index === 1; // Only 2 items, so last is index 1
-                    const classes = isLast ? "p-3" : "p-3 border-b border-blue-gray-50";
-                    const scoreValue = parseFloat(molecule.score);
-                    const scoreColor = scoreValue < -7 ? "green" : scoreValue < -5 ? "amber" : "red";
-                    
-                    return (
-                      <tr 
-                        key={molecule.id} 
-                        className="hover:bg-blue-gray-50 transition-colors cursor-pointer"
-                        onClick={() => loadSmilesIntoMolstar(molecule.smiles, molecule.name)}
-                        title={`Click to load ${molecule.name} into Molstar viewer`}
-                      >
-                        <td className={classes}>
-                          <Typography variant="small" color="blue-gray" className="font-medium">
-                            {molecule.id}
-                          </Typography>
-                        </td>
-                       
-                       
-                        <td className={classes}>
-                          <Chip
-                            value={molecule.score}
-                            variant="ghost"
-                            color={scoreColor}
-                            size="sm"
-                            className="font-mono"
-                          />
-                        </td>
-                
-                        <td className={classes}>
-                          <Typography variant="small" color="blue-gray" className="font-mono text-xs max-w-xs truncate" title={molecule.smiles}>
-                            {molecule.smiles}
-                          </Typography>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+          </Card>
+        )}
+        
+        {/* Loading/Empty State for SDF Data */}
+        {!sdfData.length && !isLoading && (
+          <Card className="mx-4 mb-4">
+            <div className="p-4 bg-white">
+              <div className="text-center py-8">
+                <Typography variant="small" color="gray">
+                  No SDF data available. Click "Test SDF" or load an SDF file to see docking results.
+                </Typography>
+              </div>
             </div>
-          </div>
-        </Card>
-      )}
-      
-      {/* Loading/Empty State for SDF Data */}
-      {!sdfData.length && !isLoading && (
-        <Card className="mx-4 mb-4 flex-shrink-0">
-          <div className="p-4 bg-white">
-            <div className="text-center py-8">
-              <Typography variant="small" color="gray">
-                No SDF data available. Click "Test SDF" or load an SDF file to see docking results.
-              </Typography>
+          </Card>
+        )}
+        
+        {/* Loading State */}
+        {isLoading && (
+          <Card className="mx-4 mb-4">
+            <div className="p-4 bg-white">
+              <div className="flex items-center justify-center gap-2 py-8">
+                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <Typography variant="small" color="gray">
+                  Loading SDF data...
+                </Typography>
+              </div>
             </div>
-          </div>
-        </Card>
-      )}
-      
-      {/* Loading State */}
-      {isLoading && (
-        <Card className="mx-4 mb-4 flex-shrink-0">
-          <div className="p-4 bg-white">
-            <div className="flex items-center justify-center gap-2 py-8">
-              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <Typography variant="small" color="gray">
-                Loading SDF data...
-              </Typography>
-            </div>
-          </div>
-        </Card>
-      )}
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
