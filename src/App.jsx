@@ -7,7 +7,7 @@ function App() {
       <Route path="/dashboard/*" element={<Dashboard />} />
       <Route path="/main/*" element={<MainPage />} />
       <Route path="/auth/*" element={<Auth />} />
-      <Route path="*" element={<Navigate to="/main/Mainhome" replace />} />
+      <Route path="*" element={<Navigate to="/main/mainHome" replace />} />
     </Routes>
   );
 }

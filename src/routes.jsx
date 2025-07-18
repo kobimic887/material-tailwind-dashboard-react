@@ -28,7 +28,8 @@ import {
   AboutUs,
   ContactUs,
   Insights,
-  PaidPlansDescription
+  PaidPlansDescription,
+  Blog
 } from "@/pages/main";
 
 import { SignIn, SignUp } from "@/pages/auth";
@@ -84,6 +85,13 @@ export const routes = [
         name: "paidplansdescription",
         path: "/paidplansdescription",
         element: <PaidPlansDescription />,
+      },
+      {
+          hideFromMenu: true,
+        icon: <ServerStackIcon {...icon} />,
+        name: "blog",
+        path: "/blog",
+        element: <Blog />,
       },
     ],
   },

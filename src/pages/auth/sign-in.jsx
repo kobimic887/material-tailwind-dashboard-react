@@ -7,20 +7,20 @@ import {
   Typography,
 } from "@material-tailwind/react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/auth";
 
 export function SignIn() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess(false);
     
     if (!termsAccepted) {
       setError("Please accept the Terms and Conditions to continue");
@@ -29,20 +29,15 @@ export function SignIn() {
     
     setLoading(true);
     try {
-      const res = await fetch(`https://${window.location.hostname}:3000/api/signin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", accept: "*/*" },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Signin failed");
-      if (data.token) {
-        localStorage.setItem("auth_token", data.token);
+      const success = await login(email, password);
+      if (success) {
+        // Navigate to main layout instead of dashboard for regular users
+        navigate("/main/mainHome");
+      } else {
+        setError("Invalid credentials");
       }
-      setSuccess(true);
-      navigate("/dashboard/dashboardhome");
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -90,13 +85,13 @@ export function SignIn() {
         <form className="mt-8 mb-2 mx-auto w-full max-w-md lg:max-w-lg" onSubmit={handleSubmit}>
           <div className="mb-1 flex flex-col gap-6">
             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-              Username
+              Email
             </Typography>
             <Input
               size="lg"
-              placeholder="username"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
+              placeholder="email@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
               className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
               labelProps={{
                 className: "before:content-none after:content-none",
@@ -143,11 +138,6 @@ export function SignIn() {
           {error && (
             <Typography color="red" className="mt-2 text-center">
               {error}
-            </Typography>
-          )}
-          {success && (
-            <Typography color="green" className="mt-2 text-center">
-              Signin successful!
             </Typography>
           )}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-6">

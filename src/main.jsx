@@ -15,6 +15,8 @@ import App from "./App";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@material-tailwind/react";
 import { MaterialTailwindControllerProvider } from "@/context";
+import { AuthProvider } from "@/context/auth";
+import { BlogProvider } from "@/context/blog";
 import "./tailwind.css";
 import "molstar/lib/mol-plugin-ui/skin/light.scss";
 import "./styles/molstar.css";
@@ -24,7 +26,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <ThemeProvider>
         <MaterialTailwindControllerProvider>
-          <App />
+          <AuthProvider>
+            <BlogProvider>
+              <App />
+            </BlogProvider>
+          </AuthProvider>
         </MaterialTailwindControllerProvider>
       </ThemeProvider>
     </BrowserRouter>

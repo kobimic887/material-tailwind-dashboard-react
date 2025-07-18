@@ -25,12 +25,14 @@ import {
   setOpenConfigurator,
   setOpenSidenav,
 } from "@/context";
+import { useAuth } from "@/context/auth";
 
 export function MainNavbar() {
   const [controller, dispatch] = useMaterialTailwindController();
   const { fixedNavbar, openSidenav } = controller;
   const { pathname } = useLocation();
   const [layout, page] =  pathname.split("/").filter((el) => el !== "");
+  const { isLoggedIn, logout, user, isAdmin } = useAuth();
 
   return (
     <Navbar
@@ -123,6 +125,15 @@ export function MainNavbar() {
               Insights
             </Button>
           </Link>
+          <Link to="/main/blog">
+            <Button
+              variant="text"
+              color="blue-gray"
+              className="hidden items-center gap-1 px-4 xl:flex normal-case text-2xl"
+            >
+              Blog
+            </Button>
+          </Link>
            <Link to="/main/paidplansdescription">
             <Button
               variant="text"
@@ -132,23 +143,48 @@ export function MainNavbar() {
               Paid Plans
             </Button>
           </Link>
-          <Link to="/auth/sign-in">
-            <Button
-              variant="text"
-              color="blue-gray"
-              className="hidden items-center gap-1 px-4 xl:flex normal-case text-2xl"
-            >
-              <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
-              Sign In
-            </Button>
-            <IconButton
-              variant="text"
-              color="blue-gray"
-              className="grid xl:hidden"
-            >
-              <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
-            </IconButton>
-          </Link>
+          {isLoggedIn() ? (
+            <Menu>
+              <MenuHandler>
+                <Button
+                  variant="text"
+                  color="blue-gray"
+                  className="hidden items-center gap-1 px-4 xl:flex normal-case text-2xl"
+                >
+                  <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
+                  {user?.email || "User"}
+                </Button>
+              </MenuHandler>
+              <MenuList>
+                {isAdmin() && (
+                  <MenuItem>
+                    <Link to="/dashboard/dashboardHome" className="w-full">
+                      Admin Dashboard
+                    </Link>
+                  </MenuItem>
+                )}
+                <MenuItem onClick={logout}>Sign Out</MenuItem>
+              </MenuList>
+            </Menu>
+          ) : (
+            <Link to="/auth/sign-in">
+              <Button
+                variant="text"
+                color="blue-gray"
+                className="hidden items-center gap-1 px-4 xl:flex normal-case text-2xl"
+              >
+                <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
+                Sign In
+              </Button>
+              <IconButton
+                variant="text"
+                color="blue-gray"
+                className="grid xl:hidden"
+              >
+                <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
+              </IconButton>
+            </Link>
+          )}
 
           <Menu>
             <MenuHandler>
