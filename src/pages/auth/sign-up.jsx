@@ -39,15 +39,15 @@ export function SignUp() {
   };
 
   return (
-    <section className="about-us-page m-8 flex">
+    <section className="about-us-page m-2 sm:m-4 md:m-8 flex min-h-screen">
       <div className="w-2/5 h-full hidden lg:block">
         <img
           src="/img/pattern.png"
           className="h-full w-full object-cover rounded-3xl"
         />
       </div>
-      <div className="w-full lg:w-3/5 flex flex-col items-center justify-center">
-              <div className="capitalize bg-gray rounded-lg px-8 py-2">
+      <div className="w-full lg:w-3/5 flex flex-col items-center justify-center px-4 py-6">
+              <div className="capitalize bg-gray rounded-lg px-4 sm:px-8 py-2">
           { <Typography variant="h6" >
           <svg xmlns="http://www.w3.org/2000/svg" width="211" height="40" viewBox="0 0 211 40" fill="none">
             <path d="M90.3999 10C90.3999 4.5 94.8999 0 100.4 0C105.9 0 110.4 4.5 110.4 10C110.4 15.5 105.9 20 100.4 20C94.8999 20.1 90.3999 15.6 90.3999 10Z" fill="#B4B239"></path>
