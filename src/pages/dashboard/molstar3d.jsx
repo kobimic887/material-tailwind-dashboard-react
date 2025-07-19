@@ -9,6 +9,8 @@ export function Molstar3D() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState(''); // 'success', 'error', or ''
+  const [moleculePrices, setMoleculePrices] = useState({}); // Store prices by SMILES
+  const [cart, setCart] = useState([]); // Shopping cart state
 
   // Function to parse SDF data
   const parseSdfData = (sdfText) => {
@@ -62,6 +64,9 @@ export function Molstar3D() {
         const parsedData = parseSdfData(sdfText);
         setSdfData(parsedData);
         console.log('SDF data loaded:', parsedData.length, 'molecules');
+        
+        // Fetch prices for all molecules
+        fetchAllMoleculePrices(parsedData);
       } else {
         console.error('Failed to load SDF data:', response.status);
       }
@@ -72,7 +77,203 @@ export function Molstar3D() {
     }
   };
 
+  // Function to fetch molecule price from API
+  const fetchMoleculePrice = async (smiles) => {
+    try {
+      const encodedSmiles = encodeURIComponent(smiles);
+      const response = await fetch(`https://${window.location.hostname}:3000/api/mol-price/search?smiles=${encodedSmiles}&limit=20`, {
+        method: 'GET',
+        headers: {
+          'accept': '*/*'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Handle the actual API response structure
+        if (Array.isArray(data) && data.length > 0) {
+          const molecule = data[0];
+          
+          // Extract price information from the response
+          const priceInfo = {
+            id: molecule.ASINEX_ID || 'N/A',
+            name: molecule.IUPAC_NAME || 'N/A',
+            availableMg: molecule.AVAILABLE_MG || 0,
+            price1mg: molecule.PRICE_1MG || 100,
+            price2mg: molecule.PRICE_2MG || 100,
+            price5mg: molecule.PRICE_5MG || 100,
+            price10mg: molecule.PRICE_10MG || 100
+          };
+          
+          return priceInfo;
+        } else {
+          // Return default pricing when not found
+          return {
+            id: 'Not Found',
+            name: 'N/A',
+            availableMg: 0,
+            price1mg: 100,
+            price2mg: 100,
+            price5mg: 100,
+            price10mg: 100
+          };
+        }
+      } else {
+        console.error('Failed to fetch price for SMILES:', smiles);
+        return {
+          id: 'API Error',
+          name: 'N/A',
+          availableMg: 0,
+          price1mg: 100,
+          price2mg: 100,
+          price5mg: 100,
+          price10mg: 100
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching price for SMILES:', smiles, error);
+      return {
+        id: 'Network Error',
+        name: 'N/A',
+        availableMg: 0,
+        price1mg: 100,
+        price2mg: 100,
+        price5mg: 100,
+        price10mg: 100
+      };
+    }
+  };
+
+  // Function to fetch prices for all molecules
+  const fetchAllMoleculePrices = async (molecules) => {
+    const pricePromises = molecules.map(async (molecule) => {
+      if (molecule.smiles !== 'N/A') {
+        const price = await fetchMoleculePrice(molecule.smiles);
+        return { smiles: molecule.smiles, price };
+      }
+      return { 
+        smiles: molecule.smiles, 
+        price: {
+          id: 'No SMILES',
+          name: 'N/A',
+          availableMg: 0,
+          price1mg: 100,
+          price2mg: 100,
+          price5mg: 100,
+          price10mg: 100
+        }
+      };
+    });
+
+    const priceResults = await Promise.all(pricePromises);
+    const priceMap = {};
+    priceResults.forEach(result => {
+      priceMap[result.smiles] = result.price;
+    });
+    
+    setMoleculePrices(priceMap);
+  };
+
+  // Shopping cart functions
+  const loadCartFromStorage = () => {
+    try {
+      const savedCart = localStorage.getItem('moleculeCart');
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        setCart(parsedCart);
+        return parsedCart;
+      }
+    } catch (error) {
+      console.error('Error loading cart from storage:', error);
+    }
+    return [];
+  };
+
+  const saveCartToStorage = (cartData) => {
+    try {
+      localStorage.setItem('moleculeCart', JSON.stringify(cartData));
+    } catch (error) {
+      console.error('Error saving cart to storage:', error);
+    }
+  };
+
+  const addToCart = (molecule, amount, priceInfo) => {
+    const cartItem = {
+      id: `${molecule.smiles}_${Date.now()}`,
+      smiles: molecule.smiles,
+      name: molecule.name,
+      score: molecule.score,
+      amount: amount,
+      pricePerMg: priceInfo?.price1mg || 100,
+      totalPrice: (priceInfo?.price1mg || 100) * amount,
+      moleculeId: priceInfo?.id || 'N/A',
+      availableMg: priceInfo?.availableMg || 0,
+      addedAt: new Date().toISOString()
+    };
+
+    const updatedCart = [...cart, cartItem];
+    setCart(updatedCart);
+    saveCartToStorage(updatedCart);
+    
+    setMessage(`Added ${amount}mg of ${molecule.name} to cart`);
+    setMessageType('success');
+    setTimeout(() => {
+      setMessage('');
+      setMessageType('');
+    }, 3000);
+  };
+
+  const removeFromCart = (itemId) => {
+    const updatedCart = cart.filter(item => item.id !== itemId);
+    setCart(updatedCart);
+    saveCartToStorage(updatedCart);
+  };
+
+  const getCartTotal = () => {
+    return cart.reduce((total, item) => total + item.totalPrice, 0).toFixed(2);
+  };
+
+  const getCartItemCount = () => {
+    return cart.length;
+  };
+
   useEffect(() => {
+    // Check for checkout status from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const checkoutStatus = urlParams.get('checkout');
+    const sessionId = urlParams.get('session_id');
+    
+    if (checkoutStatus === 'success') {
+      setMessage('Payment successful! Your molecule order has been processed.');
+      setMessageType('success');
+      // Clear the cart after successful checkout
+      localStorage.removeItem('moleculeCart');
+      setCart([]);
+      
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      setTimeout(() => {
+        setMessage('');
+        setMessageType('');
+      }, 8000);
+    } else if (checkoutStatus === 'cancel') {
+      setMessage('Checkout was cancelled. Your cart items are still saved.');
+      setMessageType('error');
+      
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      setTimeout(() => {
+        setMessage('');
+        setMessageType('');
+      }, 5000);
+    }
+    
+    // Load cart from storage on component mount
+    loadCartFromStorage();
+    
     const pdbUrl = localStorage.getItem('molstar_pdb_url');
     const sdfUrl = localStorage.getItem('molstar_sdf_url');
     const simulationKey = localStorage.getItem('molstar_simulation_key');
@@ -81,6 +282,9 @@ export function Molstar3D() {
     if (sdfUrl) {
       loadSdfData(sdfUrl);
     }
+
+    // Load cart from storage
+    const savedCart = loadCartFromStorage();
 
     // Listen for messages from Molstar iframe
     const handleMessage = (event) => {
@@ -235,7 +439,18 @@ export function Molstar3D() {
               <Typography variant="h5" color="white">
                 Molstar 3D Structure Viewer
               </Typography>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                {cart.length > 0 && (
+                  <div className="flex items-center gap-2 bg-white bg-opacity-20 rounded-lg px-3 py-1">
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                    </svg>
+                    <Typography variant="small" color="white" className="font-medium">
+                      {getCartItemCount()} items | ${getCartTotal()}
+                    </Typography>
+                  </div>
+                )}
+                <div className="flex gap-2">
                 <Button
                   size="sm"
                   variant="outlined"
@@ -272,6 +487,7 @@ export function Molstar3D() {
                 >
                   Back to Simulation
                 </Button>
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -336,7 +552,7 @@ export function Molstar3D() {
                   </div>
                 )}
                 <Chip
-                  value={`Top 2 of ${sdfData.length} molecules`}
+                  value={`Best of ${sdfData.length} molecules`}
                   variant="gradient"
                   color="blue"
                   size="sm"
@@ -356,8 +572,17 @@ export function Molstar3D() {
                         <Typography variant="small" color="blue-gray" className="font-bold leading-none">
                           Score
                         </Typography>
-                      </th>    
-             
+                      </th>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                          Price
+                        </Typography>
+                      </th>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                          Cart
+                        </Typography>
+                      </th>
                       <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
                         <Typography variant="small" color="blue-gray" className="font-bold leading-none">
                           SMILES
@@ -371,8 +596,7 @@ export function Molstar3D() {
                         // Filter for unique molecules based on SMILES
                         return index === self.findIndex(m => m.smiles === molecule.smiles && m.smiles !== 'N/A');
                       })
-                      .sort((a, b) => parseFloat(a.score) - parseFloat(b.score)) // Sort by score (most negative first)
-                      .slice(0, 2) // Take only top 2 unique molecules
+                      .sort((a, b) => parseFloat(a.score) - parseFloat(b.score)) // Sort by score (most negative first)                     
                       .map((molecule, index) => {
                       const isLast = index === 1; // Only 2 items, so last is index 1
                       const classes = isLast ? "p-3" : "p-3 border-b border-blue-gray-50";
@@ -402,11 +626,160 @@ export function Molstar3D() {
                               className="font-mono"
                             />
                           </td>
+                          
+                          <td className={classes}>
+                            <div className="flex flex-col gap-1">
+                              {typeof moleculePrices[molecule.smiles] === 'object' && moleculePrices[molecule.smiles]?.price1mg ? (
+                                <>
+                                  <Typography variant="small" color="blue-gray" className="font-medium text-xs">
+                                    ID: {moleculePrices[molecule.smiles].id}
+                                  </Typography>
+                                  <Typography variant="small" color="green" className="font-bold text-xs">
+                                    1mg: ${moleculePrices[molecule.smiles].price1mg}
+                                  </Typography>
+                                  <Typography variant="small" color="gray" className="text-xs">
+                                    Available: {moleculePrices[molecule.smiles].availableMg}mg
+                                  </Typography>
+                                </>
+                              ) : (
+                                <Typography variant="small" color="blue-gray" className="font-medium text-xs">
+                                  {typeof moleculePrices[molecule.smiles] === 'string' 
+                                    ? moleculePrices[molecule.smiles] 
+                                    : 'Loading...'}
+                                </Typography>
+                              )}
+                            </div>
+                          </td>
+                          
+                          <td className={classes} onClick={(e) => e.stopPropagation()}>
+                            <div className="flex flex-col gap-1">
+                              <div className="flex gap-1">
+                                {[1, 2, 5, 10].map(amount => (
+                                  <Button
+                                    key={amount}
+                                    size="sm"
+                                    variant="outlined"
+                                    color="blue"
+                                    className="text-xs px-2 py-1 min-w-0"
+                                    onClick={() => addToCart(molecule, amount, moleculePrices[molecule.smiles])}
+                                    disabled={molecule.smiles === 'N/A'}
+                                  >
+                                    +{amount}mg
+                                  </Button>
+                                ))}
+                              </div>
+                              <Typography variant="small" color="gray" className="text-xs">
+                                Click to add to wish list
+                              </Typography>
+                            </div>
+                          </td>
                   
                           <td className={classes}>
                             <Typography variant="small" color="blue-gray" className="font-mono text-xs max-w-xs truncate" title={molecule.smiles}>
                               {molecule.smiles}
                             </Typography>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </Card>
+        )}
+        
+        {/*  Wish List Display */}
+        {cart.length > 0 && (
+          <Card className="mx-4 mb-4">
+            <div className="p-4 bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <Typography variant="h6" color="blue-gray">
+                  Wish List
+                </Typography>
+                <div className="flex items-center gap-4">
+                  <Typography variant="small" color="gray">
+                    {getCartItemCount()} items
+                  </Typography>
+                  <Typography variant="h6" color="green">
+                    Total: ${getCartTotal()}
+                  </Typography>
+                </div>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-max table-auto text-left">
+                  <thead>
+                    <tr>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                          Molecule
+                        </Typography>
+                      </th>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                          Amount
+                        </Typography>
+                      </th>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                          Price/mg
+                        </Typography>
+                      </th>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                          Total
+                        </Typography>
+                      </th>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                          Actions
+                        </Typography>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cart.map((item, index) => {
+                      const isLast = index === cart.length - 1;
+                      const classes = isLast ? "p-3" : "p-3 border-b border-blue-gray-50";
+                      
+                      return (
+                        <tr key={item.id}>
+                          <td className={classes}>
+                            <div className="flex flex-col">
+                              <Typography variant="small" color="blue-gray" className="font-medium">
+                                {item.name}
+                              </Typography>
+                              <Typography variant="small" color="gray" className="text-xs">
+                                ID: {item.moleculeId}
+                              </Typography>
+                            </div>
+                          </td>
+                          <td className={classes}>
+                            <Typography variant="small" color="blue-gray" className="font-medium">
+                              {item.amount}mg
+                            </Typography>
+                          </td>
+                          <td className={classes}>
+                            <Typography variant="small" color="blue-gray" className="font-medium">
+                              ${item.pricePerMg}
+                            </Typography>
+                          </td>
+                          <td className={classes}>
+                            <Typography variant="small" color="green" className="font-bold">
+                              ${item.totalPrice.toFixed(2)}
+                            </Typography>
+                          </td>
+                          <td className={classes}>
+                            <Button
+                              size="sm"
+                              variant="outlined"
+                              color="red"
+                              onClick={() => removeFromCart(item.id)}
+                              className="text-xs px-2 py-1"
+                            >
+                              Remove
+                            </Button>
                           </td>
                         </tr>
                       );
