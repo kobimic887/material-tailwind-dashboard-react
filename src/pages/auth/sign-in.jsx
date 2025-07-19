@@ -13,6 +13,7 @@ export function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export function SignIn() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess(false);
     
     if (!termsAccepted) {
       setError("Please accept the Terms and Conditions to continue");
@@ -29,10 +31,17 @@ export function SignIn() {
     
     setLoading(true);
     try {
-      const success = await login(email, password);
-      if (success) {
-        // Navigate to main layout instead of dashboard for regular users
-        navigate("/main/mainHome");
+      const res = await fetch(`https://${window.location.hostname}:3000/api/signin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", accept: "*/*" },
+        body: JSON.stringify({ username: email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Signin failed");
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+        setSuccess(true);
+        navigate("/dashboard/dashboardhome");
       } else {
         setError("Invalid credentials");
       }
@@ -47,8 +56,14 @@ export function SignIn() {
     <section className="min-h-screen flex flex-col lg:flex-row bg-gray-50">
       {/* Logo Section - Mobile Top, Desktop Left */}
       <div className="w-full lg:w-auto flex justify-center lg:justify-start p-4 lg:p-8">
-        <div className="capitalize bg-gray-100 rounded-lg px-4 py-2 lg:px-8 lg:py-2">
-          <Typography variant="h6" className="flex items-center">
+        <div 
+          className="capitalize bg-gray-100 rounded-lg px-4 py-2 lg:px-8 lg:py-2 cursor-pointer hover:bg-gray-200 transition-colors"
+          onClick={() => navigate("/main/mainHome")}
+        >
+          <Typography 
+            variant="h6" 
+            className="antialiased tracking-normal font-sans text-base font-semibold leading-relaxed text-inherit flex items-center"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" width="160" height="30" viewBox="0 0 211 40" fill="none" className="lg:w-[211px] lg:h-[40px]">
             <path d="M90.3999 10C90.3999 4.5 94.8999 0 100.4 0C105.9 0 110.4 4.5 110.4 10C110.4 15.5 105.9 20 100.4 20C94.8999 20.1 90.3999 15.6 90.3999 10Z" fill="#B4B239"></path>
             <path d="M99.6002 13.9999L102.4 10.8999L102 10.9999H94.2002V9.0999H102L102.4 9.1999L99.6002 6.0999L101 4.8999L105.6 9.9999L101 15.1999L99.6002 13.9999Z" fill="white"></path>

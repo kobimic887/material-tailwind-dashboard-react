@@ -29,7 +29,6 @@ import {
   setOpenSidenav,
 } from "@/context";
 import React, { useState, useEffect } from "react";
-import { getApiBaseUrl } from "@/utils/api";
 
 export function DashboardNavbar() {
   const [controller, dispatch] = useMaterialTailwindController();
@@ -79,7 +78,7 @@ export function DashboardNavbar() {
       return;
     }
     // Optionally, validate token with backend
-    fetch(`${getApiBaseUrl()}/api/validate-token`, {
+    fetch(`https://${window.location.hostname}:3000/api/validate-token`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
