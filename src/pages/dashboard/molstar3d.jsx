@@ -283,6 +283,7 @@ export function Molstar3D() {
       loadSdfData(sdfUrl);
     }
 
+    
     // Load cart from storage
     const savedCart = loadCartFromStorage();
 
@@ -319,18 +320,17 @@ export function Molstar3D() {
               url: pdbUrl,
               format: 'pdb'
             }, '*');
-            
-            // Load SDF structure after a delay
-            setTimeout(() => {
-              if (molstarRef.current) {
-                console.log('Loading SDF structure:', sdfUrl);
-                molstarRef.current.contentWindow.postMessage({
-                  type: 'loadStructureFromUrl',
-                  url: sdfUrl,
-                  format: 'sdf'
-                }, '*');
+            // Collapse Molstar main menu by clicking the toggle button twice
+              setTimeout(() => {
+              if (molstarRef.current && molstarRef.current.contentWindow) {
+                molstarRef.current.contentWindow.eval(`
+                  (function() {
+                    var btn = document.querySelector('.msp-btn.msp-btn-icon.msp-btn-link-toggle-off.msp-transparent-bg');
+                    if (btn) { btn.click(); setTimeout(() => btn.click(), 100); }
+                  })();
+                `);
               }
-            }, 2000);
+            }, 700); // Delay to ensure PDB is loaded and UI is ready
           }
         }, 2000);
       };
@@ -366,9 +366,22 @@ export function Molstar3D() {
         url: pdbUrl,
         format: 'pdb'
       }, '*');
+    setTimeout(() => {
+              if (molstarRef.current && molstarRef.current.contentWindow) {
+                molstarRef.current.contentWindow.eval(`
+                  (function() {
+                    var btn = document.querySelector('.msp-btn.msp-btn-icon.msp-btn-link-toggle-off.msp-transparent-bg');
+                    if (btn) { btn.click(); setTimeout(() => btn.click(), 100); }
+                  })();
+                `);
+              }
+            }, 700); // Delay to ensure PDB is loaded and UI is ready
     }
   };
+const HideMenu =()=>{
+        
 
+    };
   const loadSDFStructure = () => {
     const sdfUrl = localStorage.getItem('molstar_sdf_url');
     if (sdfUrl && molstarRef.current) {
@@ -377,30 +390,64 @@ export function Molstar3D() {
         type: 'loadStructureFromUrl',
         url: sdfUrl,
         format: 'sdf'
-      }, '*');
-      
+      }, '*');     
+      setTimeout(() => {
+              if (molstarRef.current && molstarRef.current.contentWindow) {
+                molstarRef.current.contentWindow.eval(`
+                  (function() {
+                    var btn = document.querySelector('.msp-btn.msp-btn-icon.msp-btn-link-toggle-off.msp-transparent-bg');
+                    if (btn) { btn.click(); setTimeout(() => btn.click(), 100); }
+                  })();
+                `);
+              }
+            }, 700); // Delay to ensure PDB is loaded and UI is ready
       // Also reload the SDF data for the table
       loadSdfData(sdfUrl);
     }
   };
 
   // Function to load SMILES structure into Molstar
-  const loadSmilesIntoMolstar = (smiles, moleculeName) => {
-    if (molstarRef.current && smiles && smiles !== 'N/A') {
-      console.log('Loading SMILES into Molstar:', smiles, 'for molecule:', moleculeName);
-      
-      // Show loading feedback
-      setMessage(`Loading ${moleculeName} into Molstar viewer...`);
+  const loadSmilesIntoMolstar = async (smiles, moleculeName) => {
+    const simulationKey = localStorage.getItem('molstar_simulation_key');
+    molstarRef.current.contentWindow.clearStructure();
+    loadPDBStructure();
+    if (molstarRef.current && smiles && smiles !== 'N/A' && simulationKey) {
+      setMessage(`Loading SDF for ${moleculeName} into Molstar viewer...`);
       setMessageType('info');
-      
-      // Send SMILES data to Molstar iframe
-      molstarRef.current.contentWindow.postMessage({
-        type: 'loadSmilesStructure',
-        smiles: smiles,
-        name: moleculeName
-      }, '*');
-      
-      // Clear message after a delay
+
+      //clear previously load sdf
+      molstarRef.current.contentWindow.postMessage({ type: 'clearSdfStructure' }, '*');
+      try {
+        const sdfSpecUrl = `https://${window.location.hostname}:3000/api/sanitizedspecificsdf/${simulationKey}/${encodeURIComponent(smiles)}`;
+        const response = await fetch(sdfSpecUrl);
+        if (response.ok) {
+          const sdfText = await response.text();
+          // Send SDF data to Molstar iframe
+          molstarRef.current.contentWindow.postMessage({
+            type: 'loadStructureFromUrl',
+            url: sdfSpecUrl,
+            format: 'sdf'
+          }, '*');
+           setTimeout(() => {
+              if (molstarRef.current && molstarRef.current.contentWindow) {
+                molstarRef.current.contentWindow.eval(`
+                  (function() {
+                    var btn = document.querySelector('.msp-btn.msp-btn-icon.msp-btn-link-toggle-off.msp-transparent-bg');
+                    if (btn) { btn.click(); setTimeout(() => btn.click(), 100); }
+                  })();
+                `);
+              }
+            }, 700); // Delay to ensure PDB is loaded and UI is ready
+          setMessage(`Loaded SDF for ${moleculeName}`);
+          setMessageType('success');
+        } else {
+          setMessage(`Failed to fetch SDF for ${moleculeName}`);
+          setMessageType('error');
+        }
+      } catch (error) {
+        setMessage(`Error loading SDF for ${moleculeName}`);
+        setMessageType('error');
+      }
       setTimeout(() => {
         setMessage('');
         setMessageType('');

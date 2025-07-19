@@ -134,8 +134,8 @@ export function Simulation() {
   // Redirect to Molstar3D when simulation results are available
   useEffect(() => {
     if (simResult && simResult.simulationKey) {
-      const pdbUrl = `https://${window.location.hostname}:3000/api/sanitizedpdb/${simResult.simulationKey}`;
-      const sdfUrl = `https://${window.location.hostname}:3000/api/sanitizedsdf/${simResult.simulationKey}`;
+      const pdbUrl = `https://${window.location.hostname}:3000/api/sanitizedpdb/${simResult.simulationKey}`;      
+      const sdfUrl = `https://${window.location.hostname}:3000/api/sanitizedminimalsdf/${simResult.simulationKey}`;
       
       // Store URLs in localStorage and navigate to Molstar3D
       localStorage.setItem('molstar_pdb_url', pdbUrl);
@@ -260,7 +260,7 @@ export function Simulation() {
                 </a>
                 <a download
                   className="inline-block px-4 py-2 border border-green-500 text-green-500 rounded hover:bg-green-50 transition"
-                  href={`https://${window.location.hostname}:3000/api/sanitizedsdf/${simResult.simulationKey}`}
+                  href={`https://${window.location.hostname}:3000/api/sanitizedminialsdf/${simResult.simulationKey}`}
                   target="_blank"
                 >
                   View Sanitized SDF Result

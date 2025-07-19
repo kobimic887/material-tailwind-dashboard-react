@@ -138,13 +138,13 @@ export const routes = [
       },
       {
         icon: <BeakerIcon {...icon} />,
-        name: "molecule viewer",
+        name: "RdKit Visualiser",
         path: "/moleculeviewer",
         element: <MoleculeViewer />,
       },
       {
         icon: <Square2StackIcon {...icon} />,
-        name: "2D molecule viewer",
+        name: "Mcule Viewer",
         path: "/molecule2d",
         element: <Molecule2D />,
       },
