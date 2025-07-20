@@ -35,7 +35,7 @@ export function PaidPlans() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success')) {
-      issueSimulationTokens();
+      issueSimulationTokens(50);
       setMessage('Payment received! Your subscription is now active.');
       setMessageType('success');
     } else if (urlParams.get('canceled')) {
@@ -45,7 +45,24 @@ export function PaidPlans() {
   }, []);
 
   const plans = [
-    
+     {
+      name: 'Trial',
+      subtitle: 'Affordable access for anyone to understand the concept',
+      monthlyPrice: null,
+      yearlyPrice: null,
+      popular: false,
+      description: 'Affordable access for anyone to understand the concept',
+      features: [
+        'Trial',
+        '4 credits',        
+        'Low job priority',
+        'Most models & settings',
+        'Email Support',
+        'Guaranteed Confidentiality',
+      ],
+      buttonText: 'Get Tokens and Try',
+      buttonColor: 'gray'
+    },
     {
       name: 'Budget',
       subtitle: 'Affordable access for students and researchers',
@@ -172,12 +189,18 @@ export function PaidPlans() {
       return;
     }
 
+    if (plan.name === 'Trial') {
+      // Handle trial
+      issueSimulationTokens(4);
+      setMessage('Your subscription is now active.');
+      setMessageType('success');
+      return;
+    }
     if (plan.name === 'Enterprise') {
       // Handle enterprise contact separately
       window.open('mailto:sales@asinex.com?subject=Enterprise Plan Inquiry&body=I am interested in the Enterprise plan for molecular research tools.');
       return;
     }
-
     setLoading(true);
     setMessage('');
 
@@ -230,7 +253,7 @@ export function PaidPlans() {
   };
 
   // Helper to issue simulation tokens after payment
-  const issueSimulationTokens = async () => {
+  const issueSimulationTokens = async (tokensAmount) => {
     try {
       const token = localStorage.getItem('auth_token');
       const response = await fetch(`https://${window.location.hostname}:3000/api/issueSimulationTokens`, {
@@ -239,19 +262,26 @@ export function PaidPlans() {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
-        // Optionally, include user info or token if needed
-        // body: JSON.stringify({ userId: ... })
+        body: JSON.stringify({ simulationTokens: tokensAmount })
       });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to issue simulation tokens');
       }
       const data = await response.json();
+      localStorage.setItem("simulation_tokens", JSON.stringify(tokensAmount));
       console.log('Simulation tokens issued:', data);
+      // Scroll to top so user sees the message
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Dispatch custom event to update tokens in dashboard navbar
+      if (data && typeof data.tokens === 'number') {
+        window.dispatchEvent(new CustomEvent('tokensUpdated', { detail: { tokens: data.tokens } }));
+      }
       // Optionally, show a message or update UI
     } catch (error) {
       console.error('Error issuing simulation tokens:', error);
       // Optionally, show an error message
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 

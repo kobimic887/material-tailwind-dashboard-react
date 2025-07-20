@@ -43,6 +43,24 @@ export function PaidPlansDescription() {
   const plans = [
   
     {
+      name: 'Trial',
+      subtitle: 'Affordable access for anyone to understand the concept',
+      monthlyPrice: null,
+      yearlyPrice: null,
+      popular: false,
+      description: 'Affordable access for anyone to understand the concept',
+      features: [
+        'Trial',
+        '4 tokens',        
+        'Low job priority',
+        'Most models & settings',
+        'Email Support',
+        'Guaranteed Confidentiality',
+      ],
+      buttonText: 'Register To Try',
+      buttonColor: 'gray'
+    },
+    {
       name: 'Budget',
       subtitle: 'Affordable access for students and researchers',
       monthlyPrice: 6.42,
@@ -51,7 +69,7 @@ export function PaidPlansDescription() {
       description: 'Affordable access for students and researchers with light computational needs.',
       features: [
         'Academic Use',
-        '84 credits/year',
+        '84 tokens/year',
         '7 parallel jobs',
         'Low job priority',
         'Most models & settings',
@@ -76,7 +94,7 @@ export function PaidPlansDescription() {
       description: 'The best choice for active research projects needing more power.',
       features: [
         'Academic Use',
-        '168 credits/year',
+        '168 tokens/year',
         '14 parallel jobs',
         'Medium job priority',
         'Most models & settings',
@@ -101,7 +119,7 @@ export function PaidPlansDescription() {
       description: 'Designed for serious academic research with higher compute demands.',
       features: [
         'Academic Use',
-        '300 credits/year',
+        '300 tokens/year',
         '30 parallel jobs',
         'Medium job priority',
         'Most models & settings',
@@ -126,7 +144,7 @@ export function PaidPlansDescription() {
       description: 'The powerhouse plan for professionals needing large-scale computation.',
       features: [
         'Commercial Use',
-        '720 credits/year',
+        '720 tokens/year',
         '60 parallel jobs',
         'High job priority',
         'All models & settings',
