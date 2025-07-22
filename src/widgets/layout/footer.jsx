@@ -6,7 +6,7 @@ export function Footer({ brandName, brandLink, routes }) {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="py-2">
+    <footer className="fixed bottom-0 left-0 w-full bg-gray-100 shadow-md py-2 z-50">
       <div className="flex w-full flex-wrap items-center justify-center gap-6 px-2 md:justify-between">
         <Typography variant="small" className="font-normal text-inherit">
           &copy; {year}, made with{" "}

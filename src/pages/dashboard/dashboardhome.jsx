@@ -34,6 +34,9 @@ export function DashboardHome() {
   const [activityData, setActivityData] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
+  const [molPriceStats, setMolPriceStats] = React.useState(null);
+  const [molPriceStatsError, setMolPriceStatsError] = React.useState(null);
+  const [molPriceStatsLoading, setMolPriceStatsLoading] = React.useState(false);
 
   // Function to fetch activities from API
   const fetchActivities = async () => {
@@ -65,6 +68,27 @@ export function DashboardHome() {
   // Fetch activities on component mount
   React.useEffect(() => {
     fetchActivities();
+  }, []);
+
+  // Fetch molecule price stats
+  React.useEffect(() => {
+    const fetchMolPriceStats = async () => {
+      setMolPriceStatsLoading(true);
+      setMolPriceStatsError(null);
+      try {
+        const response = await fetch(`https://${window.location.hostname}:3000/api/mol-price-stats`, {
+          headers: { 'accept': 'application/json' }
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        setMolPriceStats(data);
+      } catch (err) {
+        setMolPriceStatsError(err.message);
+      } finally {
+        setMolPriceStatsLoading(false);
+      }
+    };
+    fetchMolPriceStats();
   }, []);
 
   // Generate statistics from API data
@@ -449,6 +473,36 @@ export function DashboardHome() {
                 )}
               </CardBody>
             </Card>
+          </div>
+          <div className="mb-8">
+            <Typography variant="h6" color="blue-gray" className="mb-2">Molecule Price Stats</Typography>
+            {molPriceStatsLoading ? (
+              <div className="flex items-center gap-2 py-2">
+                <Spinner className="h-5 w-5" />
+                <Typography variant="small" color="gray">Loading molecule price stats...</Typography>
+              </div>
+            ) : molPriceStatsError ? (
+              <Alert color="red" className="mb-2">
+                <Typography variant="small">Error: {molPriceStatsError}</Typography>
+              </Alert>
+            ) : molPriceStats ? (
+              <Card className="mb-2 p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Typography variant="small" color="blue-gray"><strong>Total Molecules:</strong> {molPriceStats.totalMolecules}</Typography>
+                    <Typography variant="small" color="blue-gray"><strong>Avg Price (1mg):</strong> ${molPriceStats.avgPrice1mg}</Typography>
+                    <Typography variant="small" color="blue-gray"><strong>Max Price (1mg):</strong> ${molPriceStats.maxPrice1mg}</Typography>
+                    <Typography variant="small" color="blue-gray"><strong>Min Price (1mg):</strong> ${molPriceStats.minPrice1mg}</Typography>
+                  </div>
+                  <div>
+                    <Typography variant="small" color="blue-gray"><strong>Avg Molecular Weight:</strong> {molPriceStats.avgMolecularWeight}</Typography>
+                    <Typography variant="small" color="blue-gray"><strong>Max Molecular Weight:</strong> {molPriceStats.maxMolecularWeight}</Typography>
+                    <Typography variant="small" color="blue-gray"><strong>Min Molecular Weight:</strong> {molPriceStats.minMolecularWeight}</Typography>
+                    <Typography variant="small" color="blue-gray"><strong>Total Available (mg):</strong> {molPriceStats.totalAvailableMg}</Typography>
+                  </div>
+                </div>
+              </Card>
+            ) : null}
           </div>
         </>
       )}
