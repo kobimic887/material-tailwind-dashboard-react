@@ -22,6 +22,7 @@ import {
   Bars3Icon,
   MagnifyingGlassIcon,
   XMarkIcon,
+  TrashIcon,
 } from "@heroicons/react/24/solid";
 import {
   useMaterialTailwindController,
@@ -200,8 +201,6 @@ export function DashboardNavbar() {
     }
   };
 
-  // ...existing code...
-
   const handleSignOut = () => {
     // Clear tokens and user info (customize as needed)
     localStorage.removeItem("auth_token");
@@ -209,6 +208,14 @@ export function DashboardNavbar() {
     localStorage.removeItem("simulation_tokens");
     localStorage.removeItem("moleculeCart"); // Clear cart on sign out
     window.location.href = "/auth/sign-in";
+  };
+
+  // Function to remove item from cart
+  const removeCartItem = (itemId) => {
+    const updatedCart = cartItems.filter(item => item.id !== itemId);
+    setCartItems(updatedCart);
+    setCartTotal(updatedCart.reduce((sum, item) => sum + (item.totalPrice || 0), 0));
+    localStorage.setItem('moleculeCart', JSON.stringify(updatedCart));
   };
 
   return (
@@ -445,9 +452,12 @@ export function DashboardNavbar() {
                             {item.name}
                           </Typography>
                           <Typography variant="small" color="gray" className="flex items-center gap-1 text-xs">
-                            {item.amount}mg • ${item.totalPrice.toFixed(2)}
+                            {item.amount}mg • ${typeof item.totalPrice === 'number' ? item.totalPrice.toFixed(2) : '0.00'}
                           </Typography>
                         </div>
+                        <IconButton variant="text" color="red" onClick={() => removeCartItem(item.id)}>
+                          <TrashIcon className="h-5 w-5" />
+                        </IconButton>
                       </MenuItem>
                     ))}
                     {cartItems.length > 5 && (

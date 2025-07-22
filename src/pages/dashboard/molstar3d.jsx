@@ -584,11 +584,8 @@ const HideMenu =()=>{
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <Typography variant="h6" color="blue-gray">
-                    SDF Docking Results
-                  </Typography>
-                  <Typography variant="small" color="gray" className="mt-1">
-                    Click on any row to load the molecule into the 3D viewer
-                  </Typography>
+                    Docking Results - Click on any row to load the molecule into the 3D viewer
+                  </Typography>       
                 </div>
                 {isLoading && (
                   <div className="flex items-center gap-2">

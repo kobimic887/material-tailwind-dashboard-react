@@ -34,7 +34,8 @@ export function Simulation() {
   const [simResult, setSimResult] = useState(null);
   const [simLoading, setSimLoading] = useState(false);
   const [simError, setSimError] = useState("");
-  
+  const [message, setMessage] = useState('');
+    const [messageType, setMessageType] = useState(''); // 'success', 'error', or ''
   const [topMolecules, setTopMolecules] = useState([]);
   const [topLoading, setTopLoading] = useState(false);
   const [topError, setTopError] = useState("");
@@ -189,19 +190,36 @@ export function Simulation() {
     setSearchCode(value);
   };
 
+  const saveCartToStorage = (cartData) => {
+    try {
+      localStorage.setItem('moleculeCart', JSON.stringify(cartData));
+    } catch (error) {
+      console.error('Error saving cart to storage:', error);
+    }
+  };
   const addToCart = (molecule, amount, price) => {
+    console.log(`Adding to cart: ${molecule}, Amount: ${amount}, Price: ${price}`);
     if (!molecule || !price) return;
-    setCart(prev => [
-      ...prev,
-      {
-        name: molecule.BRUTTO_FORMULA || molecule.formula || molecule.SMILES_STRING || molecule.smiles || molecule.ASINEX_ID || 'Molecule',
-        amount,
-        price,
-        id: molecule.ASINEX_ID || molecule.id || Math.random().toString(36).slice(2),
-        smiles: molecule.SMILES_STRING || molecule.smiles || '',
-        formula: molecule.BRUTTO_FORMULA || molecule.formula || '',
-      }
-    ]);
+    const priceNum = typeof price === 'number' ? price : Number(price) || 0;
+    const cartItem = {
+      name: molecule.BRUTTO_FORMULA || molecule.formula || molecule.SMILES_STRING || molecule.smiles || molecule.ASINEX_ID || 'Molecule',
+      amount,
+      price: priceNum,
+      pricePerMg: priceNum, // for compatibility with dashboard-navbar
+      totalPrice: priceNum * amount,
+      id: molecule.ASINEX_ID || molecule.id || Math.random().toString(36).slice(2),
+      smiles: molecule.SMILES_STRING || molecule.smiles || '',
+      formula: molecule.BRUTTO_FORMULA || molecule.formula || '',
+    };
+    const updatedCart = [...cart, cartItem];
+    setCart(updatedCart);
+    saveCartToStorage(updatedCart);
+    setMessage(`Added ${amount}mg of ${cartItem.name} to cart`);
+    setMessageType('success');
+    setTimeout(() => {
+      setMessage('');
+      setMessageType('');
+    }, 3000);
   };
 
   return (
