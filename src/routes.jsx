@@ -19,7 +19,6 @@ import {
   PaidPlans,
   Simulation,
   MoleculeViewer,
-  Molecule2D,
   Molstar3D,
   } from "@/pages/dashboard";
 import {
@@ -141,13 +140,7 @@ export const routes = [
         name: "RdKit Visualiser",
         path: "/moleculeviewer",
         element: <MoleculeViewer />,
-      },
-      {
-        icon: <Square2StackIcon {...icon} />,
-        name: "Mcule Viewer",
-        path: "/molecule2d",
-        element: <Molecule2D />,
-      },
+      },      
       {
         icon: <CubeTransparentIcon {...icon} />,
         name: "3D molstar viewer",

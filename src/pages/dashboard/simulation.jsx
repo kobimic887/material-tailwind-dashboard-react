@@ -44,6 +44,8 @@ export function Simulation() {
 
   const [mculeSmiles, setMculeSmiles] = useState(""); // For drawing in mcule component
 
+  const [cart, setCart] = useState([]);
+
   const navigate = useNavigate();
   
   const fetchApiData = async () => {
@@ -185,6 +187,21 @@ export function Simulation() {
 
   const handleCellClick = value => {
     setSearchCode(value);
+  };
+
+  const addToCart = (molecule, amount, price) => {
+    if (!molecule || !price) return;
+    setCart(prev => [
+      ...prev,
+      {
+        name: molecule.BRUTTO_FORMULA || molecule.formula || molecule.SMILES_STRING || molecule.smiles || molecule.ASINEX_ID || 'Molecule',
+        amount,
+        price,
+        id: molecule.ASINEX_ID || molecule.id || Math.random().toString(36).slice(2),
+        smiles: molecule.SMILES_STRING || molecule.smiles || '',
+        formula: molecule.BRUTTO_FORMULA || molecule.formula || '',
+      }
+    ]);
   };
 
   return (
@@ -371,19 +388,50 @@ export function Simulation() {
                         <td className="p-2" title={mol.BRUTTO_FORMULA || "N/A"}>{(mol.BRUTTO_FORMULA || "N/A").toString().slice(0,10)}{(mol.BRUTTO_FORMULA || "N/A").toString().length > 10 ? '...' : ''}</td>
                         <td className="p-2" title={mol.MW_STRUCTURE || "N/A"}>{(mol.MW_STRUCTURE || "N/A").toString().slice(0,10)}{(mol.MW_STRUCTURE || "N/A").toString().length > 10 ? '...' : ''}</td>
                         <td className="p-2" title={mol.AVAILABLE_MG || "N/A"}>{(mol.AVAILABLE_MG || "N/A").toString().slice(0,10)}{(mol.AVAILABLE_MG || "N/A").toString().length > 10 ? '...' : ''}</td>
-                        <td className="p-2" title={mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-"}>{(mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-").toString().slice(0,10)}{(mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-").toString().length > 10 ? '...' : ''}
-                          <button
-                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent hover:bg-blue-100 rounded p-1"
-                            title="Add to cart"
-                            onClick={() => setCart(cart => [...cart, { name: mol.BRUTTO_FORMULA || 'Unknown', price: mol.PRICE_1MG, mol }] )}
-                            style={{ border: 'none', cursor: 'pointer' }}
-                          >
-                            <ShoppingCartIcon className="h-5 w-5 text-blue-600" />
-                          </button>
+                        <td className="p-2 cursor-pointer group" title={mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-"}
+                          onClick={() => addToCart(mol, 1, mol.PRICE_1MG)}
+                        >
+                          <span>{(mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-").toString().slice(0,10)}{(mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-").toString().length > 10 ? '...' : ''}</span>
+                          {mol.PRICE_1MG && (
+                            <ShoppingCartIcon
+                              className="inline-block h-5 w-5 text-green-600 ml-2 cursor-pointer opacity-70 group-hover:opacity-100"
+                              title="Add 1mg to cart"
+                            />
+                          )}
                         </td>
-                        <td className="p-2" title={mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-"}>{(mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-").toString().slice(0,10)}{(mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-").toString().length > 10 ? '...' : ''}</td>
-                        <td className="p-2" title={mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-"}>{(mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-").toString().slice(0,10)}{(mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-").toString().length > 10 ? '...' : ''}</td>
-                        <td className="p-2" title={mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-"}>{(mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-").toString().slice(0,10)}{(mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-").toString().length > 10 ? '...' : ''}</td>
+                        <td className="p-2 cursor-pointer group" title={mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-"}
+                          onClick={() => addToCart(mol, 2, mol.PRICE_2MG)}
+                        >
+                          <span>{(mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-").toString().slice(0,10)}{(mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-").toString().length > 10 ? '...' : ''}</span>
+                          {mol.PRICE_2MG && (
+                            <ShoppingCartIcon
+                              className="inline-block h-5 w-5 text-green-600 ml-2 cursor-pointer opacity-70 group-hover:opacity-100"
+                              title="Add 2mg to cart"
+                            />
+                          )}
+                        </td>
+                        <td className="p-2 cursor-pointer group" title={mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-"}
+                          onClick={() => addToCart(mol, 5, mol.PRICE_5MG)}
+                        >
+                          <span>{(mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-").toString().slice(0,10)}{(mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-").toString().length > 10 ? '...' : ''}</span>
+                          {mol.PRICE_5MG && (
+                            <ShoppingCartIcon
+                              className="inline-block h-5 w-5 text-green-600 ml-2 cursor-pointer opacity-70 group-hover:opacity-100"
+                              title="Add 5mg to cart"
+                            />
+                          )}
+                        </td>
+                        <td className="p-2 cursor-pointer group" title={mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-"}
+                          onClick={() => addToCart(mol, 10, mol.PRICE_10MG)}
+                        >
+                          <span>{(mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-").toString().slice(0,10)}{(mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-").toString().length > 10 ? '...' : ''}</span>
+                          {mol.PRICE_10MG && (
+                            <ShoppingCartIcon
+                              className="inline-block h-5 w-5 text-green-600 ml-2 cursor-pointer opacity-70 group-hover:opacity-100"
+                              title="Add 10mg to cart"
+                            />
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -397,7 +445,7 @@ export function Simulation() {
         </div>
       </div>
       <div className="mb-6 flex flex-col gap-4 w-full p-6 pb-[10%] rounded-lg shadow-lg bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 border border-blue-300" id="simulation-inputs">
-        <Typography variant="h6" color="blue" className="mb-2">Run Simulation</Typography>
+        <Typography variant="h6" color="blue" className="mb-2">Run 1 Click Docking</Typography>
         <Input
           label="PDB ID"
           value={simPdbId}
