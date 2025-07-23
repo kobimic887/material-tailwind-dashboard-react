@@ -1,4 +1,5 @@
 import { useLocation, Link, useNavigate } from "react-router-dom";
+import routes from "@/routes";
 import {
   Navbar,
   Typography,
@@ -218,6 +219,11 @@ export function DashboardNavbar() {
     localStorage.setItem('moleculeCart', JSON.stringify(updatedCart));
   };
 
+  // Dashboard tabs for navbar
+  const dashboardTabs = routes
+    .find(r => r.layout === "dashboard")
+    .pages.filter(p => !p.hideFromMenu);
+
   return (
     <Navbar
       color={fixedNavbar ? "white" : "transparent"}
@@ -230,33 +236,21 @@ export function DashboardNavbar() {
       blurred={fixedNavbar}
     >
       <div className="flex flex-col-reverse justify-between gap-2 md:gap-6 md:flex-row md:items-center">
-        <div className="capitalize">
-          <Breadcrumbs
-            className={`bg-transparent p-0 transition-all ${fixedNavbar ? "mt-1" : ""}`}
-          >
-            <Link to={`/${layout}`}>
-              <Typography
-                variant="small"
-                color="blue-gray"
-                className="font-normal opacity-50 transition-all hover:text-blue-500 hover:opacity-100"
-              >
-                {layout || "Home"}
-              </Typography>
-            </Link>
-            {page && (
-              <Typography
-                variant="small"
-                color="blue-gray"
-                className="font-normal"
-              >
-                {page}
-              </Typography>
-            )}
-          </Breadcrumbs>
-          <Typography variant="h6" color="blue-gray" className="text-lg md:text-xl">
-            {page || "Home"}
-          </Typography>
+        {/* Dashboard navigation as tabs */}
+        <div className="flex gap-2 border-b border-blue-gray-100 mb-2">
+          {dashboardTabs.map(tab => {
+            const isActive = `/${layout}/${page}`.startsWith(`/dashboard${tab.path}`) || `/${layout}`+`/${page}` === `/dashboard${tab.path}` || `/${layout}` === "/dashboard" && tab.path === "/dashboardHome" && !page;
+            return (
+              <Link key={tab.path} to={`/dashboard${tab.path}`} className={`px-4 py-2 -mb-px border-b-2 transition-colors ${isActive ? "border-blue-500 text-blue-700 font-semibold" : "border-transparent text-blue-gray-500 hover:text-blue-700"}`}>
+                <span className="flex items-center gap-1">
+                  {tab.icon}
+                  {tab.name}
+                </span>
+              </Link>
+            );
+          })}
         </div>
+
         <div className="flex items-center justify-between w-full md:w-auto">
           {/* Mobile Search Toggle */}
           <div className="flex items-center gap-2">
@@ -283,10 +277,7 @@ export function DashboardNavbar() {
             </IconButton>
           </div>
 
-          {/* Desktop Search */}
-          <div className="mr-auto md:mr-4 md:w-56 hidden md:block">
-            <Input label="Search" />
-          </div>
+
           
           {/* Replace sign-in link with user info and sign out */}
           <div className="flex items-center gap-2 md:gap-4 mr-2 md:mr-4">
@@ -518,12 +509,7 @@ export function DashboardNavbar() {
           </IconButton>
         </div>
         
-        {/* Mobile Search Bar */}
-        {showMobileSearch && (
-          <div className="mt-4 md:hidden">
-            <Input label="Search" />
-          </div>
-        )}
+
       </div>
     </Navbar>
   );
