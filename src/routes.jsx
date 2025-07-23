@@ -135,18 +135,19 @@ export const routes = [
         path: "/simulation",
         element: <Simulation />,
       },
+            {
+        icon: <CubeTransparentIcon {...icon} />,
+        name: "simulation results",
+        path: "/molstar3d",
+        element: <Molstar3D />,
+      },
       {
         icon: <BeakerIcon {...icon} />,
         name: "RdKit Visualiser",
         path: "/moleculeviewer",
         element: <MoleculeViewer />,
       },      
-      {
-        icon: <CubeTransparentIcon {...icon} />,
-        name: "3D molstar viewer",
-        path: "/molstar3d",
-        element: <Molstar3D />,
-      },
+
       
     ],
   },

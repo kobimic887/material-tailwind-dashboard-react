@@ -41,6 +41,7 @@ export function Simulation() {
   const [topError, setTopError] = useState("");
 
   const [searchType, setSearchType] = useState("similarity"); // Add searchType state
+  const [queryType, setQueryType] = useState("draw"); // Default to Draw molecule
   const [topLimit, setTopLimit] = useState(8); // Add topLimit state
 
   const [mculeSmiles, setMculeSmiles] = useState(""); // For drawing in mcule component
@@ -225,7 +226,31 @@ export function Simulation() {
   return (
     <div className="h-[80vh] flex flex-col pt-8 pb-8 bg-gray-50">
       <div className="mb-6 flex flex-col gap-2">        
-        {/* Search type radio buttons above search box */}
+        {/* Query type radio buttons above search box */}
+        <div className="flex items-center gap-4 mb-2">
+          <Typography variant="small" color="blue-gray" className="mr-2">Query:</Typography>
+          <label className="flex items-center gap-1">
+            <input
+              type="radio"
+              name="queryType"
+              value="draw"
+              checked={queryType === "draw"}
+              onChange={() => setQueryType("draw")}
+            />
+            <span>Draw molecule</span>
+          </label>
+          <label className="flex items-center gap-1">
+            <input
+              type="radio"
+              name="queryType"
+              value="text"
+              checked={queryType === "text"}
+              onChange={() => setQueryType("text")}
+            />
+            <span>mcule ID, SMILES, CAS Number, IUPAC name, InChI, InChIKey</span>
+          </label>
+        </div>
+        {/* Search type radio buttons */}
         <div className="flex items-center gap-4 mb-2">
           <Typography variant="small" color="blue-gray" className="mr-2">Search type:</Typography>
           <label className="flex items-center gap-1">
@@ -259,7 +284,8 @@ export function Simulation() {
             <span>Exact</span>
           </label>
         </div>
-        <div className="flex items-center gap-0"> {/* gap-0 removes space between input and button */}
+        {queryType !== "draw" && (
+          <div id="molecule-search" className="flex items-center gap-0"> {/* gap-0 removes space between input and button */}
           <Input
             label="Add molecule ID, SMILES, CAS Number, IUPAC name, InChI or InChIKey here"
             value={searchCode}
@@ -277,6 +303,7 @@ export function Simulation() {
             {searchLoading ? 'Searching...' : 'Search'}
           </Button>
         </div>
+        )}
       </div>
       {searchError && (
         <Alert color="red" className="mb-6">
@@ -305,7 +332,7 @@ export function Simulation() {
         </Card>
       )}
 
-      <div style={{ display: "flex", width: "100%", height: "70vh" }}>
+      <div id="editor" style={{ display: "flex", width: "100%", height: "70vh" }}>
         <div style={{ width: "40%", height: "70vh", background: "#f5f5f5" }}>
           <iframe
             src="/ketcher/index.html"
@@ -314,7 +341,7 @@ export function Simulation() {
             allowFullScreen
           />
         </div>
-        <div style={{ width: "60%", height: "70vh", background: "#e3e8ef", overflowY: "auto", padding: 32 }}>
+        <div id="results" style={{ width: "60%", height: "70vh", background: "#e3e8ef", overflowY: "auto", padding: 32 }}>
           {/* Header as a block element, not wrapping Card or div */}
           <div className="mb-4">
             <Typography as="h5" variant="h5" color="blue-gray">Top {topMolecules.length} Molecules</Typography>
@@ -464,7 +491,13 @@ export function Simulation() {
         </div>
       </div>
       <div className="mb-6 flex flex-col gap-4 w-full p-6 pb-[10%] rounded-lg shadow-lg bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 border border-blue-300" id="simulation-inputs">
-        <Typography variant="h6" color="blue" className="mb-2">Run 1 Click Docking</Typography>
+        <button
+          type="button"
+          className="text-blue-700 underline text-left mb-2 w-fit focus:outline-none hover:text-blue-900 transition-colors"
+          tabIndex={0}
+        >
+          Run 1 Click Docking
+        </button>
         <Input
           label="PDB ID"
           value={simPdbId}
