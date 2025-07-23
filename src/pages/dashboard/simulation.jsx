@@ -323,17 +323,18 @@ export function Simulation() {
         </Card>
       )}
 
-      <div id="editor" style={{ display: "flex", width: "100%", height: "70vh" }}>
-        <div style={{ width: "100%", height: "70vh", background: "#f5f5f5" }}>
-          <iframe
-            src="/ketcher/index.html"
-            title="Ketcher 2D Chemical Editor"
-            style={{ width: "100%", height: "70vh", border: "2px solid #ccc", borderRadius: 8, background: "white" }}
-            allowFullScreen
-          />
-        </div>   
-        
-      </div>
+      {queryType !== "text" && (
+        <div id="editor" style={{ display: "flex", width: "100%", height: "70vh" }}>
+          <div style={{ width: "100%", height: "70vh", background: "#f5f5f5" }}>
+            <iframe
+              src="/ketcher/index.html"
+              title="Ketcher 2D Chemical Editor"
+              style={{ width: "100%", height: "70vh", border: "2px solid #ccc", borderRadius: 8, background: "white" }}
+              allowFullScreen
+            />
+          </div>   
+        </div>
+      )}
         <div className="flex justify-center items-center my-8">
           <Button
             size="lg"
@@ -346,11 +347,11 @@ export function Simulation() {
             {searchLoading ? 'Searching...' : 'Search'}
           </Button>
         </div>
-      <div id="results" style={{ width: "100%", height: "70vh", background: "#e3e8ef" }}>
+        <div id="results" style={{ width: "100%", height: "70vh", background: "#e3e8ef" }}>
           {/* Header as a block element, not wrapping Card or div */}
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <Typography as="h5" variant="h5" color="blue-gray">Top {topMolecules.length} Molecules</Typography>
-          </div>
+          </div> */}
           {topLoading && (
             <div className="flex items-center gap-2 mb-4">
               <Spinner className="h-5 w-5 text-blue-500" />
@@ -367,7 +368,7 @@ export function Simulation() {
                   <thead>
                     <tr>
                       <th className="p-2 font-bold">#</th>
-                      <th className="p-2 font-bold">ASINEX_ID</th>
+                      <th className="p-2 font-bold">ID</th>
                       <th className="p-2 font-bold">IUPAC Name</th>
                       <th className="p-2 font-bold">SMILES</th>
                       <th className="p-2 font-bold">InChI</th>
@@ -490,9 +491,9 @@ export function Simulation() {
               </CardBody>
             </Card>
           )}
-          {!topLoading && !topError && topMolecules.length === 0 && (
+          {/* {!topLoading && !topError && topMolecules.length === 0 && (
             <Typography>No records found.</Typography>
-          )}
+          )} */}
         </div>
       <div className="mb-6 flex flex-col gap-4 w-full p-6 pb-[10%] rounded-lg shadow-lg bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 border border-blue-300" id="simulation-inputs">
         <button
