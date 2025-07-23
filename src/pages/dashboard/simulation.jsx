@@ -225,25 +225,8 @@ export function Simulation() {
   return (
     <div className="h-[80vh] flex flex-col pt-8 pb-8 bg-gray-50">
       <div className="mb-6 flex flex-col gap-2">        
-        <div className="flex items-center gap-0"> {/* gap-0 removes space between input and button */}
-          <Input
-            label="Add molecule ID, SMILES, CAS Number, IUPAC name, InChI or InChIKey here"
-            value={searchCode}
-            onChange={e => setSearchCode(e.target.value)}
-            className="flex-1 min-w-0" // changed to flex-1 min-w-0 for full width till button
-          />
-          <Button
-            size="md"
-            color="green"
-            onClick={handleSearch}
-            disabled={searchLoading || !searchCode}
-            className="flex items-center gap-2"
-          >
-            {searchLoading ? <Spinner className="h-4 w-4" /> : <CloudIcon className="h-4 w-4" />}
-            {searchLoading ? 'Searching...' : 'Search'}
-          </Button>
-        </div>
-        <div className="flex items-center gap-4 mt-2">
+        {/* Search type radio buttons above search box */}
+        <div className="flex items-center gap-4 mb-2">
           <Typography variant="small" color="blue-gray" className="mr-2">Search type:</Typography>
           <label className="flex items-center gap-1">
             <input
@@ -275,6 +258,24 @@ export function Simulation() {
             />
             <span>Exact</span>
           </label>
+        </div>
+        <div className="flex items-center gap-0"> {/* gap-0 removes space between input and button */}
+          <Input
+            label="Add molecule ID, SMILES, CAS Number, IUPAC name, InChI or InChIKey here"
+            value={searchCode}
+            onChange={e => setSearchCode(e.target.value)}
+            className="flex-1 min-w-0" // changed to flex-1 min-w-0 for full width till button
+          />
+          <Button
+            size="md"
+            color="green"
+            onClick={handleSearch}
+            disabled={searchLoading || !searchCode}
+            className="flex items-center gap-2"
+          >
+            {searchLoading ? <Spinner className="h-4 w-4" /> : <CloudIcon className="h-4 w-4" />}
+            {searchLoading ? 'Searching...' : 'Search'}
+          </Button>
         </div>
       </div>
       {searchError && (

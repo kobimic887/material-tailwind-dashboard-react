@@ -219,10 +219,10 @@ export function DashboardNavbar() {
     localStorage.setItem('moleculeCart', JSON.stringify(updatedCart));
   };
 
-  // Dashboard tabs for navbar
+  // Dashboard tabs for navbar, remove notifications tab
   const dashboardTabs = routes
     .find(r => r.layout === "dashboard")
-    .pages.filter(p => !p.hideFromMenu);
+    .pages.filter(p => !p.hideFromMenu && p.name !== "notifications");
 
   return (
     <Navbar
@@ -240,11 +240,12 @@ export function DashboardNavbar() {
         <div className="flex gap-2 border-b border-blue-gray-100 mb-2">
           {dashboardTabs.map(tab => {
             const isActive = `/${layout}/${page}`.startsWith(`/dashboard${tab.path}`) || `/${layout}`+`/${page}` === `/dashboard${tab.path}` || `/${layout}` === "/dashboard" && tab.path === "/dashboardHome" && !page;
+            const label = tab.path === "/dashboardHome" ? "Pyxis-discover" : tab.name;
             return (
               <Link key={tab.path} to={`/dashboard${tab.path}`} className={`px-4 py-2 -mb-px border-b-2 transition-colors ${isActive ? "border-blue-500 text-blue-700 font-semibold" : "border-transparent text-blue-gray-500 hover:text-blue-700"}`}>
                 <span className="flex items-center gap-1">
                   {tab.icon}
-                  {tab.name}
+                  {label}
                 </span>
               </Link>
             );
@@ -280,7 +281,7 @@ export function DashboardNavbar() {
 
           
           {/* Replace sign-in link with user info and sign out */}
-          <div className="flex items-center gap-2 md:gap-4 mr-2 md:mr-4">
+          <div className="flex items-center gap-2 md:gap-14 mr-2 md:mr-4 px-4">
             <Typography variant="small" color="blue-gray" className="font-medium hidden sm:block">
               Hello:{" "}
               <Chip
@@ -288,12 +289,12 @@ export function DashboardNavbar() {
                 color="blue"
                 className="inline-block px-2 py-1 text-xs font-bold ml-1 align-middle"
               />{" "}
-              | You have{" "}
+              |   You have{" "}
               <Chip
                 value={`${user.simulationTokens} `}
                 color="green"
                 className="inline-block px-2 py-1 text-xs font-bold ml-1 align-middle"
-              /> Simulation Tokens left
+              /> Simulation Tokens left |
             </Typography>
             {/* Mobile user info - compact */}
             <div className="flex items-center gap-1 sm:hidden">
@@ -311,18 +312,20 @@ export function DashboardNavbar() {
             <Button
               variant="text"
               color="blue-gray"
-              className="items-center gap-1 px-2 md:px-4 normal-case min-w-0"
+              className="flex items-center gap-1 px-2 md:px-4 normal-case min-w-0"
               onClick={handleSignOut}
             >
               <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
-              <span className="hidden sm:inline">Sign Out</span>
+              <span>Sign Out</span>
             </Button>
           </div>
           <Menu>
             <MenuHandler>
-              <IconButton variant="text" color="blue-gray">
-                <BellIcon className="h-5 w-5 text-blue-gray-500" />
-              </IconButton>
+              <Link to="/dashboard/notifications">
+                <IconButton variant="text" color="blue-gray">
+                  <BellIcon className="h-5 w-5 text-blue-gray-500" />
+                </IconButton>
+              </Link>
             </MenuHandler>
             {/* <MenuList className="w-max border-0">
               <MenuItem className="flex items-center gap-3">

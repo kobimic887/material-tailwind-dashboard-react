@@ -208,17 +208,21 @@ export function Notifications() {
             </Typography>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {activities.map((activity, index) => (
-                <Chip
-                  key={activity.id || index}
-                  value={activity.message || `Activity ${index + 1}`}
-                  color={getActivityChipColor(activity)}
-                  variant="ghost"
-                  size="sm"
-                  className="max-w-md"
-                  title={`${activity.message || 'Activity'} - ${formatTimestamp(activity.timestamp)} - Type: ${activity.type || 'Unknown'}`}
-                />
-              ))}
+              {activities.map((activity, index) => {
+                const fullText = activity.message || `Activity ${index + 1}`;
+                const shortText = fullText.length > 50 ? fullText.slice(0, 50) + '…' : fullText;
+                return (
+                  <Chip
+                    key={activity.id || index}
+                    value={shortText}
+                    color={getActivityChipColor(activity)}
+                    variant="ghost"
+                    size="sm"
+                    className="max-w-md"
+                    title={fullText}
+                  />
+                );
+              })}
             </div>
           )}
         </CardBody>
