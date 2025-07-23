@@ -168,24 +168,24 @@ export function Simulation() {
     // eslint-disable-next-line
   }, []);
 
-  useEffect(() => {
-    const fetchTopMolecules = async () => {
-      setTopLoading(true);
-      setTopError("");
-      try {
-        const res = await fetch(`https://${window.location.hostname}:3000/api/mol-price?limit=${topLimit}&skip=0`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        const result = await res.json();
-        console.log('API /api/mol-price result:', result); // Debug log
-        setTopMolecules(Array.isArray(result.molecules) ? result.molecules.slice(0, topLimit) : []);
-      } catch (err) {
-        setTopError(`Failed to fetch top molecules: ${err.message}`);
-      } finally {
-        setTopLoading(false);
-      }
-    };
-    fetchTopMolecules();
-  }, [topLimit]); // Depend on topLimit
+// useEffect(() => {
+//   const fetchTopMolecules = async () => {
+//     setTopLoading(true);
+//     setTopError("");
+//     try {
+//       const res = await fetch(`https://${window.location.hostname}:3000/api/mol-price?limit=${topLimit}&skip=0`);
+//       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+//       const result = await res.json();
+//       console.log('API /api/mol-price result:', result); // Debug log
+//       setTopMolecules(Array.isArray(result.molecules) ? result.molecules.slice(0, topLimit) : []);
+//     } catch (err) {
+//       setTopError(`Failed to fetch top molecules: ${err.message}`);
+//     } finally {
+//       setTopLoading(false);
+//     }
+//   };
+//   fetchTopMolecules();
+// }, [topLimit]); // Depend on topLimit
 
   const handleCellClick = value => {
     setSearchCode(value);
@@ -292,16 +292,7 @@ export function Simulation() {
             onChange={e => setSearchCode(e.target.value)}
             className="flex-1 min-w-0" // changed to flex-1 min-w-0 for full width till button
           />
-          <Button
-            size="md"
-            color="green"
-            onClick={handleSearch}
-            disabled={searchLoading || !searchCode}
-            className="flex items-center gap-2"
-          >
-            {searchLoading ? <Spinner className="h-4 w-4" /> : <CloudIcon className="h-4 w-4" />}
-            {searchLoading ? 'Searching...' : 'Search'}
-          </Button>
+
         </div>
         )}
       </div>
@@ -333,15 +324,29 @@ export function Simulation() {
       )}
 
       <div id="editor" style={{ display: "flex", width: "100%", height: "70vh" }}>
-        <div style={{ width: "40%", height: "70vh", background: "#f5f5f5" }}>
+        <div style={{ width: "100%", height: "70vh", background: "#f5f5f5" }}>
           <iframe
             src="/ketcher/index.html"
             title="Ketcher 2D Chemical Editor"
             style={{ width: "100%", height: "70vh", border: "2px solid #ccc", borderRadius: 8, background: "white" }}
             allowFullScreen
           />
+        </div>   
+        
+      </div>
+        <div className="flex justify-center items-center my-8">
+          <Button
+            size="lg"
+            color="green"
+            onClick={handleSearch}
+            disabled={searchLoading || !searchCode}
+            className="flex items-center gap-3 px-10 py-4 w-full max-w-xs text-lg font-semibold shadow-md"
+          >
+            {searchLoading ? <Spinner className="h-5 w-5" /> : <CloudIcon className="h-5 w-5" />}
+            {searchLoading ? 'Searching...' : 'Search'}
+          </Button>
         </div>
-        <div id="results" style={{ width: "60%", height: "70vh", background: "#e3e8ef", overflowY: "auto", padding: 32 }}>
+      <div id="results" style={{ width: "100%", height: "70vh", background: "#e3e8ef" }}>
           {/* Header as a block element, not wrapping Card or div */}
           <div className="mb-4">
             <Typography as="h5" variant="h5" color="blue-gray">Top {topMolecules.length} Molecules</Typography>
@@ -489,7 +494,6 @@ export function Simulation() {
             <Typography>No records found.</Typography>
           )}
         </div>
-      </div>
       <div className="mb-6 flex flex-col gap-4 w-full p-6 pb-[10%] rounded-lg shadow-lg bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 border border-blue-300" id="simulation-inputs">
         <button
           type="button"
