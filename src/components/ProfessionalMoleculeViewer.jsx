@@ -21,62 +21,73 @@ const ProfessionalMoleculeViewer = ({
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Configure SMILES drawer for mcule.com-like appearance
+      // Clean the SMILES string
+      const cleanSmiles = smiles.trim().replace(/\s+/g, '');
+      console.log('ProfessionalMoleculeViewer attempting to parse:', cleanSmiles);
+      
+      // Configure SMILES drawer with more tolerant settings
       const drawer = new SmilesDrawer.Drawer({
         width: width,
         height: height,
-        bondThickness: 2.0,        // Thick bonds like mcule.com
-        bondLength: 15,            // Appropriate bond length
-        shortBondLength: 0.8,      // Short bonds ratio
-        bondSpacing: 0.18 * 15,    // Double bond spacing
-        atomVisualization: 'default', // Show all atoms including carbons
-        isomeric: true,            // Handle stereochemistry
+        bondThickness: 2.0,
+        bondLength: 15,
+        shortBondLength: 0.8,
+        bondSpacing: 0.18 * 15,
+        atomVisualization: 'default',
+        isomeric: false,  // Try without stereochemistry first
         debug: false,
-        padding: 20.0,        fontSizeLarge: 11,
+        padding: 20.0,
+        fontSizeLarge: 11,
         fontSizeSmall: 6,
         fontFamily: 'Arial, Helvetica, sans-serif',
         themes: {
           light: {
-            C: '#909090',          // Gray for carbon (like mcule.com)
-            N: '#0000FF',          // Blue for nitrogen
-            O: '#FF0000',          // Red for oxygen
-            S: '#FFFF00',          // Yellow for sulfur
-            P: '#FFA500',          // Orange for phosphorus
-            F: '#00FF00',          // Green for fluorine
-            Cl: '#00FF00',         // Green for chlorine
-            Br: '#A52A2A',         // Brown for bromine
-            I: '#800080',          // Purple for iodine
-            H: '#FFFFFF'           // White for hydrogen (usually not shown)
+            C: '#909090',
+            N: '#0000FF',
+            O: '#FF0000',
+            S: '#FFFF00',
+            P: '#FFA500',
+            F: '#00FF00',
+            Cl: '#00FF00',
+            Br: '#A52A2A',
+            I: '#800080',
+            H: '#FFFFFF'
           }
         }
       });
 
-      // Parse SMILES and draw
-      SmilesDrawer.parse(smiles, function(tree) {
-        // Apply coordinates
-        drawer.draw(tree, canvas, theme, false);
-      }, function(err) {
-        console.error('SMILES parsing error:', err);
-        setError('Invalid SMILES: ' + smiles);
-        
-        // Draw error message
-        ctx.fillStyle = '#666';
-        ctx.font = '14px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Invalid SMILES', width / 2, height / 2);
-      });
+      // Parse SMILES and draw with better error handling
+      try {
+        SmilesDrawer.parse(cleanSmiles, function(tree) {
+          try {
+            // Apply coordinates and draw
+            drawer.draw(tree, canvas, theme, false);
+            console.log('Successfully rendered SMILES:', cleanSmiles);
+          } catch (drawError) {
+            console.error('Draw error:', drawError);
+            throw drawError;
+          }
+        }, function(parseError) {
+          console.error('SMILES parsing error for:', cleanSmiles, parseError);
+          throw new Error('Parse failed: ' + parseError);
+        });
+      } catch (smilesError) {
+        console.error('SmilesDrawer error:', smilesError);
+        throw smilesError;
+      }
 
     } catch (err) {
-      console.error('Rendering error:', err);
-      setError('Rendering error: ' + err.message);
+      console.error('ProfessionalMoleculeViewer error for SMILES:', smiles, err);
+      setError('Cannot render: ' + smiles.substring(0, 20) + '...');
       
       // Draw error message
       const ctx = canvasRef.current.getContext('2d');
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = '#666';
-      ctx.font = '14px Arial';
+      ctx.font = '12px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Rendering Error', width / 2, height / 2);
+      ctx.fillText('Structure not available', width / 2, height / 2 - 10);
+      ctx.fillText('SMILES: ' + smiles.substring(0, 15) + '...', width / 2, height / 2 + 10);
     }
   }, [smiles, width, height, theme]);
 
