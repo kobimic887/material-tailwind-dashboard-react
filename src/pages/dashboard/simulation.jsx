@@ -16,6 +16,7 @@ import {
   CodeBracketIcon,
 } from "@heroicons/react/24/outline";
 import { ShoppingCartIcon } from '@heroicons/react/24/solid';
+import ProfessionalMoleculeViewer from '../../components/ProfessionalMoleculeViewer';
 
 export function Simulation() {
   // Popup state for clipboard copy
@@ -52,6 +53,10 @@ export function Simulation() {
   const [mculeSmiles, setMculeSmiles] = useState(""); // For drawing in mcule component
 
   const [cart, setCart] = useState([]);
+  
+  // Hover preview state
+  const [hoveredPreview, setHoveredPreview] = useState(null);
+  const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
 
   const navigate = useNavigate();
   
@@ -121,6 +126,7 @@ export function Simulation() {
       }
       const result = await res.json();
       //setSearchResult(result);
+      console.log('Search result data structure:', result); // Debug log
       setTopMolecules(Array.isArray(result.molecules) ? result.molecules : []); // Render results in topMolecules
     } catch (err) {
       setSearchError(`Failed to search: ${err.message}`);
@@ -228,8 +234,111 @@ export function Simulation() {
     }, 3000);
   };
 
+  // Hover preview functions
+  const handleMouseEnter = (smiles, event, type) => {
+    // Debug: Let's see what SMILES we're getting
+    console.log('Hover SMILES data:', smiles, 'Type:', type);
+    
+    if (smiles && smiles !== 'N/A' && smiles.trim() !== '') {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const windowWidth = window.innerWidth;
+      const previewWidth = 220; // Preview width + padding
+      
+      // Calculate position - show on right if there's space, otherwise on left
+      let xPosition = rect.right + 10;
+      if (xPosition + previewWidth > windowWidth) {
+        xPosition = rect.left - previewWidth - 10;
+      }
+      
+      setPreviewPosition({
+        x: Math.max(10, xPosition), // Ensure it doesn't go off-screen
+        y: rect.top
+      });
+      setHoveredPreview({
+        smiles: smiles.trim(), // Trim whitespace
+        type: type
+      });
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredPreview(null);
+  };
+
+  // Helper function to extract SMILES from molecule object
+  const extractSmiles = (mol) => {
+    console.log('Full molecule object:', mol);
+    console.log('Available fields:', Object.keys(mol));
+    
+    // Try different possible field names for SMILES
+    const possibleFields = [
+      'SMILES_STRING', 'SMILES', 'smiles', 'canonical_smiles', 
+      'Canonical_SMILES', 'smi', 'structure', 'mol_smiles'
+    ];
+    
+    for (const field of possibleFields) {
+      if (mol[field] && typeof mol[field] === 'string' && mol[field].trim() !== '') {
+        console.log(`Found SMILES in field: ${field}, value: ${mol[field]}`);
+        return mol[field].trim();
+      }
+    }
+    
+    console.log('No valid SMILES found in molecule:', mol);
+    return null;
+  };
+
   return (
     <div className="h-[80vh] flex flex-col pt-8 pb-8 bg-gray-50">
+      {/* Hover Preview Tooltip */}
+      {hoveredPreview && (
+        <div 
+          className="fixed z-50 bg-white border-2 border-gray-300 rounded-lg shadow-xl p-3"
+          style={{
+            left: `${previewPosition.x}px`,
+            top: `${previewPosition.y}px`,
+            transform: 'translateY(-50%)',
+            maxWidth: '220px'
+          }}
+        >
+          <div className="text-xs text-gray-600 mb-2 font-medium">
+            {hoveredPreview.type} Preview
+          </div>
+          {/* Use simple image-based molecule viewer */}
+          <div className="border border-gray-300 rounded overflow-hidden bg-white" style={{ width: '200px', height: '150px' }}>
+            <img 
+              src={`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(hoveredPreview.smiles)}/PNG?record_type=2d&image_size=200x150`}
+              alt="Molecule structure"
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              onError={(e) => {
+                // Fallback to ChemSpider if PubChem fails
+                if (!e.target.src.includes('chemspider')) {
+                  e.target.src = `https://www.chemspider.com/ImagesHandler.ashx?id=${encodeURIComponent(hoveredPreview.smiles)}&w=200&h=150`;
+                } else {
+                  // Final fallback - show text
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }
+              }}
+            />
+            <div 
+              className="flex items-center justify-center bg-gray-50 text-gray-500 text-sm w-full h-full"
+              style={{ display: 'none' }}
+            >
+              <div className="text-center">
+                <div>Structure Preview</div>
+                <div className="text-xs mt-1">Unavailable</div>
+              </div>
+            </div>
+          </div>
+          <div className="text-xs text-gray-500 mt-2 font-mono break-all">
+            {hoveredPreview.smiles.length > 25 
+              ? `${hoveredPreview.smiles.substring(0, 25)}...` 
+              : hoveredPreview.smiles
+            }
+          </div>
+        </div>
+      )}
+
       <div className="mb-6 flex flex-col gap-2">        
         {/* Query type radio buttons above search box */}
         <div className="flex items-center gap-4 mb-2">
@@ -395,6 +504,8 @@ export function Simulation() {
                           className="p-2 cursor-pointer hover:bg-blue-100"
                           title={mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "N/A"}
                           onClick={() => setSearchCode(mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "")}
+                          onMouseEnter={(e) => handleMouseEnter(extractSmiles(mol), e, "mcule ID")}
+                          onMouseLeave={handleMouseLeave}
                         >
                           {(mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "N/A").toString().slice(0,moleculeLimit)}{(mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "N/A").toString().length > moleculeLimit ? '...' : ''}
                         </td>
@@ -402,6 +513,8 @@ export function Simulation() {
                           className="p-2 cursor-pointer hover:bg-blue-100"
                           title={mol.IUPAC_NAME || "N/A"}
                           onClick={() => setSearchCode(mol.IUPAC_NAME || "")}
+                          onMouseEnter={(e) => handleMouseEnter(extractSmiles(mol), e, "IUPAC Name")}
+                          onMouseLeave={handleMouseLeave}
                         >
                           {(mol.IUPAC_NAME || "N/A").toString().slice(0,moleculeLimit)}{(mol.IUPAC_NAME || "N/A").toString().length > moleculeLimit ? '...' : ''}
                         </td>
@@ -419,6 +532,8 @@ export function Simulation() {
                               alert("Failed to copy SMILES to clipboard: " + err);
                             }
                           }}
+                          onMouseEnter={(e) => handleMouseEnter(extractSmiles(mol), e, "SMILES")}
+                          onMouseLeave={handleMouseLeave}
                         >
                           {(mol.SMILES_STRING || mol.SMILES || mol.smiles || "N/A").toString().slice(0,moleculeLimit)}{(mol.SMILES_STRING || mol.SMILES || mol.smiles || "N/A").toString().length > moleculeLimit ? '...' : ''}
                         </td>
@@ -436,6 +551,8 @@ export function Simulation() {
                               alert("Failed to copy InChI to clipboard: " + err);
                             }
                           }}
+                          onMouseEnter={(e) => handleMouseEnter(extractSmiles(mol), e, "InChI")}
+                          onMouseLeave={handleMouseLeave}
                         >
                           {(mol.INCHI || "N/A").toString().slice(0,moleculeLimit)}{(mol.INCHI || "N/A").toString().length > moleculeLimit ? '...' : ''}
                         </td>
@@ -443,6 +560,8 @@ export function Simulation() {
                           className="p-2 font-mono text-xs cursor-pointer hover:bg-blue-100"
                           title={mol.INCHIKEY || "N/A"}
                           onClick={() => setSearchCode(mol.INCHIKEY || "")}
+                          onMouseEnter={(e) => handleMouseEnter(extractSmiles(mol), e, "InChIKey")}
+                          onMouseLeave={handleMouseLeave}
                         >
                           {(mol.INCHIKEY || "N/A").toString().slice(0,moleculeLimit)}{(mol.INCHIKEY || "N/A").toString().length > moleculeLimit ? '...' : ''}
                         </td>
