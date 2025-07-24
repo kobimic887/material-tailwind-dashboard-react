@@ -18,7 +18,11 @@ import {
 import { ShoppingCartIcon } from '@heroicons/react/24/solid';
 
 export function Simulation() {
+  // Popup state for clipboard copy
+  const [showClipboardPopup, setShowClipboardPopup] = useState(false);
   const [loading, setLoading] = useState(false);
+  // State for toggling simulation inputs
+  const [showSimInputs, setShowSimInputs] = useState(false);
   const [response, setResponse] = useState(null);
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -408,6 +412,8 @@ export function Simulation() {
                             setSearchCode(smiles);
                             try {
                               await navigator.clipboard.writeText(smiles);
+                              setShowClipboardPopup(true);
+                              setTimeout(() => setShowClipboardPopup(false), 3000);
                             } catch (err) {
                               alert("Failed to copy SMILES to clipboard: " + err);
                             }
@@ -423,6 +429,8 @@ export function Simulation() {
                             setSearchCode(inchi);
                             try {
                               await navigator.clipboard.writeText(inchi);
+                              setShowClipboardPopup(true);
+                              setTimeout(() => setShowClipboardPopup(false), 3000);
                             } catch (err) {
                               alert("Failed to copy InChI to clipboard: " + err);
                             }
@@ -495,28 +503,30 @@ export function Simulation() {
             <Typography>No records found.</Typography>
           )} */}
         </div>
-      <div className="mb-6 flex flex-col gap-4 w-full p-6 pb-[10%] rounded-lg shadow-lg bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 border border-blue-300" id="simulation-inputs">
+      <div className="mb-6 flex flex-col gap-4 w-full p-6 pb-[10%] rounded-lg shadow-lg bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 border border-blue-300">
         <button
           type="button"
           className="text-blue-700 underline text-left mb-2 w-fit focus:outline-none hover:text-blue-900 transition-colors"
           tabIndex={0}
+          onClick={() => setShowSimInputs(v => !v)}
         >
           Run 1 Click Docking
         </button>
-        <Input
-          label="PDB ID"
-          value={simPdbId}
-          onChange={e => setSimPdbId(e.target.value)}
-          className="w-full max-w-xs"
-        />
-        <div className="flex items-center gap-0">
-          <Input
-            label="SMILES"
-            value={simSmiles}
-            onChange={e => setSimSmiles(e.target.value)}
-            className="flex-1 min-w-0"
-          />
-          <Button
+        {showSimInputs && (
+          <div id="simulation-inputs" className="flex items-center gap-0">
+            <Input
+              label="PDB ID"
+              value={simPdbId}
+              onChange={e => setSimPdbId(e.target.value)}
+              className="w-full max-w-xs border border-black"
+            />
+            <Input
+              label="SMILES"
+              value={simSmiles}
+              onChange={e => setSimSmiles(e.target.value)}
+              className="flex-1 min-w-0 border border-black"
+            />
+                     <Button
             size="md"
             color="blue"
             onClick={handleSimulation}
@@ -525,8 +535,15 @@ export function Simulation() {
           >
             {simLoading ? 'Simulating...' : 'Simulate'}
           </Button>
+          </div>
+        )}
+ 
         </div>
-      </div>
+      {showClipboardPopup && (
+        <Alert color="green" className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-fit px-6 py-3 text-center shadow-lg">
+          Ctrl+V into Draw molecule
+        </Alert>
+      )}
       {simLoading && (
         <div className="flex justify-center items-center mb-6">
           <Spinner className="h-8 w-8 text-blue-500" />
