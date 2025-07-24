@@ -47,6 +47,7 @@ export function Simulation() {
   const [searchType, setSearchType] = useState("similarity"); // Add searchType state
   const [queryType, setQueryType] = useState("draw"); // Default to Draw molecule
   const [topLimit, setTopLimit] = useState(8); // Add topLimit state
+  const [moleculeLimit, setMoleculeLimit] = useState(30); // Add moleculeLimit state
 
   const [mculeSmiles, setMculeSmiles] = useState(""); // For drawing in mcule component
 
@@ -395,14 +396,14 @@ export function Simulation() {
                           title={mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "N/A"}
                           onClick={() => setSearchCode(mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "")}
                         >
-                          {(mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "N/A").toString().slice(0,10)}{(mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "N/A").toString().length > 10 ? '...' : ''}
+                          {(mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "N/A").toString().slice(0,moleculeLimit)}{(mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "N/A").toString().length > moleculeLimit ? '...' : ''}
                         </td>
                         <td
                           className="p-2 cursor-pointer hover:bg-blue-100"
                           title={mol.IUPAC_NAME || "N/A"}
                           onClick={() => setSearchCode(mol.IUPAC_NAME || "")}
                         >
-                          {(mol.IUPAC_NAME || "N/A").toString().slice(0,10)}{(mol.IUPAC_NAME || "N/A").toString().length > 10 ? '...' : ''}
+                          {(mol.IUPAC_NAME || "N/A").toString().slice(0,moleculeLimit)}{(mol.IUPAC_NAME || "N/A").toString().length > moleculeLimit ? '...' : ''}
                         </td>
                         <td
                           className="p-2 font-mono text-xs cursor-pointer hover:bg-blue-100"
@@ -419,7 +420,7 @@ export function Simulation() {
                             }
                           }}
                         >
-                          {(mol.SMILES_STRING || mol.SMILES || mol.smiles || "N/A").toString().slice(0,10)}{(mol.SMILES_STRING || mol.SMILES || mol.smiles || "N/A").toString().length > 10 ? '...' : ''}
+                          {(mol.SMILES_STRING || mol.SMILES || mol.smiles || "N/A").toString().slice(0,moleculeLimit)}{(mol.SMILES_STRING || mol.SMILES || mol.smiles || "N/A").toString().length > moleculeLimit ? '...' : ''}
                         </td>
                         <td
                           className="p-2 font-mono text-xs cursor-pointer hover:bg-blue-100"
@@ -436,22 +437,22 @@ export function Simulation() {
                             }
                           }}
                         >
-                          {(mol.INCHI || "N/A").toString().slice(0,10)}{(mol.INCHI || "N/A").toString().length > 10 ? '...' : ''}
+                          {(mol.INCHI || "N/A").toString().slice(0,moleculeLimit)}{(mol.INCHI || "N/A").toString().length > moleculeLimit ? '...' : ''}
                         </td>
                         <td
                           className="p-2 font-mono text-xs cursor-pointer hover:bg-blue-100"
                           title={mol.INCHIKEY || "N/A"}
                           onClick={() => setSearchCode(mol.INCHIKEY || "")}
                         >
-                          {(mol.INCHIKEY || "N/A").toString().slice(0,10)}{(mol.INCHIKEY || "N/A").toString().length > 10 ? '...' : ''}
+                          {(mol.INCHIKEY || "N/A").toString().slice(0,moleculeLimit)}{(mol.INCHIKEY || "N/A").toString().length > moleculeLimit ? '...' : ''}
                         </td>
-                        <td className="p-2" title={mol.BRUTTO_FORMULA || "N/A"}>{(mol.BRUTTO_FORMULA || "N/A").toString().slice(0,10)}{(mol.BRUTTO_FORMULA || "N/A").toString().length > 10 ? '...' : ''}</td>
-                        <td className="p-2" title={mol.MW_STRUCTURE || "N/A"}>{(mol.MW_STRUCTURE || "N/A").toString().slice(0,10)}{(mol.MW_STRUCTURE || "N/A").toString().length > 10 ? '...' : ''}</td>
-                        <td className="p-2" title={mol.AVAILABLE_MG || "N/A"}>{(mol.AVAILABLE_MG || "N/A").toString().slice(0,10)}{(mol.AVAILABLE_MG || "N/A").toString().length > 10 ? '...' : ''}</td>
+                        <td className="p-2" title={mol.BRUTTO_FORMULA || "N/A"}>{(mol.BRUTTO_FORMULA || "N/A").toString().slice(0,moleculeLimit)}{(mol.BRUTTO_FORMULA || "N/A").toString().length > moleculeLimit ? '...' : ''}</td>
+                        <td className="p-2" title={mol.MW_STRUCTURE || "N/A"}>{(mol.MW_STRUCTURE || "N/A").toString().slice(0,moleculeLimit)}{(mol.MW_STRUCTURE || "N/A").toString().length > moleculeLimit ? '...' : ''}</td>
+                        <td className="p-2" title={mol.AVAILABLE_MG || "N/A"}>{(mol.AVAILABLE_MG || "N/A").toString().slice(0,moleculeLimit)}{(mol.AVAILABLE_MG || "N/A").toString().length > moleculeLimit ? '...' : ''}</td>
                         <td className="p-2 cursor-pointer group" title={mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-"}
                           onClick={() => addToCart(mol, 1, mol.PRICE_1MG)}
                         >
-                          <span>{(mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-").toString().slice(0,10)}{(mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-").toString().length > 10 ? '...' : ''}</span>
+                          <span>{(mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-").toString().slice(0,moleculeLimit)}{(mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-").toString().length > moleculeLimit ? '...' : ''}</span>
                           {mol.PRICE_1MG && (
                             <ShoppingCartIcon
                               className="inline-block h-5 w-5 text-green-600 ml-2 cursor-pointer opacity-70 group-hover:opacity-100"
@@ -462,7 +463,7 @@ export function Simulation() {
                         <td className="p-2 cursor-pointer group" title={mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-"}
                           onClick={() => addToCart(mol, 2, mol.PRICE_2MG)}
                         >
-                          <span>{(mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-").toString().slice(0,10)}{(mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-").toString().length > 10 ? '...' : ''}</span>
+                          <span>{(mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-").toString().slice(0,moleculeLimit)}{(mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-").toString().length > moleculeLimit ? '...' : ''}</span>
                           {mol.PRICE_2MG && (
                             <ShoppingCartIcon
                               className="inline-block h-5 w-5 text-green-600 ml-2 cursor-pointer opacity-70 group-hover:opacity-100"
@@ -473,7 +474,7 @@ export function Simulation() {
                         <td className="p-2 cursor-pointer group" title={mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-"}
                           onClick={() => addToCart(mol, 5, mol.PRICE_5MG)}
                         >
-                          <span>{(mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-").toString().slice(0,10)}{(mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-").toString().length > 10 ? '...' : ''}</span>
+                          <span>{(mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-").toString().slice(0,moleculeLimit)}{(mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-").toString().length > moleculeLimit ? '...' : ''}</span>
                           {mol.PRICE_5MG && (
                             <ShoppingCartIcon
                               className="inline-block h-5 w-5 text-green-600 ml-2 cursor-pointer opacity-70 group-hover:opacity-100"
@@ -484,7 +485,7 @@ export function Simulation() {
                         <td className="p-2 cursor-pointer group" title={mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-"}
                           onClick={() => addToCart(mol, 10, mol.PRICE_10MG)}
                         >
-                          <span>{(mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-").toString().slice(0,10)}{(mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-").toString().length > 10 ? '...' : ''}</span>
+                          <span>{(mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-").toString().slice(0,moleculeLimit)}{(mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-").toString().length > moleculeLimit ? '...' : ''}</span>
                           {mol.PRICE_10MG && (
                             <ShoppingCartIcon
                               className="inline-block h-5 w-5 text-green-600 ml-2 cursor-pointer opacity-70 group-hover:opacity-100"
