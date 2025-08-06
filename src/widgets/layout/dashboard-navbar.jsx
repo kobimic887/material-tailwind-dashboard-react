@@ -235,9 +235,9 @@ export function DashboardNavbar() {
       fullWidth
       blurred={fixedNavbar}
     >
-      <div className="flex flex-col-reverse justify-between gap-2 md:gap-6 md:flex-row md:items-center">
+      <div className="flex flex-col-reverse justify-between gap-2 md:gap-6 md:flex-row md:items-center w-full px-2">
         {/* Dashboard navigation as tabs */}
-        <div className="flex gap-2 border-b border-blue-gray-100 mb-2">
+        <div className="flex gap-2 border-b border-blue-gray-100 mb-2 overflow-x-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50 whitespace-nowrap">
           {dashboardTabs.map(tab => {
             const isActive = `/${layout}/${page}`.startsWith(`/dashboard${tab.path}`) || `/${layout}`+`/${page}` === `/dashboard${tab.path}` || `/${layout}` === "/dashboard" && tab.path === "/dashboardHome" && !page;
             const label = tab.path === "/dashboardHome" ? "Pyxis-discover" : tab.name;
@@ -252,7 +252,7 @@ export function DashboardNavbar() {
           })}
         </div>
 
-        <div className="flex items-center justify-between w-full md:w-auto">
+        <div className="flex items-center justify-between w-full md:w-auto mt-2 md:mt-0">
           {/* Mobile Search Toggle */}
           <div className="flex items-center gap-2">
             <IconButton
@@ -281,7 +281,7 @@ export function DashboardNavbar() {
 
           
           {/* Replace sign-in link with user info and sign out */}
-          <div className="flex items-center gap-2 md:gap-14 mr-2 md:mr-4 px-4">
+          <div className="flex items-center gap-2 md:gap-14 mr-2 md:mr-4 px-2 sm:px-4">
             <Typography variant="small" color="blue-gray" className="font-medium hidden sm:block">
               Hello:{" "}
               <Chip

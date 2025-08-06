@@ -288,7 +288,7 @@ export function Simulation() {
   };
 
   return (
-    <div className="h-[80vh] flex flex-col pt-8 pb-8 bg-gray-50">
+    <div className="min-h-screen flex flex-col pt-4 pb-4 bg-gray-50 w-full px-2 sm:px-4">
       {/* Hover Preview Tooltip */}
       {hoveredPreview && (
         <div 
@@ -339,11 +339,11 @@ export function Simulation() {
         </div>
       )}
 
-      <div className="mb-6 flex flex-col gap-2">        
+      <div className="mb-6 flex flex-col gap-2 w-full">        
         {/* Query type radio buttons above search box */}
-        <div className="flex items-center gap-4 mb-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mb-2 w-full">
           <Typography variant="small" color="blue-gray" className="mr-2">Query:</Typography>
-          <label className="flex items-center gap-1">
+          <label className="flex items-center gap-1 w-full sm:w-auto">
             <input
               type="radio"
               name="queryType"
@@ -353,7 +353,7 @@ export function Simulation() {
             />
             <span>Draw molecule</span>
           </label>
-          <label className="flex items-center gap-1">
+          <label className="flex items-center gap-1 w-full sm:w-auto">
             <input
               type="radio"
               name="queryType"
@@ -365,9 +365,9 @@ export function Simulation() {
           </label>
         </div>
         {/* Search type radio buttons */}
-        <div className="flex items-center gap-4 mb-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mb-2 w-full">
           <Typography variant="small" color="blue-gray" className="mr-2">Search type:</Typography>
-          <label className="flex items-center gap-1">
+          <label className="flex items-center gap-1 w-full sm:w-auto">
             <input
               type="radio"
               name="searchType"
@@ -377,7 +377,7 @@ export function Simulation() {
             />
             <span>Similarity</span>
           </label>
-          <label className="flex items-center gap-1">
+          <label className="flex items-center gap-1 w-full sm:w-auto">
             <input
               type="radio"
               name="searchType"
@@ -399,12 +399,12 @@ export function Simulation() {
           </label>
         </div>
         {queryType !== "draw" && (
-          <div id="molecule-search" className="flex items-center gap-0"> {/* gap-0 removes space between input and button */}
+        <div id="molecule-search" className="flex flex-col sm:flex-row items-stretch gap-2 w-full"> {/* Responsive search bar */}
           <Input
             label="Add molecule ID, SMILES, CAS Number, IUPAC name, InChI or InChIKey here"
             value={searchCode}
             onChange={e => setSearchCode(e.target.value)}
-            className="flex-1 min-w-0" // changed to flex-1 min-w-0 for full width till button
+            className="flex-1 min-w-0 w-full sm:w-auto" // full width on mobile
           />
 
         </div>
