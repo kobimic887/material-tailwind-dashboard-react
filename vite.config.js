@@ -27,13 +27,11 @@ export default defineConfig({
       ignored: ['**/.git/**', '**/node_modules/**', '**/.env*', '**/dist/**']
     }
   },
-  optimizeDeps: {
-    exclude: ['.git/**']
-  },
   build: {
     rollupOptions: {
       external: (id) => {
-        return id.includes('.git/') || id.includes('node_modules/');
+        // Only externalize actual npm packages, not internal files
+        return /^[^.\/]/.test(id);
       }
     }
   }
