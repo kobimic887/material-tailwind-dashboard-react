@@ -23,5 +23,18 @@ export default defineConfig({
         secure: false,
       },
     },
+    watch: {
+      ignored: ['**/.git/**', '**/node_modules/**', '**/.env*', '**/dist/**']
+    }
   },
+  optimizeDeps: {
+    exclude: ['.git/**']
+  },
+  build: {
+    rollupOptions: {
+      external: (id) => {
+        return id.includes('.git/') || id.includes('node_modules/');
+      }
+    }
+  }
 });
