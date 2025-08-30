@@ -9,6 +9,7 @@ import {
   Spinner,
 } from "@material-tailwind/react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { API_CONFIG } from "@/utils/constants";
 
 export function Notifications() {
   const [showAlerts, setShowAlerts] = React.useState({
@@ -43,7 +44,7 @@ export function Notifications() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`https://${window.location.hostname}:3000/api/activity`, {
+      const response = await fetch(API_CONFIG.buildApiUrl('/activity'), {
         headers: {
           "Content-Type": "application/json",
           // If you have a token variable, include it; otherwise, remove this line

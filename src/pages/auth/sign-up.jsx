@@ -7,6 +7,7 @@ import {
   Typography,
 } from "@material-tailwind/react";
 import { Link } from "react-router-dom";
+import { API_CONFIG } from "@/utils/constants";
 
 export function SignUp() {
   const [email, setEmail] = useState("");
@@ -30,7 +31,7 @@ export function SignUp() {
     
     setLoading(true);
     try {
-      const res = await fetch(`https://${window.location.hostname}:3000/api/signup`, {
+      const res = await fetch(API_CONFIG.buildApiUrl('/signup'), {
         method: "POST",
         headers: { "Content-Type": "application/json", accept: "*/*" },
         body: JSON.stringify({ username, password, email, organization }),

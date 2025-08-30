@@ -1,12 +1,14 @@
 // Utility functions for API calls
 
+// Centralized hostname constant
+export const API_HOSTNAME = 'app.pyxis-discovery.com' //window.location.hostname;
+
 /**
  * Get the appropriate protocol (http/https) based on the current hostname
  * Uses HTTP for localhost and 127.0.0.1 to avoid SSL certificate issues in development
  */
 export const getApiProtocol = () => {
-  const hostname = window.location.hostname;
-  return (hostname === 'localhost' || hostname === '127.0.0.1') ? 'http' : 'https';
+  return (API_HOSTNAME === 'localhost' || API_HOSTNAME === '127.0.0.1') ? 'http' : 'https';
 };
 
 /**
@@ -14,7 +16,7 @@ export const getApiProtocol = () => {
  */
 export const getApiBaseUrl = () => {
   const protocol = getApiProtocol();
-  return `${protocol}://${window.location.hostname}:3000`;
+  return `${protocol}://${API_HOSTNAME}:3000`;
 };
 
 /**

@@ -48,8 +48,6 @@ export function PaidPlans() {
      {
       name: 'Trial',
       subtitle: 'Affordable access for anyone to understand the concept',
-      monthlyPrice: null,
-      yearlyPrice: null,
       popular: false,
       description: 'Affordable access for anyone to understand the concept',
       features: [
@@ -64,122 +62,57 @@ export function PaidPlans() {
       buttonColor: 'gray'
     },
     {
-      name: 'Budget',
-      subtitle: 'Affordable access for students and researchers',
-      monthlyPrice: 6.42,
-      yearlyPrice: 77.04,
-      popular: false,
-      description: 'Affordable access for students and researchers with light computational needs.',
-      features: [
-        'Academic Use',
-        '84 credits/year',
-        '7 parallel jobs',
-        'Low job priority',
-        'Most models & settings',
-        'Email Support',
-        'Guaranteed Confidentiality',
-        'Unlimited Data Storage',
-        'Full Pipelines Access',
-        'Full API Access',
-        'Max 5k Residues Protein Folding',
-        'Access to Molecular Dynamics',
-        'Folding Simulation Not Included'
-      ],
-      buttonText: 'Purchase',
-      buttonColor: 'blue-gray'
-    },
-    {
       name: 'Standard',
       subtitle: 'Best for active research projects',
-      monthlyPrice: 12.08,
-      yearlyPrice: 144.96,
+      price: 20,
       popular: false,
       description: 'The best choice for active research projects needing more power.',
       features: [
-        'Academic Use',
-        '168 credits/year',
-        '14 parallel jobs',
+        '50 credits',
         'Medium job priority',
         'Most models & settings',
         'Email Support',
         'Guaranteed Confidentiality',
         'Unlimited Data Storage',
-        'Full Pipelines Access',
-        'Full API Access',
-        'Max 5k Residues Protein Folding',
-        'Access to Molecular Dynamics',
-        'Folding Simulation Not Included'
       ],
       buttonText: 'Purchase',
       buttonColor: 'blue'
     },
     {
       name: 'Academic',
-      subtitle: 'For serious academic research',
-      monthlyPrice: 21.25,
-      yearlyPrice: 255.00,
-      popular: true,
-      description: 'Designed for serious academic research with higher compute demands.',
+      subtitle: 'For serious academic research with higher compute demands',
+      price: 40,
+      popular: false,
+      description: 'The best choice for active research projects needing more power.',
       features: [
-        'Academic Use',
-        '300 credits/year',
-        '30 parallel jobs',
+        '300 credits',
         'Medium job priority',
         'Most models & settings',
-        'Preferred Support',
+        'Email Support',
         'Guaranteed Confidentiality',
         'Unlimited Data Storage',
-        'Full Pipelines Access',
-        'Full API Access',
-        'Max 5k Residues Protein Folding',
-        'Access to Molecular Dynamics',
-        'Folding Simulation Not Included'
       ],
       buttonText: 'Purchase',
-      buttonColor: 'indigo'
+      buttonColor: 'blue'
     },
+    
     {
       name: 'Professional',
       subtitle: 'The powerhouse plan for professionals',
-      monthlyPrice: 66.67,
-      yearlyPrice: 800.04,
+      price: 80,
       popular: false,
       description: 'The powerhouse plan for professionals needing large-scale computation.',
       features: [
         'Commercial Use',
-        '720 credits/year',
-        '60 parallel jobs',
+        '720 credits',
         'High job priority',
         'All models & settings',
         'Priority Support',
         'Guaranteed Confidentiality',
         'Unlimited Data Storage',
-        'Full Pipelines Access',
-        'Full API Access',
-        'Max 5k Residues Protein Folding',
-        'Access to Molecular Dynamics',
-        'Folding Simulation Not Included'
       ],
       buttonText: 'Purchase',
       buttonColor: 'purple'
-    },
-    {
-      name: 'Enterprise',
-      subtitle: 'Custom solutions for businesses and large-scale projects',
-      monthlyPrice: null,
-      yearlyPrice: null,
-      popular: false,
-      description: 'Commercial use rights, unlimited users, unlimited parallel jobs, custom models/pipelines/visualizations. Contact for pricing.',
-      features: [
-        'Commercial Use',
-        'Unlimited users',
-        'Unlimited parallel jobs',
-        'Custom models, pipelines, visualizations',
-        'Pyxis-discover Teams',
-        'Contact for pricing'
-      ],
-      buttonText: 'Contact Us',
-      buttonColor: 'gray'
     }
   ];  const handlePlanSelection = async (plan) => {
     // Check if Stripe is configured
@@ -235,8 +168,8 @@ export function PaidPlans() {
         },
         body: JSON.stringify({
           planName: plan.name,
-          price: isYearly ? plan.yearlyPrice : plan.monthlyPrice,
-          isYearly: isYearly,
+          price: plan.price,
+      
         }),
       });
 
@@ -329,35 +262,7 @@ export function PaidPlans() {
             advanced computational tools accessible to every researcher and scientist.
           </Typography>
           
-          {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4 mb-12">
-            <Typography className={`text-lg font-medium ${!isYearly ? 'text-blue-600' : 'text-gray-500'}`}>
-              Billed Monthly
-            </Typography>
-            <div className="relative">
-              <button
-                onClick={handleToggleChange}
-                className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                  isYearly ? 'bg-blue-600' : 'bg-gray-300'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    isYearly ? 'translate-x-7' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              <Typography className={`text-lg font-medium ${isYearly ? 'text-blue-600' : 'text-gray-500'}`}>
-                Billed Yearly
-              </Typography>
-              <Chip
-                value="Save up to 20%"
-                className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1"
-              />
-            </div>
-          </div>
+
         </div>
 
         {/* Pricing Cards */}
@@ -386,17 +291,11 @@ export function PaidPlans() {
                     <div className="mb-4">
                       <div className="flex items-baseline justify-center">
                         <Typography variant="h2" className="text-4xl font-bold text-gray-900">
-                          ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
+                          ${ plan.price}
                         </Typography>
-                        <Typography className="text-gray-500 ml-2">
-                          /{isYearly ? 'year' : 'month'}
-                        </Typography>
+
                       </div>
-                      {isYearly && plan.yearlyPrice && plan.monthlyPrice && (
-                        <Typography className="text-green-600 text-sm mt-1">
-                          Save ${((plan.monthlyPrice * 12) - plan.yearlyPrice).toFixed(0)}/year
-                        </Typography>
-                      )}
+                
                     </div>
                     
                     <Typography className="text-gray-600 text-sm mb-6">

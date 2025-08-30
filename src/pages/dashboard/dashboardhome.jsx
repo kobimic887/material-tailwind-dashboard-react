@@ -29,6 +29,8 @@ import {
 } from "@/data";
 import { CheckCircleIcon, ClockIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
+import { API_CONFIG } from "@/utils/constants";
+
 
 export function DashboardHome() {
   const [activityData, setActivityData] = React.useState(null);
@@ -44,7 +46,7 @@ export function DashboardHome() {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`https://${window.location.hostname}:3000/api/activity`, {
+      const response = await fetch(API_CONFIG.buildApiUrl('/activity'), {
         headers: {
           "Content-Type": "application/json",
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -76,7 +78,7 @@ export function DashboardHome() {
       setMolPriceStatsLoading(true);
       setMolPriceStatsError(null);
       try {
-        const response = await fetch(`https://${window.location.hostname}:3000/api/mol-price-stats`, {
+        const response = await fetch(API_CONFIG.buildApiUrl('/mol-price-stats'), {
           headers: { 'accept': 'application/json' }
         });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);

@@ -1,7 +1,6 @@
 import {
   HomeIcon,
   UserCircleIcon,
-  TableCellsIcon,
   InformationCircleIcon,
   ServerStackIcon,
   RectangleStackIcon,
@@ -14,9 +13,9 @@ import {
 import {
   DashboardHome,
   Profile,
-  Tables,
   Notifications,
   PaidPlans,
+  ControlPanel,
   Simulation,
   MoleculeViewer,
   Molstar3D,
@@ -96,38 +95,11 @@ export const routes = [
   },
   {
     layout: "dashboard",
-    pages: [
-      {
-        icon: <HomeIcon {...icon} />,
-        name: "dashboard",
-        path: "/dashboardHome",
-        element: <DashboardHome />,
-      },
-      {
-          hideFromMenu: true,
-        icon: <UserCircleIcon {...icon} />,
-        name: "profile",
-        path: "/profile",
-        element: <Profile />,
-      },
-      {
-          hideFromMenu: true,
-        icon: <TableCellsIcon {...icon} />,
-        name: "tables",
-        path: "/tables",
-        element: <Tables />,
-      },
-      {
-        icon: <InformationCircleIcon {...icon} />,
-        name: "notifications",
-        path: "/notifications",
-        element: <Notifications />,
-      },
-      {
-        icon: <GiftIcon {...icon} />,
-        name: "paidplans",
-        path: "/paidplans",
-        element: <PaidPlans />,
+    pages: [      {
+        icon: <CogIcon {...icon} />,
+        name: "control panel",
+        path: "/controlpanel",
+        element: <ControlPanel />,
       },
       {
         icon: <EyeIcon {...icon} />,
@@ -141,6 +113,34 @@ export const routes = [
         path: "/molstar3d",
         element: <Molstar3D />,
       },
+      
+      {
+        icon: <HomeIcon {...icon} />,
+        name: "dashboard",
+        path: "/dashboardHome",
+        element: <DashboardHome />,
+      },
+
+      {
+          hideFromMenu: true,
+        icon: <UserCircleIcon {...icon} />,
+        name: "profile",
+        path: "/profile",
+        element: <Profile />,
+      },
+      {
+        icon: <InformationCircleIcon {...icon} />,
+        name: "notifications",
+        path: "/notifications",
+        element: <Notifications />,
+      },
+      {
+        icon: <GiftIcon {...icon} />,
+        name: "paidplans",
+        path: "/paidplans",
+        element: <PaidPlans />,
+      },
+
       {
         icon: <BeakerIcon {...icon} />,
         name: "RdKit Visualiser",

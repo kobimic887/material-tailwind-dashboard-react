@@ -17,6 +17,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ShoppingCartIcon } from '@heroicons/react/24/solid';
 import ProfessionalMoleculeViewer from '../../components/ProfessionalMoleculeViewer';
+import { API_CONFIG } from "@/utils/constants";
 
 export function Simulation() {
   // Popup state for clipboard copy
@@ -116,7 +117,7 @@ export function Simulation() {
       };
       const token = localStorage.getItem('auth_token');
       const query = encodeURIComponent(searchCode);
-      const res = await fetch(`https://${window.location.hostname}:3000/api/mol-price/search?query=${query}&limit=10&skip=0`, {
+      const res = await fetch(API_CONFIG.buildApiUrl(`/mol-price/search?query=${query}&limit=10&skip=0`), {
         method: "GET",
         headers: { 'accept': 'application/json' },
       });
@@ -142,7 +143,7 @@ export function Simulation() {
     try {
       const params = new URLSearchParams({ pdbid: simPdbId, smiles: simSmiles });
       const token = localStorage.getItem('auth_token');
-      const res = await fetch(`https://${window.location.hostname}:3000/api/simulation?${params.toString()}`, {
+      const res = await fetch(API_CONFIG.buildApiUrl(`/simulation?${params.toString()}`), {
         method: "GET",
         headers: {
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -161,8 +162,8 @@ export function Simulation() {
   // Redirect to Molstar3D when simulation results are available
   useEffect(() => {
     if (simResult && simResult.simulationKey) {
-      const pdbUrl = `https://${window.location.hostname}:3000/api/sanitizedpdb/${simResult.simulationKey}`;      
-      const sdfUrl = `https://${window.location.hostname}:3000/api/sanitizedminimalsdf/${simResult.simulationKey}`;
+      const pdbUrl = API_CONFIG.buildApiUrl(`/sanitizedpdb/${simResult.simulationKey}`);      
+      const sdfUrl = API_CONFIG.buildApiUrl(`/sanitizedminimalsdf/${simResult.simulationKey}`);
       
       // Store URLs in localStorage and navigate to Molstar3D
       localStorage.setItem('molstar_pdb_url', pdbUrl);
@@ -399,14 +400,23 @@ export function Simulation() {
           </label>
         </div>
         {queryType !== "draw" && (
-        <div id="molecule-search" className="flex flex-col sm:flex-row items-stretch gap-2 w-full"> {/* Responsive search bar */}
+        <div id="molecule-search" className="flex flex-col sm:flex-row items-stretch gap-2 w-1/2"> {/* 50% width search bar */}
           <Input
             label="Add molecule ID, SMILES, CAS Number, IUPAC name, InChI or InChIKey here"
             value={searchCode}
             onChange={e => setSearchCode(e.target.value)}
-            className="flex-1 min-w-0 w-full sm:w-auto" // full width on mobile
+            className="flex-1 min-w-0 w-full" // full width within the container
           />
-
+          <Button
+            size="lg"
+            color="green"
+            onClick={handleSearch}
+            disabled={searchLoading || !searchCode}
+            className="flex items-center gap-3 px-6 py-3 text-lg font-semibold shadow-md whitespace-nowrap"
+          >
+            {searchLoading ? <Spinner className="h-5 w-5" /> : <CloudIcon className="h-5 w-5" />}
+            {searchLoading ? 'Searching...' : 'Search'}
+          </Button>
         </div>
         )}
       </div>
@@ -449,18 +459,6 @@ export function Simulation() {
           </div>   
         </div>
       )}
-        <div className="flex justify-center items-center my-8">
-          <Button
-            size="lg"
-            color="green"
-            onClick={handleSearch}
-            disabled={searchLoading || !searchCode}
-            className="flex items-center gap-3 px-10 py-4 w-full max-w-xs text-lg font-semibold shadow-md"
-          >
-            {searchLoading ? <Spinner className="h-5 w-5" /> : <CloudIcon className="h-5 w-5" />}
-            {searchLoading ? 'Searching...' : 'Search'}
-          </Button>
-        </div>
         <div id="results" style={{ width: "100%", height: "70vh", background: "#e3e8ef" }}>
           {/* Header as a block element, not wrapping Card or div */}
           {/* <div className="mb-4">
@@ -696,14 +694,14 @@ export function Simulation() {
               <div className="mt-4 flex gap-2">
                 <a download
                   className="inline-block px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition"
-                  href={`https://${window.location.hostname}:3000/api/sanitizedpdb/${simResult.simulationKey}`}
+                  href={API_CONFIG.buildApiUrl(`/sanitizedpdb/${simResult.simulationKey}`)}
                   target="_blank"
                 >
                   View Sanitized PDB Result
                 </a>
                 <a download
                   className="inline-block px-4 py-2 border border-green-500 text-green-500 rounded hover:bg-green-50 transition"
-                  href={`https://${window.location.hostname}:3000/api/sanitizedminimalsdf/${simResult.simulationKey}`}
+                  href={API_CONFIG.buildApiUrl(`/sanitizedminimalsdf/${simResult.simulationKey}`)}
                   target="_blank"
                 >
                   View Sanitized SDF Result

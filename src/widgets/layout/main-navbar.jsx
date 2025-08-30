@@ -158,7 +158,7 @@ export function MainNavbar() {
               <MenuList>
                 {isAdmin() && (
                   <MenuItem>
-                    <Link to="/dashboard/dashboardHome" className="w-full">
+                    <Link to="/dashboard/controlpanel" className="w-full">
                       Admin Dashboard
                     </Link>
                   </MenuItem>

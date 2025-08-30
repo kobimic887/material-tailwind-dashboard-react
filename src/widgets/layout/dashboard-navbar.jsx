@@ -1,5 +1,4 @@
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import routes from "@/routes";
 import {
   Navbar,
   Typography,
@@ -31,6 +30,7 @@ import {
   setOpenSidenav,
 } from "@/context";
 import React, { useState, useEffect } from "react";
+import { API_CONFIG, getAuthToken } from "@/utils/constants";
 
 export function DashboardNavbar() {
   const [controller, dispatch] = useMaterialTailwindController();
@@ -58,29 +58,35 @@ export function DashboardNavbar() {
     
     window.addEventListener('storage', handleStorageChange);
     
-    // Also check for cart updates periodically (for same-tab updates)
-    const cartCheckInterval = setInterval(() => {
+    // Also set up a custom event listener for cart updates within the same tab
+    const handleCartUpdate = () => {
       loadCartFromStorage();
-    }, 1000);
+    };
     
-    // Example: get user info and tokens from localStorage (customize as needed)
-    const storedUser = JSON.parse(localStorage.getItem("user_info")) || {};
-    const simulationTokens = Number(
-      localStorage.getItem("simulation_tokens")
-    ) || 0;
-    setUser({
-      name: storedUser.name || storedUser.username || "User",
-      simulationTokens,
-    });
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+    };
+  }, []);
 
-    // Validate auth token
-    const token = localStorage.getItem("auth_token");
+  useEffect(() => {
+    validateTokenAndLoadUser();
+  }, [pathname]);
+
+  const validateTokenAndLoadUser = async () => {
+    const token = getAuthToken();
+    const apiUrl = API_CONFIG.buildApiUrl("/validate-token");
+    
     if (!token) {
+      console.log("No token found, redirecting to main");
       navigate("/main/mainhome", { replace: true });
       return;
     }
-    // Optionally, validate token with backend
-    fetch(`https://${window.location.hostname}:3000/api/validate-token`, {
+    
+    fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -92,6 +98,13 @@ export function DashboardNavbar() {
         return res.json();
       })
       .then((data) => {
+        // Add null check for data
+        if (!data) {
+          console.error("Received null/undefined data from validate-token API");
+          navigate("/main/mainhome", { replace: true });
+          return;
+        }
+        
         if (!data.valid) {
           navigate("/main/mainhome", { replace: true });
         } else {
@@ -99,420 +112,278 @@ export function DashboardNavbar() {
           if (data.user) {
             localStorage.setItem("user_info", JSON.stringify(data.user));
           }
-          if (typeof data.user.simulationTokens !== 'undefined') {
-            localStorage.setItem("simulation_tokens", data.user.simulationTokens);
+          if (data.user && typeof data.user.simulationTokens !== 'undefined') {
+            setUser({
+              name: data.user.username || data.user.email || "User",
+              simulationTokens: data.user.simulationTokens
+            });
+          } else {
+            // Fallback to localStorage user info
+            const storedUser = localStorage.getItem("user_info");
+            if (storedUser) {
+              try {
+                const parsedUser = JSON.parse(storedUser);
+                setUser({
+                  name: parsedUser.username || parsedUser.email || "User",
+                  simulationTokens: parsedUser.simulationTokens || 0
+                });
+              } catch (e) {
+                console.error("Error parsing stored user info:", e);
+                setUser({ name: "User", simulationTokens: 0 });
+              }
+            }
           }
-          setUser({
-            name: (data.user && (data.user.name || data.user.username)) || "User",
-            simulationTokens: data.user.simulationTokens || 0,
-          });
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Token validation failed:", err);
         navigate("/main/mainhome", { replace: true });
       });
-      
-    // Cleanup function
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(cartCheckInterval);
-    };
-  }, [navigate]);
+  };
 
-  // Function to load cart from localStorage
   const loadCartFromStorage = () => {
     try {
-      const savedCart = localStorage.getItem('moleculeCart');
-      if (savedCart) {
-        const parsedCart = JSON.parse(savedCart);
-        setCartItems(parsedCart);
-        
-        // Calculate total price
-        const total = parsedCart.reduce((sum, item) => sum + item.totalPrice, 0);
-        setCartTotal(total);
-        
-        return parsedCart;
+      const cart = localStorage.getItem('moleculeCart');
+      if (cart) {
+        const cartData = JSON.parse(cart);
+        setCartItems(cartData.items || []);
+        setCartTotal(cartData.total || 0);
+      } else {
+        setCartItems([]);
+        setCartTotal(0);
       }
     } catch (error) {
       console.error('Error loading cart from storage:', error);
+      setCartItems([]);
+      setCartTotal(0);
     }
-    setCartItems([]);
-    setCartTotal(0);
-    return [];
   };
 
-  // Function to get cart summary
-  const getCartSummary = () => {
-    const itemCount = cartItems.length;
-    const uniqueMolecules = [...new Set(cartItems.map(item => item.name))].length;
-    return {
-      itemCount,
-      uniqueMolecules,
-      total: cartTotal.toFixed(2)
-    };
-  };
-
-  // Function to handle Stripe checkout
-  const handleStripeCheckout = async () => {
+  const removeFromCart = (index) => {
     try {
-      if (cartItems.length === 0) {
-        alert('Your cart is empty!');
-        return;
-      }
-
-      // Prepare checkout data
-      const checkoutData = {
-        items: cartItems.map(item => ({
-          name: item.name,
-          amount: item.amount,
-          price: item.pricePerMg,
-          total: item.totalPrice,
-          smiles: item.smiles,
-          moleculeId: item.moleculeId
-        })),
-        price: cartTotal,
-        name: 'test cart',
-        // Add any additional metadata if needed
-        currency: 'usd',
-        successUrl: `${window.location.origin}/dashboard/molstar3d?checkout=success`,
-        cancelUrl: `${window.location.origin}/dashboard/molstar3d?checkout=cancel`
-      };
-
-      // Call Stripe checkout API
-      const response = await fetch(`${getApiBaseUrl()}/create-checkout-session-onetime`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify(checkoutData)
-      });
-
-      if (response.ok) {
-        const { sessionUrl } = await response.json();
-        // Redirect to Stripe Checkout
-        window.location.href = sessionUrl;
-      } else {
-        const error = await response.json();
-        alert(`Checkout failed: ${error.message || 'Unknown error'}`);
+      const cart = localStorage.getItem('moleculeCart');
+      if (cart) {
+        const cartData = JSON.parse(cart);
+        cartData.items.splice(index, 1);
+        cartData.total = cartData.items.reduce((sum, item) => sum + (item.price || 0), 0);
+        localStorage.setItem('moleculeCart', JSON.stringify(cartData));
+        loadCartFromStorage();
+        
+        // Dispatch a custom event to notify other components
+        window.dispatchEvent(new Event('cartUpdated'));
       }
     } catch (error) {
-      console.error('Stripe checkout error:', error);
-      alert('Failed to initiate checkout. Please try again.');
+      console.error('Error removing item from cart:', error);
     }
   };
 
-  const handleSignOut = () => {
-    // Clear tokens and user info (customize as needed)
-    localStorage.removeItem("auth_token");
+  const logout = () => {
+    localStorage.removeItem("access_token");
     localStorage.removeItem("user_info");
-    localStorage.removeItem("simulation_tokens");
-    localStorage.removeItem("moleculeCart"); // Clear cart on sign out
-    window.location.href = "/auth/sign-in";
+    localStorage.removeItem("moleculeCart");
+    navigate("/main/mainhome", { replace: true });
   };
-
-  // Function to remove item from cart
-  const removeCartItem = (itemId) => {
-    const updatedCart = cartItems.filter(item => item.id !== itemId);
-    setCartItems(updatedCart);
-    setCartTotal(updatedCart.reduce((sum, item) => sum + (item.totalPrice || 0), 0));
-    localStorage.setItem('moleculeCart', JSON.stringify(updatedCart));
-  };
-
-  // Dashboard tabs for navbar, remove notifications tab
-  const dashboardTabs = routes
-    .find(r => r.layout === "dashboard")
-    .pages.filter(p => !p.hideFromMenu && p.name !== "notifications");
 
   return (
     <Navbar
-      color={fixedNavbar ? "white" : "transparent"}
-      className={`rounded-xl transition-all ${
-        fixedNavbar
-          ? "sticky top-4 z-40 py-3 shadow-md shadow-blue-gray-500/5"
-          : "px-0 py-1"
-      }`}
+      id="top-navbar"
+      color="white"
+      className="sticky top-0 z-40 py-3 shadow-md shadow-blue-gray-500/5 rounded-none border-b border-blue-gray-100"
       fullWidth
-      blurred={fixedNavbar}
+      blurred={true}
     >
-      <div className="flex flex-col-reverse justify-between gap-2 md:gap-6 md:flex-row md:items-center w-full px-2">
-        {/* Dashboard navigation as tabs */}
-        <div className="flex gap-2 border-b border-blue-gray-100 mb-2 overflow-x-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50 whitespace-nowrap">
-          {dashboardTabs.map(tab => {
-            const isActive = `/${layout}/${page}`.startsWith(`/dashboard${tab.path}`) || `/${layout}`+`/${page}` === `/dashboard${tab.path}` || `/${layout}` === "/dashboard" && tab.path === "/dashboardHome" && !page;
-            const label = tab.path === "/dashboardHome" ? "Pyxis-discover" : tab.name;
-            return (
-              <Link key={tab.path} to={`/dashboard${tab.path}`} className={`px-4 py-2 -mb-px border-b-2 transition-colors ${isActive ? "border-blue-500 text-blue-700 font-semibold" : "border-transparent text-blue-gray-500 hover:text-blue-700"}`}>
-                <span className="flex items-center gap-1">
-                  {tab.icon}
-                  {label}
-                </span>
+      <div id="navbar-content" className="flex items-center justify-between w-full px-4">
+        {/* Left Side - Mobile Menu Toggle and Breadcrumbs */}
+        <div id="navbar-left" className="flex items-center gap-4">
+          {/* Mobile Menu Toggle */}
+          <IconButton
+            id="mobile-menu-toggle"
+            variant="text"
+            color="blue-gray"
+            className="grid xl:hidden"
+            onClick={() => setOpenSidenav(dispatch, !openSidenav)}
+          >
+            <Bars3Icon strokeWidth={3} className="h-6 w-6 text-blue-gray-500" />
+          </IconButton>
+
+          {/* Breadcrumbs */}
+          <div id="breadcrumbs" className="hidden lg:block">
+            <Breadcrumbs className="bg-transparent p-0">
+              <Link to="/dashboard/controlpanel" className="opacity-60">
+                Dashboard
               </Link>
-            );
-          })}
+              <Typography
+                variant="small"
+                color="blue-gray"
+                className="font-normal opacity-100 capitalize"
+              >
+                {page || "Home"}
+              </Typography>
+            </Breadcrumbs>
+          </div>
         </div>
 
-        <div className="flex items-center justify-between w-full md:w-auto mt-2 md:mt-0">
+        {/* Center - Search Bar */}
+        <div id="navbar-center" className="flex-1 max-w-md mx-4">
+          <div className={`${showMobileSearch ? 'block' : 'hidden md:block'}`}>
+            <Input
+              id="search-input"
+              type="search"
+              placeholder="Search..."
+              className="!border-blue-gray-300 focus:!border-blue-500"
+              labelProps={{
+                className: "before:content-none after:content-none",
+              }}
+              icon={<MagnifyingGlassIcon className="h-5 w-5" />}
+            />
+          </div>
+        </div>
+
+        {/* Right Side - Actions and User Menu */}
+        <div id="navbar-right" className="flex items-center gap-2">
           {/* Mobile Search Toggle */}
-          <div className="flex items-center gap-2">
-            <IconButton
-              variant="text"
-              color="blue-gray"
-              className="grid xl:hidden"
-              onClick={() => setOpenSidenav(dispatch, !openSidenav)}
-            >
-              <Bars3Icon strokeWidth={3} className="h-6 w-6 text-blue-gray-500" />
-            </IconButton>
-            
-            <IconButton
-              variant="text"
-              color="blue-gray"
-              className="grid md:hidden"
-              onClick={() => setShowMobileSearch(!showMobileSearch)}
-            >
-              {showMobileSearch ? (
-                <XMarkIcon className="h-5 w-5 text-blue-gray-500" />
-              ) : (
-                <MagnifyingGlassIcon className="h-5 w-5 text-blue-gray-500" />
-              )}
-            </IconButton>
-          </div>
+          <IconButton
+            id="mobile-search-toggle"
+            variant="text"
+            color="blue-gray"
+            className="grid md:hidden"
+            onClick={() => setShowMobileSearch(!showMobileSearch)}
+          >
+            {showMobileSearch ? (
+              <XMarkIcon className="h-5 w-5 text-blue-gray-500" />
+            ) : (
+              <MagnifyingGlassIcon className="h-5 w-5 text-blue-gray-500" />
+            )}
+          </IconButton>
 
-
-          
-          {/* Replace sign-in link with user info and sign out */}
-          <div className="flex items-center gap-2 md:gap-14 mr-2 md:mr-4 px-2 sm:px-4">
-            <Typography variant="small" color="blue-gray" className="font-medium hidden sm:block">
-              Hello:{" "}
-              <Chip
-                value={user.name}
-                color="blue"
-                className="inline-block px-2 py-1 text-xs font-bold ml-1 align-middle"
-              />{" "}
-              |   You have{" "}
-              <Chip
-                value={`${user.simulationTokens} `}
-                color="green"
-                className="inline-block px-2 py-1 text-xs font-bold ml-1 align-middle"
-              /> Simulation Tokens left |
-            </Typography>
-            {/* Mobile user info - compact */}
-            <div className="flex items-center gap-1 sm:hidden">
-              <Chip
-                value={user.name}
-                color="blue"
-                className="px-2 py-1 text-xs font-bold"
-              />
-              <Chip
-                value={`${user.simulationTokens}`}
-                color="green"
-                className="px-2 py-1 text-xs font-bold"
-              />
-            </div>
-            <Button
-              variant="text"
-              color="blue-gray"
-              className="flex items-center gap-1 px-2 md:px-4 normal-case min-w-0"
-              onClick={handleSignOut}
-            >
-              <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
-              <span>Sign Out</span>
-            </Button>
-          </div>
+          {/* Cart Menu */}
           <Menu>
             <MenuHandler>
-              <Link to="/dashboard/notifications">
-                <IconButton variant="text" color="blue-gray">
-                  <BellIcon className="h-5 w-5 text-blue-gray-500" />
-                </IconButton>
-              </Link>
-            </MenuHandler>
-            {/* <MenuList className="w-max border-0">
-              <MenuItem className="flex items-center gap-3">
-                <Avatar
-                  src="https://demos.creative-tim.com/material-dashboard/assets/img/team-2.jpg"
-                  alt="item-1"
-                  size="sm"
-                  variant="circular"
-                />
-                <div>
-                  <Typography
-                    variant="small"
-                    color="blue-gray"
-                    className="mb-1 font-normal"
-                  >
-                    <strong>New message</strong> from Laur
-                  </Typography>
-                  <Typography
-                    variant="small"
-                    color="blue-gray"
-                    className="flex items-center gap-1 text-xs font-normal opacity-60"
-                  >
-                    <ClockIcon className="h-3.5 w-3.5" /> 13 minutes ago
-                  </Typography>
-                </div>
-              </MenuItem>
-              <MenuItem className="flex items-center gap-4">
-                <Avatar
-                  src="https://demos.creative-tim.com/material-dashboard/assets/img/small-logos/logo-spotify.svg"
-                  alt="item-1"
-                  size="sm"
-                  variant="circular"
-                />
-                <div>
-                  <Typography
-                    variant="small"
-                    color="blue-gray"
-                    className="mb-1 font-normal"
-                  >
-                    <strong>New album</strong> by Travis Scott
-                  </Typography>
-                  <Typography
-                    variant="small"
-                    color="blue-gray"
-                    className="flex items-center gap-1 text-xs font-normal opacity-60"
-                  >
-                    <ClockIcon className="h-3.5 w-3.5" /> 1 day ago
-                  </Typography>
-                </div>
-              </MenuItem>
-              <MenuItem className="flex items-center gap-4">
-                <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-tr from-blue-gray-800 to-blue-gray-900">
-                  <CreditCardIcon className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <Typography
-                    variant="small"
-                    color="blue-gray"
-                    className="mb-1 font-normal"
-                  >
-                    Payment successfully completed
-                  </Typography>
-                  <Typography
-                    variant="small"
-                    color="blue-gray"
-                    className="flex items-center gap-1 text-xs font-normal opacity-60"
-                  >
-                    <ClockIcon className="h-3.5 w-3.5" /> 2 days ago
-                  </Typography>
-                </div>
-              </MenuItem>
-            </MenuList> */}
-          </Menu>
-          <Menu>
-            <MenuHandler>
-              <div className="relative">
-                <IconButton
-                  variant="text"
-                  color="blue-gray"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="h-5 w-5 text-blue-gray-500"
-                  >
-                    <path d="M2.25 2.25a.75.75 0 000 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 00-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 000-1.5H5.378A2.25 2.25 0 017.5 15h11.218a.75.75 0 00.674-.421 60.358 60.358 0 002.96-7.228.75.75 0 00-.525-.965A60.864 60.864 0 005.68 4.509l-.232-.867A1.875 1.875 0 003.636 2.25H2.25zM3.75 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM16.5 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" />
-                  </svg>
+              <IconButton id="cart-menu-button" variant="text" color="blue-gray">
+                <div className="relative">
+                  <CreditCardIcon className="h-5 w-5 text-blue-gray-500" />
                   {cartItems.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                      {cartItems.length}
-                    </span>
+                    <Chip
+                      value={cartItems.length}
+                      size="sm"
+                      className="absolute -top-2 -right-2 h-5 w-5 bg-red-500 text-white text-xs flex items-center justify-center"
+                    />
                   )}
-                </IconButton>
-              </div>
+                </div>
+              </IconButton>
             </MenuHandler>
-            <MenuList className="w-80 border-0 shadow-lg">
-              {cartItems.length > 0 ? (
-                <>
-                  <div className="p-3 border-b border-blue-gray-50">
-                    <Typography variant="h6" color="blue-gray" className="mb-1">
-                      Shopping Cart
-                    </Typography>
-                    <Typography variant="small" color="gray">
-                      {getCartSummary().itemCount} items • {getCartSummary().uniqueMolecules} unique molecules
+            <MenuList id="cart-menu-list" className="w-80 border-0 shadow-lg">
+              <div className="p-3 border-b border-blue-gray-100">
+                <Typography variant="h6" color="blue-gray">
+                  Molecule Cart ({cartItems.length})
+                </Typography>
+                <Typography variant="small" color="blue-gray" className="font-normal">
+                  Total: ${cartTotal.toFixed(2)}
+                </Typography>
+              </div>
+              <div className="max-h-64 overflow-y-auto">
+                {cartItems.length === 0 ? (
+                  <div className="p-4 text-center">
+                    <Typography variant="small" color="blue-gray" className="font-normal">
+                      Your cart is empty
                     </Typography>
                   </div>
-                  <div className="max-h-64 overflow-y-auto">
-                    {cartItems.slice(0, 5).map((item, index) => (
-                      <MenuItem key={item.id} className="flex items-center gap-3 p-3">
-                        <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-tr from-blue-500 to-blue-600">
-                          <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <Typography variant="small" color="blue-gray" className="mb-1 font-medium">
-                            {item.name}
-                          </Typography>
-                          <Typography variant="small" color="gray" className="flex items-center gap-1 text-xs">
-                            {item.amount}mg • ${typeof item.totalPrice === 'number' ? item.totalPrice.toFixed(2) : '0.00'}
-                          </Typography>
-                        </div>
-                        <IconButton variant="text" color="red" onClick={() => removeCartItem(item.id)}>
-                          <TrashIcon className="h-5 w-5" />
-                        </IconButton>
-                      </MenuItem>
-                    ))}
-                    {cartItems.length > 5 && (
-                      <MenuItem className="p-3 text-center">
-                        <Typography variant="small" color="gray">
-                          and {cartItems.length - 5} more items...
+                ) : (
+                  cartItems.map((item, index) => (
+                    <MenuItem key={index} className="flex items-center justify-between p-3 border-b border-blue-gray-50">
+                      <div className="flex-1">
+                        <Typography variant="small" color="blue-gray" className="font-medium">
+                          {item.name || `Molecule ${index + 1}`}
                         </Typography>
-                      </MenuItem>
-                    )}
-                  </div>
-                  <div className="p-3 border-t border-blue-gray-50">
-                    <div className="flex justify-between items-center mb-2">
-                      <Typography variant="small" color="blue-gray" className="font-medium">
-                        Total:
-                      </Typography>
-                      <Typography variant="small" color="green" className="font-bold">
-                        ${getCartSummary().total}
-                      </Typography>
-                    </div>
-                    <Button size="sm" color="blue" fullWidth onClick={() => navigate('/dashboard/molstar3d')}>
-                      View Cart
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      color="green" 
-                      fullWidth 
-                      onClick={handleStripeCheckout}
-                      className="mt-2"
-                      disabled={cartItems.length === 0}
-                    >
-                      Checkout 
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <MenuItem className="p-6 text-center">
-                  <div className="grid h-12 w-12 place-items-center rounded-full bg-blue-gray-50 mx-auto mb-2">
-                    <svg className="h-6 w-6 text-blue-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
-                    </svg>
-                  </div>
-                  <Typography variant="small" color="blue-gray" className="mb-1">
-                    Your cart is empty
-                  </Typography>
-                  <Typography variant="small" color="gray" className="text-xs">
-                    Add molecules from the Molstar3D page
-                  </Typography>
-                </MenuItem>
+                        <Typography variant="tiny" color="blue-gray" className="font-normal">
+                          ${(item.price || 0).toFixed(2)}
+                        </Typography>
+                      </div>
+                      <IconButton
+                        variant="text"
+                        color="red"
+                        size="sm"
+                        onClick={() => removeFromCart(index)}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </IconButton>
+                    </MenuItem>
+                  ))
+                )}
+              </div>
+              {cartItems.length > 0 && (
+                <div className="p-3 border-t border-blue-gray-100">
+                  <Button fullWidth color="blue" size="sm">
+                    Checkout
+                  </Button>
+                </div>
               )}
             </MenuList>
           </Menu>
-          <IconButton
-            variant="text"
-            color="blue-gray"
-            onClick={() => setOpenConfigurator(dispatch, true)}
-          >
-            <Cog6ToothIcon className="h-5 w-5 text-blue-gray-500" />
-          </IconButton>
-        </div>
-        
 
+          {/* Notifications Menu */}
+          <Menu>
+            <MenuHandler>
+              <IconButton id="notifications-menu-button" variant="text" color="blue-gray">
+                <BellIcon className="h-5 w-5 text-blue-gray-500" />
+              </IconButton>
+            </MenuHandler>
+            <MenuList id="notifications-menu-list" className="w-max border-0">
+              <MenuItem>No new notifications</MenuItem>
+            </MenuList>
+          </Menu>
+
+          {/* User Menu */}
+          <Menu>
+            <MenuHandler>
+              <Button
+                id="user-menu-button"
+                variant="text"
+                color="blue-gray"
+                className="flex items-center gap-2 rounded-full py-0.5 pr-2 pl-0.5 lg:ml-auto"
+              >
+                <Avatar
+                  variant="circular"
+                  size="sm"
+                  alt="User Avatar"
+                  className="border border-gray-900 p-0.5"
+                  src="/img/team-1.jpeg"
+                />
+                <Typography
+                  variant="small"
+                  color="blue-gray"
+                  className="font-medium hidden lg:block"
+                >
+                  {user.name}
+                </Typography>
+              </Button>
+            </MenuHandler>
+            <MenuList id="user-menu-list" className="p-1">
+              <div className="p-2 border-b border-blue-gray-100">
+                <Typography variant="small" color="blue-gray" className="font-medium">
+                  {user.name}
+                </Typography>
+                <Typography variant="tiny" color="blue-gray" className="font-normal">
+                  Simulation Tokens: {user.simulationTokens}
+                </Typography>
+              </div>
+              <MenuItem className="flex items-center gap-2">
+                <UserCircleIcon className="h-4 w-4" />
+                <Link to="/dashboard/profile" className="w-full">
+                  Profile
+                </Link>
+              </MenuItem>
+              <MenuItem className="flex items-center gap-2">
+                <Cog6ToothIcon className="h-4 w-4" />
+                Settings
+              </MenuItem>
+              <hr className="my-2 border-blue-gray-50" />
+              <MenuItem className="flex items-center gap-2 text-red-500" onClick={logout}>
+                Sign Out
+              </MenuItem>
+            </MenuList>
+          </Menu>
+        </div>
       </div>
     </Navbar>
   );

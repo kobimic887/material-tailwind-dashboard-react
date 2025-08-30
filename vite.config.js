@@ -13,8 +13,9 @@ export default defineConfig({
   server: {
     host:'0.0.0.0',
     https: false,
+    port: 5173,
     headers: {
-      'Content-Security-Policy': "script-src 'self' 'unsafe-eval' 'unsafe-inline'"
+      'Content-Security-Policy': "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: data: https://js.stripe.com https://cdn.jsdelivr.net https://api.nepcha.com https://3dmol.csb.pitt.edu https://unpkg.com; worker-src 'self' blob: data:"
     },
     proxy: {
       '/api': {

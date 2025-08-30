@@ -15,7 +15,7 @@ export default function handler(req, res) {
 async function handleCreateCheckoutSession(req, res) {
   try {
     const { planName, price, isYearly } = req.body;
-    const origin = req.headers.origin || 'http://localhost:5174';
+    const origin = req.headers.origin || 'http://localhost:5173';
     
     const result = await createCheckoutSession(planName, price, isYearly, origin);
     res.json(result);

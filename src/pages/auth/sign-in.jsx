@@ -8,6 +8,7 @@ import {
 } from "@material-tailwind/react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/auth";
+import { API_CONFIG } from "@/utils/constants";
 
 export function SignIn() {
   const [email, setEmail] = useState("");
@@ -15,7 +16,6 @@ export function SignIn() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -24,14 +24,9 @@ export function SignIn() {
     setError("");
     setSuccess(false);
     
-    if (!termsAccepted) {
-      setError("Please accept the Terms and Conditions to continue");
-      return;
-    }
-    
     setLoading(true);
     try {
-      const res = await fetch(`https://${window.location.hostname}:3000/api/signin`, {
+      const res = await fetch(API_CONFIG.buildApiUrl('/signin'), {
         method: "POST",
         headers: { "Content-Type": "application/json", accept: "*/*" },
         body: JSON.stringify({ username: email, password }),
@@ -39,9 +34,18 @@ export function SignIn() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Signin failed");
       if (data.token) {
+        // Store tokens and user info
         localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("access_token", data.token);
+        localStorage.setItem("user_info", JSON.stringify(data.user || { username: email }));
+        
+        // Use auth context login for consistency
+        if (data.user) {
+          login(data.user.email || email, password);
+        }
+        
         setSuccess(true);
-        navigate("/dashboard/dashboardhome");
+        navigate("/dashboard/controlpanel");
       } else {
         setError("Invalid credentials");
       }
@@ -127,26 +131,6 @@ export function SignIn() {
               }}
             />
           </div>
-          <Checkbox
-            checked={termsAccepted}
-            onChange={(e) => setTermsAccepted(e.target.checked)}
-            label={
-              <Typography
-                variant="small"
-                color="gray"
-                className="flex items-center justify-start font-medium"
-              >
-                I agree the&nbsp;
-                <a
-                  href="#"
-                  className="font-normal text-black transition-colors hover:text-gray-900 underline"
-                >
-                  Terms and Conditions
-                </a>
-              </Typography>
-            }
-            containerProps={{ className: "-ml-2.5" }}
-          />
           <Button className="mt-6" fullWidth type="submit" disabled={loading}>
             {loading ? "Signing in..." : "Sign In"}
           </Button>

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card, CardHeader, CardBody, Typography, Button, Chip } from "@material-tailwind/react";
 import { useNavigate } from "react-router-dom";
+import { API_CONFIG } from "@/utils/constants";
 
 export function Molstar3D() {
   const molstarRef = useRef(null);
@@ -81,7 +82,7 @@ export function Molstar3D() {
   const fetchMoleculePrice = async (smiles) => {
     try {
       const encodedSmiles = encodeURIComponent(smiles);
-      const response = await fetch(`https://${window.location.hostname}:3000/api/mol-price/search?smiles=${encodedSmiles}&limit=20`, {
+      const response = await fetch(API_CONFIG.buildApiUrl(`/mol-price/search?smiles=${encodedSmiles}&limit=20`), {
         method: 'GET',
         headers: {
           'accept': '*/*'
@@ -239,11 +240,20 @@ export function Molstar3D() {
   };
 
   useEffect(() => {
-    // Check for checkout status from URL parameters
+    // Check for checkout status and simulation data from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const checkoutStatus = urlParams.get('checkout');
     const sessionId = urlParams.get('session_id');
+    const pdbParam = urlParams.get('pdb');
+    const simulationParam = urlParams.get('simulation');
     
+    // Auto-load SDF file if parameters are present
+    if (pdbParam && simulationParam) {
+      const sdfUrl = API_CONFIG.buildApiUrl(`/sdf/${simulationParam}`);
+      loadSdfData(sdfUrl, simulationParam);
+    }
+
+    // Handle checkout status
     if (checkoutStatus === 'success') {
       setMessage('Payment successful! Your molecule order has been processed.');
       setMessageType('success');
@@ -418,7 +428,7 @@ const HideMenu =()=>{
       //clear previously load sdf
       molstarRef.current.contentWindow.postMessage({ type: 'clearSdfStructure' }, '*');
       try {
-        const sdfSpecUrl = `https://${window.location.hostname}:3000/api/sanitizedspecificsdf/${simulationKey}/${encodeURIComponent(smiles)}`;
+        const sdfSpecUrl = API_CONFIG.buildApiUrl(`/sanitizedspecificsdf/${simulationKey}/${encodeURIComponent(smiles)}`);
         const response = await fetch(sdfSpecUrl);
         if (response.ok) {
           const sdfText = await response.text();
