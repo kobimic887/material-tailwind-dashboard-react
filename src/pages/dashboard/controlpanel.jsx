@@ -290,7 +290,7 @@ export function ControlPanel() {
                         className="border-b border-blue-gray-50 py-3 px-6 text-left"
                         style={index === 1 ? { width: '60px', minWidth: '60px', maxWidth: '60px' } : {}}
                       >
-                        <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
+                        <Typography variant="small" className="text-[12px] font-medium uppercase text-blue-gray-400">
                           {el}
                         </Typography>
                       </th>
@@ -301,7 +301,7 @@ export function ControlPanel() {
                   {userSimulationLogs?.length === 0 ? (
                     <tr>
                       <td colSpan="7" className="py-8 text-center">
-                        <Typography variant="small" color="gray">No simulation logs found</Typography>
+                        <Typography variant="small" color="gray" className="text-sm">No simulation logs found</Typography>
                       </td>
                     </tr>
                   ) : (
@@ -312,7 +312,7 @@ export function ControlPanel() {
                       return (
                         <tr key={log.simulationKey || log.id || key} className="hover:bg-blue-gray-50 cursor-pointer transition-colors">
                           <td className={className} onClick={() => handleViewInMolstar(log)}>
-                            <Typography variant="small" color="blue-gray" className="font-mono text-xs hover:text-blue-600">
+                            <Typography variant="small" color="blue-gray" className="font-mono text-sm hover:text-blue-600">
                               {log.simulationKey?.substring(0, 12) || log.id || 'N/A'}
                             </Typography>
                           </td>
@@ -321,17 +321,17 @@ export function ControlPanel() {
                             onClick={() => handleViewInMolstar(log)}
                             style={{ width: '60px', minWidth: '60px', maxWidth: '60px', padding: '12px 4px' }}
                           >
-                            <Typography variant="small" className="text-xs font-medium text-blue-gray-600 font-mono hover:text-blue-600" style={{ fontSize: '11px', lineHeight: '1.2' }}>
+                            <Typography variant="small" className="text-xs font-medium text-blue-gray-600 font-mono hover:text-blue-600" style={{ fontSize: '12px', lineHeight: '1.3' }}>
                               {(log.pdbid || log.pdbId || 'N/A').toString().substring(0, 10)}
                             </Typography>
                           </td>
                           <td className={className} onClick={() => handleViewInMolstar(log)} title={log.smiles || log.SMILES || 'N/A'}>
-                            <Typography variant="small" className="text-xs font-medium text-blue-gray-600 font-mono hover:text-blue-600" style={{ fontSize: '11px', lineHeight: '1.2' }}>
+                            <Typography variant="small" className="text-xs font-medium text-blue-gray-600 font-mono hover:text-blue-600" style={{ fontSize: '12px', lineHeight: '1.3' }}>
                               {(log.smiles || log.SMILES || 'N/A').toString().substring(0, 15)}
                             </Typography>
                           </td>
                           <td className={className} onClick={() => handleViewInMolstar(log)}>
-                            <Typography variant="small" className="text-xs font-medium text-blue-gray-600">
+                            <Typography variant="small" className="text-sm font-medium text-blue-gray-600">
                               {formatDate(log.timestamp || log.createdAt)}
                             </Typography>
                           </td>
@@ -340,7 +340,7 @@ export function ControlPanel() {
                               variant="gradient"
                               color={getStatusColor({ status })}
                               value={status.charAt(0).toUpperCase() + status.slice(1)}
-                              className="py-0.5 px-2 text-[11px] font-medium w-fit"
+                              className="py-0.5 px-2 text-[12px] font-medium w-fit"
                             />
                           </td>
                           <td className={className}>
@@ -356,7 +356,7 @@ export function ControlPanel() {
                                 }
                               }}
                               disabled={priceLoading || !log.smiles && !log.SMILES}
-                              className="text-xs py-1 px-2"
+                              className="text-sm py-1 px-2"
                             >
                               {priceLoading && (currentSmiles === (log.smiles || log.SMILES)) ? 'Loading...' : 'Show Price'}
                             </Button>

@@ -146,8 +146,22 @@ export function DashboardNavbar() {
       const cart = localStorage.getItem('moleculeCart');
       if (cart) {
         const cartData = JSON.parse(cart);
-        setCartItems(cartData.items || []);
-        setCartTotal(cartData.total || 0);
+        
+        // Handle different cart data structures
+        if (Array.isArray(cartData)) {
+          // Simple array format from simulation page
+          setCartItems(cartData);
+          const total = cartData.reduce((sum, item) => sum + (item.totalPrice || item.price || 0), 0);
+          setCartTotal(total);
+        } else if (cartData.items && Array.isArray(cartData.items)) {
+          // Object format with items and total
+          setCartItems(cartData.items);
+          setCartTotal(cartData.total || 0);
+        } else {
+          // Unknown format, reset cart
+          setCartItems([]);
+          setCartTotal(0);
+        }
       } else {
         setCartItems([]);
         setCartTotal(0);
@@ -164,9 +178,29 @@ export function DashboardNavbar() {
       const cart = localStorage.getItem('moleculeCart');
       if (cart) {
         const cartData = JSON.parse(cart);
-        cartData.items.splice(index, 1);
-        cartData.total = cartData.items.reduce((sum, item) => sum + (item.price || 0), 0);
-        localStorage.setItem('moleculeCart', JSON.stringify(cartData));
+        
+        let updatedItems;
+        if (Array.isArray(cartData)) {
+          // Simple array format
+          updatedItems = [...cartData];
+          updatedItems.splice(index, 1);
+        } else if (cartData.items && Array.isArray(cartData.items)) {
+          // Object format with items
+          updatedItems = [...cartData.items];
+          updatedItems.splice(index, 1);
+        } else {
+          return; // Unknown format
+        }
+        
+        const newTotal = updatedItems.reduce((sum, item) => sum + (item.totalPrice || item.price || 0), 0);
+        
+        // Save in object format for consistency
+        const newCartData = {
+          items: updatedItems,
+          total: newTotal
+        };
+        
+        localStorage.setItem('moleculeCart', JSON.stringify(newCartData));
         loadCartFromStorage();
         
         // Dispatch a custom event to notify other components

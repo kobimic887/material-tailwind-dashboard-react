@@ -36,7 +36,6 @@ export function Simulation() {
   const [searchError, setSearchError] = useState("");
 
   const [simPdbId, setSimPdbId] = useState("");
-  const [simSmiles, setSimSmiles] = useState("");
   const [simResult, setSimResult] = useState(null);
   const [simLoading, setSimLoading] = useState(false);
   const [simError, setSimError] = useState("");
@@ -97,30 +96,36 @@ export function Simulation() {
       if (searchType === "similarity") searchMode = 3;
       else if (searchType === "substructure") searchMode = 2;
       else if (searchType === "exact") searchMode = 1;
-      const body = {
-        searchMode,
-        smiles: "",
-        codes: [searchCode],
-        requestid:  "7b09275b-da07-491f-93d2-784f0a868528",
-        orderBy: 1,
-        page: 0,
-        order: "desc",
-        perPage: 25,
-        minMW: 0,
-        maxMW: 500,
-        minHAC: 0,
-        maxHAC: 5,
-        minCLP: -10,
-        maxCLP: 10,
-        subset: 0,
-        headers: {}
-      };
+      
       const token = localStorage.getItem('auth_token');
       const query = encodeURIComponent(searchCode);
-      const res = await fetch(API_CONFIG.buildApiUrl(`/mol-price/search?query=${query}&limit=10&skip=0`), {
-        method: "GET",
-        headers: { 'accept': 'application/json' },
-      });
+      
+      let res;
+      // Use different API endpoint for exact search
+      if (searchType === "exact") {
+        res = await fetch(API_CONFIG.buildApiUrl(`/asinex/exact/${query}`), {
+          method: "GET",
+          headers: { 
+            'accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+        });
+      } else if (searchType === "substructure" || searchType === "similarity") {
+        res = await fetch(API_CONFIG.buildApiUrl(`/api/substructure/0_10/${query}`), {
+          method: "GET",
+          headers: { 
+            'accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+        });
+      } else {
+        // Use regular search API for similarity
+        res = await fetch(API_CONFIG.buildApiUrl(`/mol-price/search?query=${query}&limit=10&skip=0`), {
+          method: "GET",
+          headers: { 'accept': 'application/json' },
+        });
+      }
+      
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(`HTTP ${res.status}: ${res.statusText} - ${errorText}`);
@@ -128,7 +133,35 @@ export function Simulation() {
       const result = await res.json();
       //setSearchResult(result);
       console.log('Search result data structure:', result); // Debug log
-      setTopMolecules(Array.isArray(result.molecules) ? result.molecules : []); // Render results in topMolecules
+      
+      // Handle the new response structure
+      if (result.data) {
+        // Single result with data object
+        const molecule = result.data;
+        // Convert to array format for consistency with existing table rendering
+        const formattedMolecule = {
+          ASINEX_ID: molecule.id_number || molecule.id,
+          SMILES_STRING: molecule.smiles_string,
+          BRUTTO_FORMULA: molecule.brutto_formula,
+          MW_STRUCTURE: molecule.mol_weight,
+          AVAILABLE_MG: molecule.available_mg,
+          PRICE_1MG: molecule.price_1mg,
+          PRICE_5MG: molecule.price_5mg,
+          PRICE_10MG: molecule.price_10mg,
+          // Add other fields that might be missing
+          IUPAC_NAME: molecule.iupac_name || "N/A",
+          INCHI: molecule.inchi || "N/A", 
+          INCHIKEY: molecule.inchikey || "N/A",
+          PRICE_2MG: molecule.price_2mg || "N/A"
+        };
+        setTopMolecules([formattedMolecule]);
+      } else if (Array.isArray(result.molecules)) {
+        // Array format (existing structure)
+        setTopMolecules(result.molecules);
+      } else {
+        // Fallback for other formats
+        setTopMolecules([]);
+      }
     } catch (err) {
       setSearchError(`Failed to search: ${err.message}`);
     } finally {
@@ -137,11 +170,17 @@ export function Simulation() {
   };
 
   const handleSimulation = async () => {
+    // Check if we have a SMILES from the search
+    if (!searchCode) {
+      setSimError("Please search for a molecule first to get the SMILES code for docking");
+      return;
+    }
+
     setSimLoading(true);
     setSimError("");
     setSimResult(null);
     try {
-      const params = new URLSearchParams({ pdbid: simPdbId, smiles: simSmiles });
+      const params = new URLSearchParams({ pdbid: simPdbId, smiles: searchCode });
       const token = localStorage.getItem('auth_token');
       const res = await fetch(API_CONFIG.buildApiUrl(`/simulation?${params.toString()}`), {
         method: "GET",
@@ -400,23 +439,57 @@ export function Simulation() {
           </label>
         </div>
         {queryType !== "draw" && (
-        <div id="molecule-search" className="flex flex-col sm:flex-row items-stretch gap-2 w-1/2"> {/* 50% width search bar */}
-          <Input
-            label="Add molecule ID, SMILES, CAS Number, IUPAC name, InChI or InChIKey here"
-            value={searchCode}
-            onChange={e => setSearchCode(e.target.value)}
-            className="flex-1 min-w-0 w-full" // full width within the container
-          />
-          <Button
-            size="lg"
-            color="green"
-            onClick={handleSearch}
-            disabled={searchLoading || !searchCode}
-            className="flex items-center gap-3 px-6 py-3 text-lg font-semibold shadow-md whitespace-nowrap"
-          >
-            {searchLoading ? <Spinner className="h-5 w-5" /> : <CloudIcon className="h-5 w-5" />}
-            {searchLoading ? 'Searching...' : 'Search'}
-          </Button>
+        <div className="flex flex-col lg:flex-row gap-4 w-full">
+          {/* Search section */}
+          <div id="molecule-search" className="flex flex-col sm:flex-row items-stretch gap-2 w-full lg:w-1/2"> {/* 50% width search bar */}
+            <Input
+              label="Add molecule ID, SMILES, CAS Number, IUPAC name, InChI or InChIKey here"
+              value={searchCode}
+              onChange={e => setSearchCode(e.target.value)}
+              className="flex-1 min-w-0 w-full" // full width within the container
+            />
+            <Button
+              size="lg"
+              color="green"
+              onClick={handleSearch}
+              disabled={searchLoading || !searchCode}
+              className="flex items-center gap-3 px-6 py-3 text-lg font-semibold shadow-md whitespace-nowrap"
+            >
+              {searchLoading ? <Spinner className="h-5 w-5" /> : <CloudIcon className="h-5 w-5" />}
+              {searchLoading ? 'Searching...' : 'Search'}
+            </Button>
+          </div>
+
+          {/* Docking section */}
+          <div className="w-full lg:w-1/2 flex flex-col gap-4 p-6 rounded-lg shadow-lg bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 border border-blue-300 self-start">
+            <button
+              type="button"
+              className="text-blue-700 underline text-left mb-2 w-fit focus:outline-none hover:text-blue-900 transition-colors"
+              tabIndex={0}
+              onClick={() => setShowSimInputs(v => !v)}
+            >
+              Run 1 Click Docking
+            </button>
+            {showSimInputs && (
+              <div id="simulation-inputs" className="flex items-center gap-0">
+                <Input
+                  label="PDB ID"
+                  value={simPdbId}
+                  onChange={e => setSimPdbId(e.target.value)}
+                  className="w-full max-w-xs border border-black"
+                />
+                <Button
+                  size="md"
+                  color="blue"
+                  onClick={handleSimulation}
+                  disabled={simLoading || !simPdbId || !searchCode}
+                  className="items-center gap-2"
+                >
+                  {simLoading ? 'Simulating...' : 'Simulate'}
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
         )}
       </div>
@@ -620,42 +693,6 @@ export function Simulation() {
           {/* {!topLoading && !topError && topMolecules.length === 0 && (
             <Typography>No records found.</Typography>
           )} */}
-        </div>
-      <div className="mb-6 flex flex-col gap-4 w-full p-6 pb-[10%] rounded-lg shadow-lg bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 border border-blue-300">
-        <button
-          type="button"
-          className="text-blue-700 underline text-left mb-2 w-fit focus:outline-none hover:text-blue-900 transition-colors"
-          tabIndex={0}
-          onClick={() => setShowSimInputs(v => !v)}
-        >
-          Run 1 Click Docking
-        </button>
-        {showSimInputs && (
-          <div id="simulation-inputs" className="flex items-center gap-0">
-            <Input
-              label="PDB ID"
-              value={simPdbId}
-              onChange={e => setSimPdbId(e.target.value)}
-              className="w-full max-w-xs border border-black"
-            />
-            <Input
-              label="SMILES"
-              value={simSmiles}
-              onChange={e => setSimSmiles(e.target.value)}
-              className="flex-1 min-w-0 border border-black"
-            />
-                     <Button
-            size="md"
-            color="blue"
-            onClick={handleSimulation}
-            disabled={simLoading || !simPdbId || !simSmiles}
-            className="items-center gap-2"
-          >
-            {simLoading ? 'Simulating...' : 'Simulate'}
-          </Button>
-          </div>
-        )}
- 
         </div>
       {showClipboardPopup && (
         <Alert color="green" className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-fit px-6 py-3 text-center shadow-lg">

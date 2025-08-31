@@ -58,6 +58,7 @@ export function Molstar3D() {
   // Function to load SDF data from URL
   const loadSdfData = async (url) => {
     try {
+      console.log('Loading SDF data from URL:', url);
       setIsLoading(true);
       const response = await fetch(url);
       if (response.ok) {
@@ -240,6 +241,24 @@ export function Molstar3D() {
   };
 
   useEffect(() => {
+    // Clear any localhost URLs from localStorage on component mount
+    const clearLocalhostUrls = () => {
+      const pdbUrl = localStorage.getItem('molstar_pdb_url');
+      const sdfUrl = localStorage.getItem('molstar_sdf_url');
+      
+      if (pdbUrl && pdbUrl.includes('localhost')) {
+        console.log('Clearing localhost PDB URL:', pdbUrl);
+        localStorage.removeItem('molstar_pdb_url');
+      }
+      
+      if (sdfUrl && sdfUrl.includes('localhost')) {
+        console.log('Clearing localhost SDF URL:', sdfUrl);
+        localStorage.removeItem('molstar_sdf_url');
+      }
+    };
+    
+    clearLocalhostUrls();
+    
     // Check for checkout status and simulation data from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const checkoutStatus = urlParams.get('checkout');
@@ -249,8 +268,9 @@ export function Molstar3D() {
     
     // Auto-load SDF file if parameters are present
     if (pdbParam && simulationParam) {
-      const sdfUrl = API_CONFIG.buildApiUrl(`/sdf/${simulationParam}`);
-      loadSdfData(sdfUrl, simulationParam);
+      const sdfUrl = API_CONFIG.buildApiUrl(`/sanitizedminimalsdf/${simulationParam}`);
+      console.log('Auto-loading SDF with URL:', sdfUrl);
+      loadSdfData(sdfUrl);
     }
 
     // Handle checkout status
@@ -284,13 +304,32 @@ export function Molstar3D() {
     // Load cart from storage on component mount
     loadCartFromStorage();
     
-    const pdbUrl = localStorage.getItem('molstar_pdb_url');
-    const sdfUrl = localStorage.getItem('molstar_sdf_url');
+    let pdbUrl = localStorage.getItem('molstar_pdb_url');
+    let sdfUrl = localStorage.getItem('molstar_sdf_url');
     const simulationKey = localStorage.getItem('molstar_simulation_key');
+
+    console.log('localStorage URLs:', { pdbUrl, sdfUrl, simulationKey });
+
+    // Check and fix localhost URLs if necessary
+    if (pdbUrl && pdbUrl.includes('localhost') && simulationKey) {
+      const newPdbUrl = API_CONFIG.buildApiUrl(`/sanitizedpdb/${simulationKey}`);
+      console.log('Rebuilding localhost PDB URL:', pdbUrl, '->', newPdbUrl);
+      localStorage.setItem('molstar_pdb_url', newPdbUrl);
+      pdbUrl = newPdbUrl;
+    }
 
     // Load SDF data if URL is available
     if (sdfUrl) {
-      loadSdfData(sdfUrl);
+      // Check if the URL is using localhost and rebuild it if necessary
+      if (sdfUrl.includes('localhost') && simulationKey) {
+        const newSdfUrl = API_CONFIG.buildApiUrl(`/sanitizedminimalsdf/${simulationKey}`);
+        console.log('Rebuilding localhost SDF URL:', sdfUrl, '->', newSdfUrl);
+        localStorage.setItem('molstar_sdf_url', newSdfUrl);
+        loadSdfData(newSdfUrl);
+      } else {
+        console.log('Loading SDF from localStorage URL:', sdfUrl);
+        loadSdfData(sdfUrl);
+      }
     }
 
     
@@ -368,7 +407,17 @@ export function Molstar3D() {
   };
 
   const loadPDBStructure = () => {
-    const pdbUrl = localStorage.getItem('molstar_pdb_url');
+    let pdbUrl = localStorage.getItem('molstar_pdb_url');
+    const simulationKey = localStorage.getItem('molstar_simulation_key');
+    
+    // Check and fix localhost URL if necessary
+    if (pdbUrl && pdbUrl.includes('localhost') && simulationKey) {
+      const newPdbUrl = API_CONFIG.buildApiUrl(`/sanitizedpdb/${simulationKey}`);
+      console.log('Rebuilding localhost PDB URL in loadPDBStructure:', pdbUrl, '->', newPdbUrl);
+      localStorage.setItem('molstar_pdb_url', newPdbUrl);
+      pdbUrl = newPdbUrl;
+    }
+    
     if (pdbUrl && molstarRef.current) {
       console.log('Manually loading PDB:', pdbUrl);
       molstarRef.current.contentWindow.postMessage({
@@ -627,12 +676,12 @@ const HideMenu =()=>{
                           Score
                         </Typography>
                       </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 hidden">
                         <Typography variant="small" color="blue-gray" className="font-bold leading-none">
                           Price
                         </Typography>
                       </th>
-                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3 hidden">
                         <Typography variant="small" color="blue-gray" className="font-bold leading-none">
                           Cart
                         </Typography>
@@ -681,7 +730,7 @@ const HideMenu =()=>{
                             />
                           </td>
                           
-                          <td className={classes}>
+                          <td className={`${classes} hidden`}>
                             <div className="flex flex-col gap-1">
                               {typeof moleculePrices[molecule.smiles] === 'object' && moleculePrices[molecule.smiles]?.price1mg ? (
                                 <>
@@ -705,27 +754,8 @@ const HideMenu =()=>{
                             </div>
                           </td>
                           
-                          <td className={classes} onClick={(e) => e.stopPropagation()}>
-                            <div className="flex flex-col gap-1">
-                              <div className="flex gap-1">
-                                {[1, 2, 5, 10].map(amount => (
-                                  <Button
-                                    key={amount}
-                                    size="sm"
-                                    variant="outlined"
-                                    color="blue"
-                                    className="text-xs px-2 py-1 min-w-0"
-                                    onClick={() => addToCart(molecule, amount, moleculePrices[molecule.smiles])}
-                                    disabled={molecule.smiles === 'N/A'}
-                                  >
-                                    +{amount}mg
-                                  </Button>
-                                ))}
-                              </div>
-                              <Typography variant="small" color="gray" className="text-xs">
-                                Click to add to wish list
-                              </Typography>
-                            </div>
+                          <td className={`${classes} hidden`} onClick={(e) => e.stopPropagation()}>
+                            {/* Cart content hidden */}
                           </td>
                   
                           <td className={classes}>
