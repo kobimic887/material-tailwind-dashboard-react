@@ -151,17 +151,36 @@ export function ControlPanel() {
       const savedCart = localStorage.getItem('moleculeCart');
       if (savedCart) {
         const parsedCart = JSON.parse(savedCart);
-        setCart(parsedCart);
-        return parsedCart;
+        
+        // Handle different cart data structures
+        if (Array.isArray(parsedCart)) {
+          // Simple array format (old format)
+          setCart(parsedCart);
+          return parsedCart;
+        } else if (parsedCart.items && Array.isArray(parsedCart.items)) {
+          // Object format with items and total (new format)
+          setCart(parsedCart.items);
+          return parsedCart.items;
+        } else {
+          // Unknown format, reset cart
+          setCart([]);
+          return [];
+        }
       }
     } catch (error) {
       console.error('Error loading cart from storage:', error);
     }
+    setCart([]);
     return [];
   };
 
-  const saveCartToStorage = (cartData) => {
+  const saveCartToStorage = (cartItems) => {
     try {
+      const total = cartItems.reduce((sum, item) => sum + (item.totalPrice || item.price || 0), 0);
+      const cartData = {
+        items: cartItems,
+        total: total
+      };
       localStorage.setItem('moleculeCart', JSON.stringify(cartData));
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('cartUpdated'));
