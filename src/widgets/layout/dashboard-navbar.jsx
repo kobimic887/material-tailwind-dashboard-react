@@ -211,6 +211,78 @@ export function DashboardNavbar() {
     }
   };
 
+  const handleSendEnquiry = async () => {
+    try {
+      const cartData = {
+        items: cartItems,
+        total: cartTotal,
+        user: user,
+        timestamp: new Date().toISOString()
+      };
+
+      // Format cart items for email
+      const cartItemsHtml = cartData.items.map(item => `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.smiles || 'N/A'}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.quantity || 1}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.price || item.totalPrice || 'N/A'}</td>
+        </tr>
+      `).join('');
+
+      const emailHtml = `
+        <h2>Shopping Cart Enquiry</h2>
+        <p><strong>Customer Information:</strong></p>
+        <ul>
+          <li>Name: ${cartData.user.name || 'N/A'}</li>
+          <li>Email: ${cartData.user.email || 'N/A'}</li>
+          <li>Simulation Tokens: ${cartData.user.simulationTokens || 0}</li>
+        </ul>
+        
+        <p><strong>Cart Details:</strong></p>
+        <table style="border-collapse: collapse; width: 100%;">
+          <thead>
+            <tr style="background-color: #f2f2f2;">
+              <th style="padding: 8px; border: 1px solid #ddd;">SMILES</th>
+              <th style="padding: 8px; border: 1px solid #ddd;">Quantity</th>
+              <th style="padding: 8px; border: 1px solid #ddd;">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${cartItemsHtml}
+          </tbody>
+        </table>
+        
+        <p><strong>Total: $${cartData.total}</strong></p>
+        <p><strong>Timestamp: ${new Date(cartData.timestamp).toLocaleString()}</strong></p>
+      `;
+
+      const token = getAuthToken();
+      const response = await fetch(API_CONFIG.buildApiUrl('/send-email'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          to: 'contact@pyxis-discovery.com',
+          from: '"Pyxis Discovery" <no-reply@pyxis-discovery.com>',
+          subject: `Shopping Cart Enquiry from ${cartData.user.name || 'Customer'}`,
+          html: emailHtml,
+          text: `Shopping Cart Enquiry from ${cartData.user.name || 'Customer'}\n\nCart Total: $${cartData.total}\nTimestamp: ${new Date(cartData.timestamp).toLocaleString()}`
+        })
+      });
+
+      if (response.ok) {
+        alert('Enquiry sent successfully!');
+      } else {
+        throw new Error('Failed to send enquiry');
+      }
+    } catch (error) {
+      console.error('Error sending enquiry:', error);
+      alert('Failed to send enquiry. Please try again.');
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("user_info");
@@ -346,9 +418,17 @@ export function DashboardNavbar() {
                 )}
               </div>
               {cartItems.length > 0 && (
-                <div className="p-3 border-t border-blue-gray-100">
+                <div className="p-3 border-t border-blue-gray-100 space-y-2">
                   <Button fullWidth color="blue" size="sm">
                     Checkout
+                  </Button>
+                  <Button 
+                    fullWidth 
+                    color="green" 
+                    size="sm"
+                    onClick={handleSendEnquiry}
+                  >
+                    Send Enquiry
                   </Button>
                 </div>
               )}
