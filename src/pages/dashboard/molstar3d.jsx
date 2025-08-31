@@ -273,6 +273,50 @@ export function Molstar3D() {
       loadSdfData(sdfUrl);
     }
 
+    // Auto-load PDB file if simulation parameter is present
+    if (simulationParam) {
+      const pdbUrl = API_CONFIG.buildApiUrl(`/sanitizedpdb/${simulationParam}`);
+      console.log('Auto-loading PDB from simulation parameter:', pdbUrl);
+      
+      // Store the URLs and simulation key in localStorage
+      localStorage.setItem('molstar_pdb_url', pdbUrl);
+      localStorage.setItem('molstar_simulation_key', simulationParam);
+      
+      // Load PDB into Molstar after iframe is ready
+      const loadPdbWhenReady = () => {
+        if (molstarRef.current) {
+          setTimeout(() => {
+            console.log('Loading PDB structure from URL parameter:', pdbUrl);
+            molstarRef.current.contentWindow.postMessage({
+              type: 'loadStructureFromUrl',
+              url: pdbUrl,
+              format: 'pdb'
+            }, '*');
+            
+            // Collapse Molstar main menu
+            setTimeout(() => {
+              if (molstarRef.current && molstarRef.current.contentWindow) {
+                molstarRef.current.contentWindow.eval(`
+                  (function() {
+                    var btn = document.querySelector('.msp-btn.msp-btn-icon.msp-btn-link-toggle-off.msp-transparent-bg');
+                    if (btn) { btn.click(); setTimeout(() => btn.click(), 100); }
+                  })();
+                `);
+              }
+            }, 700);
+          }, 2000);
+        }
+      };
+
+      // If iframe is already loaded, load immediately
+      if (molstarRef.current) {
+        loadPdbWhenReady();
+      } else {
+        // Wait for iframe to load
+        setTimeout(loadPdbWhenReady, 3000);
+      }
+    }
+
     // Handle checkout status
     if (checkoutStatus === 'success') {
       setMessage('Payment successful! Your molecule order has been processed.');
@@ -311,7 +355,7 @@ export function Molstar3D() {
     console.log('localStorage URLs:', { pdbUrl, sdfUrl, simulationKey });
 
     // Check and fix localhost URLs if necessary
-    if (pdbUrl && pdbUrl.includes('localhost') && simulationKey) {
+    if (pdbUrl && simulationKey) {
       const newPdbUrl = API_CONFIG.buildApiUrl(`/sanitizedpdb/${simulationKey}`);
       console.log('Rebuilding localhost PDB URL:', pdbUrl, '->', newPdbUrl);
       localStorage.setItem('molstar_pdb_url', newPdbUrl);
@@ -321,7 +365,7 @@ export function Molstar3D() {
     // Load SDF data if URL is available
     if (sdfUrl) {
       // Check if the URL is using localhost and rebuild it if necessary
-      if (sdfUrl.includes('localhost') && simulationKey) {
+      if ( simulationKey) {
         const newSdfUrl = API_CONFIG.buildApiUrl(`/sanitizedminimalsdf/${simulationKey}`);
         console.log('Rebuilding localhost SDF URL:', sdfUrl, '->', newSdfUrl);
         localStorage.setItem('molstar_sdf_url', newSdfUrl);
