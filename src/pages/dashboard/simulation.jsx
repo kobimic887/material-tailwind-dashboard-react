@@ -111,7 +111,7 @@ export function Simulation() {
           },
         });
       } else if (searchType === "substructure" || searchType === "similarity") {
-        res = await fetch(API_CONFIG.buildApiUrl(`/api/substructure/0_10/${query}`), {
+        res = await fetch(API_CONFIG.buildApiUrl(`/asinex/substructure/0_10/${query}`), {
           method: "GET",
           headers: { 
             'accept': 'application/json',
