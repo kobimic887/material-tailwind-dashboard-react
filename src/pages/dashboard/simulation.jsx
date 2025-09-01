@@ -111,7 +111,7 @@ export function Simulation() {
           },
         });
       } else if (searchType === "substructure" || searchType === "similarity") {
-        res = await fetch(API_CONFIG.buildApiUrl(`/asinex/substructure/0_10/${query}`), {
+        res = await fetch(API_CONFIG.buildApiUrl(`/asinex/substructure/0_50/${query}`), {
           method: "GET",
           headers: { 
             'accept': 'application/json',
@@ -136,7 +136,7 @@ export function Simulation() {
       
       // Handle the new response structure
       if (result.data) {
-        // Single result with data object
+        // Single result with data object (old format)
         const molecule = result.data;
         // Convert to array format for consistency with existing table rendering
         const formattedMolecule = {
@@ -155,8 +155,44 @@ export function Simulation() {
           PRICE_2MG: molecule.price_2mg || "N/A"
         };
         setTopMolecules([formattedMolecule]);
+      } else if (Array.isArray(result)) {
+        // Direct array format (new format)
+        const formattedMolecules = result.map(molecule => ({
+          ASINEX_ID: molecule.id_number || molecule.id,
+          SMILES_STRING: molecule.smiles_string,
+          BRUTTO_FORMULA: molecule.brutto_formula,
+          MW_STRUCTURE: molecule.mol_weight,
+          AVAILABLE_MG: molecule.available_mg,
+          PRICE_1MG: molecule.price_1mg,
+          PRICE_5MG: molecule.price_5mg,
+          PRICE_10MG: molecule.price_10mg,
+          // Add other fields that might be missing
+          IUPAC_NAME: molecule.iupac_name || "N/A",
+          INCHI: molecule.inchi || "N/A", 
+          INCHIKEY: molecule.inchikey || "N/A",
+          PRICE_2MG: molecule.price_2mg || "N/A"
+        }));
+        setTopMolecules(formattedMolecules);
+      } else if (result.id || result.id_number) {
+        // Single object format (new format)
+        const formattedMolecule = {
+          ASINEX_ID: result.id_number || result.id,
+          SMILES_STRING: result.smiles_string,
+          BRUTTO_FORMULA: result.brutto_formula,
+          MW_STRUCTURE: result.mol_weight,
+          AVAILABLE_MG: result.available_mg,
+          PRICE_1MG: result.price_1mg,
+          PRICE_5MG: result.price_5mg,
+          PRICE_10MG: result.price_10mg,
+          // Add other fields that might be missing
+          IUPAC_NAME: result.iupac_name || "N/A",
+          INCHI: result.inchi || "N/A", 
+          INCHIKEY: result.inchikey || "N/A",
+          PRICE_2MG: result.price_2mg || "N/A"
+        };
+        setTopMolecules([formattedMolecule]);
       } else if (Array.isArray(result.molecules)) {
-        // Array format (existing structure)
+        // Array format with molecules property (old format)
         setTopMolecules(result.molecules);
       } else {
         // Fallback for other formats
