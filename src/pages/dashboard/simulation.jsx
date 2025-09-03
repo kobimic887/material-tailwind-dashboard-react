@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -54,12 +54,41 @@ export function Simulation() {
 
   const [cart, setCart] = useState([]);
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [allMolecules, setAllMolecules] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  
   // Hover preview state
   const [hoveredPreview, setHoveredPreview] = useState(null);
   const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
 
+  // Refs to prevent infinite loops in scroll handler
+  const hasMoreRef = useRef(true);
+  const topLoadingRef = useRef(false);
+  const currentPageRef = useRef(0);
+  const initialLoadingRef = useRef(true);
+
   const navigate = useNavigate();
   
+  // Update refs when state changes
+  useEffect(() => {
+    hasMoreRef.current = hasMore;
+  }, [hasMore]);
+
+  useEffect(() => {
+    topLoadingRef.current = topLoading;
+  }, [topLoading]);
+
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
+
+  useEffect(() => {
+    initialLoadingRef.current = initialLoading;
+  }, [initialLoading]);
+
   const fetchApiData = async () => {
     setLoading(true);
     setError('');
@@ -87,10 +116,101 @@ export function Simulation() {
     }
   };
 
+  // Function to fetch molecules from /asinex/all/x_10
+  const fetchAllMolecules = async (page = 0, append = false) => {
+    try {
+      if (!append) {
+        setTopLoading(true);
+        setTopError("");
+      }
+      
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(API_CONFIG.buildApiUrl(`/asinex/all/${page}_10`), {
+        method: "GET",
+        headers: { 
+          'accept': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+      });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      
+      const result = await res.json();
+      console.log('Fetched molecules from /asinex/all:', result);
+      
+      let formattedMolecules = [];
+      
+      // Handle different response formats
+      if (Array.isArray(result)) {
+        formattedMolecules = result.map(molecule => ({
+          ASINEX_ID: molecule.id_number || molecule.id,
+          SMILES_STRING: molecule.smiles_string,
+          BRUTTO_FORMULA: molecule.brutto_formula,
+          MW_STRUCTURE: molecule.mol_weight,
+          AVAILABLE_MG: molecule.available_mg,
+          PRICE_1MG: molecule.price_1mg,
+          PRICE_5MG: molecule.price_5mg,
+          PRICE_10MG: molecule.price_10mg,
+          IUPAC_NAME: molecule.iupac_name || "N/A",
+          INCHI: molecule.inchi || "N/A", 
+          INCHIKEY: molecule.inchikey || "N/A",
+          PRICE_2MG: molecule.price_2mg || "N/A"
+        }));
+      } else if (result.data && Array.isArray(result.data)) {
+        formattedMolecules = result.data.map(molecule => ({
+          ASINEX_ID: molecule.id_number || molecule.id,
+          SMILES_STRING: molecule.smiles_string,
+          BRUTTO_FORMULA: molecule.brutto_formula,
+          MW_STRUCTURE: molecule.mol_weight,
+          AVAILABLE_MG: molecule.available_mg,
+          PRICE_1MG: molecule.price_1mg,
+          PRICE_5MG: molecule.price_5mg,
+          PRICE_10MG: molecule.price_10mg,
+          IUPAC_NAME: molecule.iupac_name || "N/A",
+          INCHI: molecule.inchi || "N/A", 
+          INCHIKEY: molecule.inchikey || "N/A",
+          PRICE_2MG: molecule.price_2mg || "N/A"
+        }));
+      }
+      
+      if (append) {
+        setAllMolecules(prev => [...prev, ...formattedMolecules]);
+        setTopMolecules(prev => [...prev, ...formattedMolecules]);
+      } else {
+        setAllMolecules(formattedMolecules);
+        setTopMolecules(formattedMolecules);
+      }
+      
+      // Check if we have more data (if we got less than 10, we're at the end)
+      if (formattedMolecules.length < 10) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
+      }
+      
+      setCurrentPage(page);
+      
+    } catch (err) {
+      setTopError(`Failed to fetch molecules: ${err.message}`);
+      console.error('Error fetching molecules:', err);
+    } finally {
+      setTopLoading(false);
+      setInitialLoading(false);
+    }
+  };
+
   const handleSearch = async () => {
     setSearchLoading(true);
     setSearchError("");
     setSearchResult(null);
+    
+    // Reset pagination when searching
+    setCurrentPage(0);
+    setAllMolecules([]);
+    setHasMore(true);
+    
     try {
       let searchMode = 3;
       if (searchType === "similarity") searchMode = 3;
@@ -251,9 +371,31 @@ export function Simulation() {
 
   // Auto-fetch on component mount
   useEffect(() => {
-    //fetchApiData();
-    // eslint-disable-next-line
-  }, []);
+    // Load initial molecules when component mounts
+    fetchAllMolecules(0, false);
+  }, []); // Only run once on mount
+
+  // Separate useEffect for scroll handling
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + document.documentElement.scrollTop
+        >= document.documentElement.offsetHeight - 1000 && // Load when 1000px from bottom
+        hasMoreRef.current &&
+        !topLoadingRef.current &&
+        !initialLoadingRef.current
+      ) {
+        console.log('Loading next page:', currentPageRef.current + 1);
+        fetchAllMolecules(currentPageRef.current + 1, true);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []); // Empty dependency array - only set up once
 
 // useEffect(() => {
 //   const fetchTopMolecules = async () => {
@@ -573,16 +715,16 @@ export function Simulation() {
           {/* <div className="mb-4">
             <Typography as="h5" variant="h5" color="blue-gray">Top {topMolecules.length} Molecules</Typography>
           </div> */}
-          {topLoading && (
+          {topLoading && topMolecules.length === 0 && (
             <div className="flex items-center gap-2 mb-4">
               <Spinner className="h-5 w-5 text-blue-500" />
-              <Typography>Loading...</Typography>
+              <Typography>Loading molecules...</Typography>
             </div>
           )}
           {topError && (
             <Alert color="red" className="mb-4">{topError}</Alert>
           )}
-          {!topLoading && !topError && topMolecules.length > 0 && (
+          {!initialLoading && !topError && topMolecules.length > 0 && (
             <Card className="mb-4">
               <CardBody>
                 <table className="w-full text-left">
@@ -726,9 +868,32 @@ export function Simulation() {
               </CardBody>
             </Card>
           )}
-          {/* {!topLoading && !topError && topMolecules.length === 0 && (
-            <Typography>No records found.</Typography>
-          )} */}
+          
+          {/* Pagination Loading Indicator */}
+          {topLoading && topMolecules.length > 0 && (
+            <div className="flex items-center justify-center gap-2 mb-4 py-4">
+              <Spinner className="h-5 w-5 text-blue-500" />
+              <Typography variant="small" color="gray">Loading more molecules...</Typography>
+            </div>
+          )}
+          
+          {/* No More Data Message */}
+          {!hasMore && topMolecules.length > 0 && !topLoading && (
+            <div className="text-center py-4 mb-4">
+              <Typography variant="small" color="gray">
+                No more molecules to load. Showing {topMolecules.length} total molecules.
+              </Typography>
+            </div>
+          )}
+          
+          {/* No Data State */}
+          {!initialLoading && !topLoading && !topError && topMolecules.length === 0 && (
+            <div className="text-center py-8">
+              <Typography variant="small" color="gray">
+                No molecules found. Try searching for specific compounds.
+              </Typography>
+            </div>
+          )}
         </div>
       {showClipboardPopup && (
         <Alert color="green" className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-fit px-6 py-3 text-center shadow-lg">
