@@ -606,7 +606,7 @@ export function Simulation() {
               checked={queryType === "text"}
               onChange={() => setQueryType("text")}
             />
-            <span>mcule ID, SMILES, CAS Number, IUPAC name, InChI, InChIKey</span>
+            <span>Molecule ID, SMILES, CAS Number, IUPAC name, InChI, InChIKey</span>
           </label>
         </div>
         {/* Search type radio buttons */}
