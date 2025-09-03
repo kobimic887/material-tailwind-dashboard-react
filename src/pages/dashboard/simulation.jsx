@@ -69,6 +69,7 @@ export function Simulation() {
   const topLoadingRef = useRef(false);
   const currentPageRef = useRef(0);
   const initialLoadingRef = useRef(true);
+  const isLoadingPageRef = useRef(false); // Prevent multiple simultaneous requests
 
   const navigate = useNavigate();
   
@@ -118,11 +119,21 @@ export function Simulation() {
 
   // Function to fetch molecules from /asinex/all/x_10
   const fetchAllMolecules = async (page = 0, append = false) => {
+    // Prevent multiple simultaneous requests
+    if (isLoadingPageRef.current) {
+      console.log('Already loading, skipping request');
+      return;
+    }
+    
+    isLoadingPageRef.current = true;
+    
     try {
       if (!append) {
         setTopLoading(true);
         setTopError("");
       }
+      
+      console.log(`Fetching page ${page} from /asinex/all/${page}_10`);
       
       const token = localStorage.getItem('auth_token');
       const res = await fetch(API_CONFIG.buildApiUrl(`/asinex/all/${page}_10`), {
@@ -186,6 +197,7 @@ export function Simulation() {
       // Check if we have more data (if we got less than 10, we're at the end)
       if (formattedMolecules.length < 10) {
         setHasMore(false);
+        console.log('No more data available');
       } else {
         setHasMore(true);
       }
@@ -198,6 +210,7 @@ export function Simulation() {
     } finally {
       setTopLoading(false);
       setInitialLoading(false);
+      isLoadingPageRef.current = false; // Always reset the loading flag
     }
   };
 
@@ -377,23 +390,37 @@ export function Simulation() {
 
   // Separate useEffect for scroll handling
   useEffect(() => {
+    let scrollTimeout;
+    
     const handleScroll = () => {
-      if (
-        window.innerHeight + document.documentElement.scrollTop
-        >= document.documentElement.offsetHeight - 1000 && // Load when 1000px from bottom
-        hasMoreRef.current &&
-        !topLoadingRef.current &&
-        !initialLoadingRef.current
-      ) {
-        console.log('Loading next page:', currentPageRef.current + 1);
-        fetchAllMolecules(currentPageRef.current + 1, true);
+      // Clear previous timeout
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
       }
+      
+      // Debounce scroll events
+      scrollTimeout = setTimeout(() => {
+        if (
+          window.innerHeight + document.documentElement.scrollTop
+          >= document.documentElement.offsetHeight - 1000 && // Load when 1000px from bottom
+          hasMoreRef.current &&
+          !topLoadingRef.current &&
+          !initialLoadingRef.current &&
+          !isLoadingPageRef.current // Additional check
+        ) {
+          console.log('Scroll triggered - Loading next page:', currentPageRef.current + 1);
+          fetchAllMolecules(currentPageRef.current + 1, true);
+        }
+      }, 250); // 250ms debounce
     };
 
     window.addEventListener('scroll', handleScroll);
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
     };
   }, []); // Empty dependency array - only set up once
 
