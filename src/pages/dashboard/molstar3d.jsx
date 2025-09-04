@@ -208,7 +208,7 @@ export function Molstar3D() {
       score: molecule.score,
       amount: amount,
       pricePerMg: priceInfo?.price1mg || 100,
-      totalPrice: (priceInfo?.price1mg || 100) * amount,
+      totalPrice: priceInfo?.price1mg || 100, // Do not multiply by amount - just use the price as is
       moleculeId: priceInfo?.id || 'N/A',
       availableMg: priceInfo?.availableMg || 0,
       addedAt: new Date().toISOString()

@@ -463,7 +463,7 @@ export function Simulation() {
       amount,
       price: priceNum,
       pricePerMg: priceNum, // for compatibility with dashboard-navbar
-      totalPrice: priceNum * amount,
+      totalPrice: priceNum, // Do not multiply by amount - just use the price as is
       id: molecule.ASINEX_ID || molecule.id || Math.random().toString(36).slice(2),
       smiles: molecule.SMILES_STRING || molecule.smiles || '',
       formula: molecule.BRUTTO_FORMULA || molecule.formula || '',

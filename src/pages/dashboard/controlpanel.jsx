@@ -197,7 +197,7 @@ export function ControlPanel() {
       formula: molecule.brutto_formula || molecule.BRUTTO_FORMULA || molecule.formula || '',
       amount: amount,
       pricePerMg: pricePerMg,
-      totalPrice: pricePerMg * amount,
+      totalPrice: pricePerMg, // Do not multiply by amount - just use the price as is
       moleculeId: molecule.id || molecule.ASINEX_ID || molecule.id || 'N/A',
       availableMg: molecule.available_mg || molecule.AVAILABLE_MG || 0,
       addedAt: new Date().toISOString()

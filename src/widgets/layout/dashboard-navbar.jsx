@@ -391,11 +391,16 @@ export function DashboardNavbar() {
             <MenuList id="cart-menu-list" className="w-80 border-0 shadow-lg">
               <div className="p-3 border-b border-blue-gray-100">
                 <Typography variant="h6" color="blue-gray">
-                  Molecule Cart ({cartItems.length})
+                  Molecule Cart ({cartItems.length} {cartItems.length === 1 ? 'item' : 'items'})
                 </Typography>
-                <Typography variant="small" color="blue-gray" className="font-normal">
-                  Total: ${cartTotal.toFixed(2)}
-                </Typography>
+                <div className="flex justify-between items-center mt-1">
+                  <Typography variant="small" color="blue-gray" className="font-normal">
+                    Total Amount: {cartItems.reduce((sum, item) => sum + (item.amount || 0), 0)}mg
+                  </Typography>
+                  <Typography variant="small" color="green" className="font-bold text-lg">
+                    Total: ${cartTotal.toFixed(2)}
+                  </Typography>
+                </div>
               </div>
               <div className="max-h-64 overflow-y-auto">
                 {cartItems.length === 0 ? (
@@ -411,9 +416,19 @@ export function DashboardNavbar() {
                         <Typography variant="small" color="blue-gray" className="font-medium">
                           {item.name || `Molecule ${index + 1}`}
                         </Typography>
-                        <Typography variant="tiny" color="blue-gray" className="font-normal">
-                          ${(item.price || 0).toFixed(2)}
-                        </Typography>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Typography variant="tiny" color="blue-gray" className="font-normal">
+                            {item.amount}mg
+                          </Typography>
+                          <Typography variant="tiny" color="green" className="font-bold">
+                            ${(item.totalPrice || item.price || 0).toFixed(2)}
+                          </Typography>
+                        </div>
+                        {item.smiles && (
+                          <Typography variant="tiny" color="gray" className="font-mono truncate max-w-48">
+                            {item.smiles.length > 30 ? `${item.smiles.substring(0, 30)}...` : item.smiles}
+                          </Typography>
+                        )}
                       </div>
                       <IconButton
                         variant="text"
