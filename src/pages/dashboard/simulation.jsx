@@ -63,6 +63,9 @@ export function Simulation() {
   // Hover preview state
   const [hoveredPreview, setHoveredPreview] = useState(null);
   const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
+  
+  // Checkbox selection state
+  const [selectedMolecules, setSelectedMolecules] = useState(new Set());
 
   // Refs to prevent infinite loops in scroll handler
   const hasMoreRef = useRef(true);
@@ -192,6 +195,8 @@ export function Simulation() {
       } else {
         setAllMolecules(formattedMolecules);
         setTopMolecules(formattedMolecules);
+        // Clear selected molecules when loading new data (not appending)
+        setSelectedMolecules(new Set());
       }
       
       // Check if we have more data (if we got less than 10, we're at the end)
@@ -223,6 +228,9 @@ export function Simulation() {
     setCurrentPage(0);
     setAllMolecules([]);
     setHasMore(true);
+    
+    // Clear selected molecules when doing a new search
+    setSelectedMolecules(new Set());
     
     try {
       let searchMode = 3;
@@ -288,6 +296,8 @@ export function Simulation() {
           PRICE_2MG: molecule.price_2mg || "N/A"
         };
         setTopMolecules([formattedMolecule]);
+        // Clear selected molecules when loading new search results
+        setSelectedMolecules(new Set());
       } else if (Array.isArray(result)) {
         // Direct array format (new format)
         const formattedMolecules = result.map(molecule => ({
@@ -306,6 +316,8 @@ export function Simulation() {
           PRICE_2MG: molecule.price_2mg || "N/A"
         }));
         setTopMolecules(formattedMolecules);
+        // Clear selected molecules when loading new search results
+        setSelectedMolecules(new Set());
       } else if (result.id || result.id_number) {
         // Single object format (new format)
         const formattedMolecule = {
@@ -324,12 +336,18 @@ export function Simulation() {
           PRICE_2MG: result.price_2mg || "N/A"
         };
         setTopMolecules([formattedMolecule]);
+        // Clear selected molecules when loading new search results  
+        setSelectedMolecules(new Set());
       } else if (Array.isArray(result.molecules)) {
         // Array format with molecules property (old format)
         setTopMolecules(result.molecules);
+        // Clear selected molecules when loading new search results
+        setSelectedMolecules(new Set());
       } else {
         // Fallback for other formats
         setTopMolecules([]);
+        // Clear selected molecules when loading new search results
+        setSelectedMolecules(new Set());
       }
     } catch (err) {
       setSearchError(`Failed to search: ${err.message}`);
@@ -424,24 +442,6 @@ export function Simulation() {
     };
   }, []); // Empty dependency array - only set up once
 
-// useEffect(() => {
-//   const fetchTopMolecules = async () => {
-//     setTopLoading(true);
-//     setTopError("");
-//     try {
-//       const res = await fetch(`https://${window.location.hostname}:3000/api/mol-price?limit=${topLimit}&skip=0`);
-//       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-//       const result = await res.json();
-//       console.log('API /api/mol-price result:', result); // Debug log
-//       setTopMolecules(Array.isArray(result.molecules) ? result.molecules.slice(0, topLimit) : []);
-//     } catch (err) {
-//       setTopError(`Failed to fetch top molecules: ${err.message}`);
-//     } finally {
-//       setTopLoading(false);
-//     }
-//   };
-//   fetchTopMolecules();
-// }, [topLimit]); // Depend on topLimit
 
   const handleCellClick = value => {
     setSearchCode(value);
@@ -530,6 +530,34 @@ export function Simulation() {
     
     console.log('No valid SMILES found in molecule:', mol);
     return null;
+  };
+
+  // Handle checkbox selection
+  const handleCheckboxChange = (molecule, isChecked) => {
+    const moleculeId = molecule.ASINEX_ID || molecule.id || Math.random().toString(36).slice(2);
+    const smiles = molecule.SMILES_STRING || molecule.SMILES || molecule.smiles || '';
+    
+    setSelectedMolecules(prev => {
+      const newSelected = new Set(prev);
+      if (isChecked) {
+        newSelected.add(moleculeId);
+      } else {
+        newSelected.delete(moleculeId);
+      }
+      
+      // Update search box with concatenated SMILES for all selected molecules
+      const selectedSmiles = [];
+      topMolecules.forEach(mol => {
+        const id = mol.ASINEX_ID || mol.id || Math.random().toString(36).slice(2);
+        const molSmiles = mol.SMILES_STRING || mol.SMILES || mol.smiles || '';
+        if (newSelected.has(id) && molSmiles) {
+          selectedSmiles.push(molSmiles);
+        }
+      });
+      
+      setSearchCode(selectedSmiles.join(','));
+      return newSelected;
+    });
   };
 
   return (
@@ -657,13 +685,14 @@ export function Simulation() {
               size="lg"
               color="green"
               onClick={handleSearch}
-              disabled={searchLoading || !searchCode}
+              disabled={searchLoading || !searchCode || selectedMolecules.size > 1}
               className="flex items-center gap-3 px-6 py-3 text-lg font-semibold shadow-md whitespace-nowrap"
             >
               {searchLoading ? <Spinner className="h-5 w-5" /> : <CloudIcon className="h-5 w-5" />}
               {searchLoading ? 'Searching...' : 'Search'}
             </Button>
           </div>
+   
 
           {/* Docking section */}
           <div className="w-full lg:w-1/2 flex flex-col gap-4 p-6 rounded-lg shadow-lg bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 border border-blue-300 self-start">
@@ -757,6 +786,7 @@ export function Simulation() {
                 <table className="w-full text-left">
                   <thead>
                     <tr>
+                      <th className="p-2 font-bold">Select</th>
                       <th className="p-2 font-bold">#</th>
                       <th className="p-2 font-bold">ID</th>
                       <th className="p-2 font-bold">IUPAC Name</th>
@@ -773,9 +803,21 @@ export function Simulation() {
                     </tr>
                   </thead>
                   <tbody>
-                    {topMolecules.map((mol, idx) => (
-                      <tr key={mol.ASINEX_ID || mol.id || idx} className="border-b">
-                        <td className="p-2">{idx + 1}</td>
+                    {topMolecules.map((mol, idx) => {
+                      const moleculeId = mol.ASINEX_ID || mol.id || Math.random().toString(36).slice(2);
+                      const isChecked = selectedMolecules.has(moleculeId);
+                      
+                      return (
+                        <tr key={moleculeId} className="border-b">
+                          <td className="p-2">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => handleCheckboxChange(mol, e.target.checked)}
+                              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                          </td>
+                          <td className="p-2">{idx + 1}</td>
                         <td
                           className="p-2 cursor-pointer hover:bg-blue-100"
                           title={mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "N/A"}
@@ -889,7 +931,8 @@ export function Simulation() {
                           )}
                         </td>
                       </tr>
-                    ))}
+                    )
+                    })}
                   </tbody>
                 </table>
               </CardBody>
