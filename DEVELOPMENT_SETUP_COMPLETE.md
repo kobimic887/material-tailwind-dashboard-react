@@ -3,7 +3,7 @@
 ## 🎉 SUCCESS! Your development environment is now fully configured and running.
 
 ### What's Working:
-- ✅ **Vite Development Server**: Running on http://localhost:5174
+- ✅ **Vite Development Server**: Running on http://localhost:5173
 - ✅ **Stripe Payment Server**: Running on port 3001
 - ✅ **Environment Variables**: Properly loaded from `.env` file
 - ✅ **Secure Configuration**: No secrets in the repository
@@ -21,9 +21,9 @@ This command will:
 - Load all environment variables from `.env`
 
 #### Access the Application:
-- **Frontend**: http://localhost:5174
-- **Paid Plans Page**: http://localhost:5174/dashboard/paid-plans
-- **Molecule Viewer**: http://localhost:5174/dashboard/molecule-viewer
+- **Frontend**: http://localhost:5173
+- **Paid Plans Page**: http://localhost:5173/dashboard/paid-plans
+- **Molecule Viewer**: http://localhost:5173/dashboard/molecule-viewer
 
 #### Payment Testing:
 - Use Stripe test card: `4242 4242 4242 4242`
@@ -80,7 +80,7 @@ STRIPE_SECRET_KEY=sk_test_...
 ```
 
 ### Next Steps:
-1. Navigate to http://localhost:5174 to see your application
+1. Navigate to http://localhost:5173 to see your application
 2. Visit the Paid Plans page to test Stripe integration
 3. Try the Molecule Viewer for chemical drawing
 4. Customize the pricing plans as needed

@@ -47,8 +47,8 @@ export function stripeApiPlugin() {
                 },
               ],
               mode: 'subscription',
-              success_url: `${req.headers.origin || 'http://localhost:5174'}/dashboard/paidplans?success=true&session_id={CHECKOUT_SESSION_ID}`,
-              cancel_url: `${req.headers.origin || 'http://localhost:5174'}/dashboard/paidplans?canceled=true`,
+              success_url: `${req.headers.origin || 'http://localhost:5173'}/dashboard/paidplans?success=true&session_id={CHECKOUT_SESSION_ID}`,
+              cancel_url: `${req.headers.origin || 'http://localhost:5173'}/dashboard/paidplans?canceled=true`,
               metadata: {
                 plan: planName,
                 billing: isYearly ? 'yearly' : 'monthly'

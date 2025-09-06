@@ -423,15 +423,15 @@ Please contact the customer at ${userEmail} to process this order.
                           {item.name || `Molecule ${index + 1}`}
                         </Typography>
                         <div className="flex items-center gap-2 mt-1">
-                          <Typography variant="tiny" color="blue-gray" className="font-normal">
+                          <Typography variant="small" color="blue-gray" className="font-normal text-xs">
                             {item.amount}mg
                           </Typography>
-                          <Typography variant="tiny" color="green" className="font-bold">
+                          <Typography variant="small" color="green" className="font-bold text-xs">
                             ${(item.totalPrice || item.price || 0).toFixed(2)}
                           </Typography>
                         </div>
                         {item.smiles && (
-                          <Typography variant="tiny" color="gray" className="font-mono truncate max-w-48">
+                          <Typography variant="small" color="gray" className="font-mono truncate max-w-48 text-xs">
                             {item.smiles.length > 30 ? `${item.smiles.substring(0, 30)}...` : item.smiles}
                           </Typography>
                         )}
@@ -508,7 +508,7 @@ Please contact the customer at ${userEmail} to process this order.
                 <Typography variant="small" color="blue-gray" className="font-medium">
                   {user.name}
                 </Typography>
-                <Typography variant="tiny" color="blue-gray" className="font-normal">
+                <Typography variant="small" color="blue-gray" className="font-normal text-xs">
                   Simulation Tokens: {user.simulationTokens}
                 </Typography>
               </div>

@@ -523,8 +523,14 @@ export function Simulation() {
     
     for (const field of possibleFields) {
       if (mol[field] && typeof mol[field] === 'string' && mol[field].trim() !== '') {
-        console.log(`Found SMILES in field: ${field}, value: ${mol[field]}`);
-        return mol[field].trim();
+        const smiles = mol[field].trim();
+        // Basic SMILES validation - should contain typical SMILES characters
+        if (smiles.length > 1 && /[A-Za-z0-9\[\]()@=#+\-\\/\\\\]/.test(smiles)) {
+          console.log(`Found valid SMILES in field: ${field}, value: ${smiles}`);
+          return smiles;
+        } else {
+          console.log(`Invalid SMILES format in field: ${field}, value: ${smiles}`);
+        }
       }
     }
     
@@ -583,14 +589,32 @@ export function Simulation() {
               alt="Molecule structure"
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               onError={(e) => {
-                // Fallback to ChemSpider if PubChem fails
-                if (!e.target.src.includes('chemspider')) {
-                  e.target.src = `https://www.chemspider.com/ImagesHandler.ashx?id=${encodeURIComponent(hoveredPreview.smiles)}&w=200&h=150`;
-                } else {
-                  // Final fallback - show text
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
+                console.warn('Failed to load molecule image for SMILES:', hoveredPreview.smiles, 'URL:', e.target.src);
+                
+                // Try different approaches in sequence using data attributes to track attempts
+                if (!e.target.getAttribute('data-fallback-attempted')) {
+                  e.target.setAttribute('data-fallback-attempted', '1');
+                  // Try simplified SMILES encoding (remove special characters that might cause issues)
+                  const simplifiedSmiles = hoveredPreview.smiles.replace(/[^\w\[\]()@=#+\-\\/\\\\]/g, '');
+                  if (simplifiedSmiles !== hoveredPreview.smiles) {
+                    console.log('Trying simplified SMILES:', simplifiedSmiles);
+                    e.target.src = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(simplifiedSmiles)}/PNG?record_type=2d&image_size=200x150`;
+                    return;
+                  }
                 }
+                
+                if (e.target.getAttribute('data-fallback-attempted') === '1') {
+                  e.target.setAttribute('data-fallback-attempted', '2');
+                  // Try different image size parameter
+                  console.log('Trying different image size for SMILES:', hoveredPreview.smiles);
+                  e.target.src = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(hoveredPreview.smiles)}/PNG?image_size=small`;
+                  return;
+                }
+                
+                // Final fallback - show text message
+                console.log('All fallbacks failed, showing text for SMILES:', hoveredPreview.smiles);
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
               }}
             />
             <div 
@@ -599,7 +623,8 @@ export function Simulation() {
             >
               <div className="text-center">
                 <div>Structure Preview</div>
-                <div className="text-xs mt-1">Unavailable</div>
+                <div className="text-xs mt-1">Service Unavailable</div>
+                <div className="text-xs mt-1">Complex SMILES format</div>
               </div>
             </div>
           </div>
