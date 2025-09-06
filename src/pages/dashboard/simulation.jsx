@@ -561,7 +561,7 @@ export function Simulation() {
         }
       });
       
-      setSearchCode(selectedSmiles.join(','));
+      setSearchCode(selectedSmiles.join(';'));
       return newSelected;
     });
   };
