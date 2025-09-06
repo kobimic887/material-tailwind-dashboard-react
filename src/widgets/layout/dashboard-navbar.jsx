@@ -213,73 +213,79 @@ export function DashboardNavbar() {
 
   const handleSendEnquiry = async () => {
     try {
+      // Get logged-in user email from localStorage
+      const storedUser = localStorage.getItem("user_info");
+      let userEmail = 'unknown@example.com';
+      let userName = user.name || 'Customer';
+      
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          userEmail = parsedUser.email || userEmail;
+          userName = parsedUser.username || parsedUser.email || userName;
+        } catch (e) {
+          console.error("Error parsing stored user info:", e);
+        }
+      }
+
       const cartData = {
         items: cartItems,
         total: cartTotal,
-        user: user,
+        user: { ...user, email: userEmail },
         timestamp: new Date().toISOString()
       };
 
-      // Format cart items for email
-      const cartItemsHtml = cartData.items.map(item => `
-        <tr>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.smiles || 'N/A'}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.quantity || 1}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.price || item.totalPrice || 'N/A'}</td>
-        </tr>
-      `).join('');
+      // Format cart items for email body
+      const cartItemsText = cartData.items.map((item, index) => `
+${index + 1}. SMILES: ${item.smiles || 'N/A'}
+   Amount: ${item.amount || 'N/A'}mg
+   Price: $${(item.totalPrice || item.price || 0).toFixed(2)}
+   ${item.name ? `Name: ${item.name}` : ''}
+      `).join('\n');
 
-      const emailHtml = `
-        <h2>Shopping Cart Enquiry</h2>
-        <p><strong>Customer Information:</strong></p>
-        <ul>
-          <li>Name: ${cartData.user.name || 'N/A'}</li>
-          <li>Email: ${cartData.user.email || 'N/A'}</li>
-          <li>Simulation Tokens: ${cartData.user.simulationTokens || 0}</li>
-        </ul>
-        
-        <p><strong>Cart Details:</strong></p>
-        <table style="border-collapse: collapse; width: 100%;">
-          <thead>
-            <tr style="background-color: #f2f2f2;">
-              <th style="padding: 8px; border: 1px solid #ddd;">SMILES</th>
-              <th style="padding: 8px; border: 1px solid #ddd;">Quantity</th>
-              <th style="padding: 8px; border: 1px solid #ddd;">Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${cartItemsHtml}
-          </tbody>
-        </table>
-        
-        <p><strong>Total: $${cartData.total}</strong></p>
-        <p><strong>Timestamp: ${new Date(cartData.timestamp).toLocaleString()}</strong></p>
+      const emailMessage = `
+SHOPPING CART ENQUIRY
+
+Customer Information:
+- Name: ${userName}
+- Email: ${userEmail}
+- Simulation Tokens: ${cartData.user.simulationTokens || 0}
+
+Cart Details:
+${cartItemsText}
+
+TOTAL AMOUNT: ${cartData.items.reduce((sum, item) => sum + (item.amount || 0), 0)}mg
+TOTAL PRICE: $${cartData.total.toFixed(2)}
+
+Timestamp: ${new Date(cartData.timestamp).toLocaleString()}
+
+Please contact the customer at ${userEmail} to process this order.
       `;
 
-      const token = getAuthToken();
+      // Use the existing /api/send-email endpoint with the correct format
       const response = await fetch(API_CONFIG.buildApiUrl('/send-email'), {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          to: 'contact@pyxis-discovery.com',
-          from: '"Pyxis Discovery" <no-reply@pyxis-discovery.com>',
-          subject: `Shopping Cart Enquiry from ${cartData.user.name || 'Customer'}`,
-          html: emailHtml,
-          text: `Shopping Cart Enquiry from ${cartData.user.name || 'Customer'}\n\nCart Total: $${cartData.total}\nTimestamp: ${new Date(cartData.timestamp).toLocaleString()}`
+          name: userName,
+          subject: `Shopping Cart Enquiry from ${userName}`,
+          message: emailMessage,
+          recipientEmail: 'contact@pyxis-discovery.com'
         })
       });
 
-      if (response.ok) {
-        alert('Enquiry sent successfully!');
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        alert('Enquiry sent successfully! We will contact you soon.');
       } else {
-        throw new Error('Failed to send enquiry');
+        throw new Error(result.error || 'Failed to send enquiry');
       }
     } catch (error) {
       console.error('Error sending enquiry:', error);
-      alert('Failed to send enquiry. Please try again.');
+      alert(`Failed to send enquiry: ${error.message}. Please try again.`);
     }
   };
 
