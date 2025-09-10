@@ -259,7 +259,7 @@ export function ControlPanel() {
             >
               <div>
                 <Typography variant="h6" color="blue-gray" className="mb-1">
-                  Previous Simulations Logs
+                  Please find your Past Jobs listed below. You can review your past jobs by clicking on the SIMULATION ID                  
                 </Typography>
                 <Typography
                   variant="small"
@@ -303,7 +303,7 @@ export function ControlPanel() {
               <table className="w-full min-w-[640px] table-auto">
                 <thead>
                   <tr>
-                    {["Simulation ID", "PDB ID", "SMILES", "Timestamp", "Status", "Price", "Actions"].map((el, index) => (
+                    {["Simulation ID", "PDB ID", "SMILES", "Timestamp", "Status", "Price"].map((el, index) => (
                       <th 
                         key={el} 
                         className="border-b border-blue-gray-50 py-3 px-6 text-left"
@@ -380,7 +380,7 @@ export function ControlPanel() {
                               {priceLoading && (currentSmiles === (log.smiles || log.SMILES)) ? 'Loading...' : 'Show Price'}
                             </Button>
                           </td>
-                          <td className={className}>
+                          {/* <td className={className}>
                             <div className="flex items-center gap-2">
                               <IconButton 
                                 variant="text" 
@@ -400,7 +400,7 @@ export function ControlPanel() {
                                 <ArrowDownTrayIcon className="h-4 w-4" />
                               </IconButton>
                             </div>
-                          </td>
+                          </td> */}
                         </tr>
                       );
                     })
@@ -410,7 +410,7 @@ export function ControlPanel() {
             </CardBody>
           </Card>
 
-          {/* Projects Table */}
+          {/* Projects Table
           <Card className="border border-blue-gray-100 shadow-sm">
             <CardHeader
               floated={false}
@@ -530,7 +530,7 @@ export function ControlPanel() {
                 </tbody>
               </table>
             </CardBody>
-          </Card>
+          </Card> */}
 
 
         </div>
