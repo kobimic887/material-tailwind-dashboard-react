@@ -23,6 +23,8 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   EyeIcon,
+  CheckIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, ClockIcon, ExclamationTriangleIcon, ShoppingCartIcon } from "@heroicons/react/24/solid";
 import { API_CONFIG } from "@/utils/constants";
@@ -120,6 +122,11 @@ export function ControlPanel() {
     if (item.status === 'running') return 'blue';
     if (item.status === 'failed') return 'red';
     return 'gray';
+  };
+
+  // Check if ADMET data exists for a simulation log
+  const hasAdmetData = (log) => {
+    return log.admet && typeof log.admet === 'object' && Object.keys(log.admet).length > 0;
   };
 
   // Function to fetch price data from API
@@ -355,7 +362,7 @@ export function ControlPanel() {
                   {userSimulationLogs?.length === 0 ? (
                     <tr>
                       <td colSpan="7" className="py-8 text-center">
-                        <Typography variant="small" color="gray" className="text-sm">No simulation logs found</Typography>
+                        <Typography variant="small" color="gray" className="text-sm">Loading simulation logs...</Typography>
                       </td>
                     </tr>
                   ) : (
@@ -419,7 +426,7 @@ export function ControlPanel() {
                             <Button
                               variant="outlined"
                               size="sm"
-                              color="green"
+                              color="blue"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const simulationId = log.simulationKey || log.id;
@@ -428,9 +435,21 @@ export function ControlPanel() {
                                 }
                               }}
                               disabled={admetLoading || !log.simulationKey && !log.id}
-                              className="text-sm py-1 px-2"
+                              className="text-sm py-1 px-2 flex items-center gap-1"
+                              title={hasAdmetData(log) ? "ADMET data available" : "Click to calculate ADMET"}
                             >
-                              {admetLoading && (currentSimulationId === (log.simulationKey || log.id)) ? 'Loading...' : 'ADMET'}
+                              {admetLoading && (currentSimulationId === (log.simulationKey || log.id)) ? (
+                                'Loading...'
+                              ) : (
+                                <>
+                                  {hasAdmetData(log) ? (
+                                    <CheckIcon className="h-3 w-3 text-green-600" />
+                                  ) : (
+                                    <span className="text-red-500 font-bold text-xs">O</span>
+                                  )}
+                                  ADMET
+                                </>
+                              )}
                             </Button>
                           </td>
                           {/* <td className={className}>
@@ -1044,7 +1063,7 @@ export function ControlPanel() {
                   </Card>
                 </div>
               ) : (
-                <Typography color="gray">No ADMET data available</Typography>
+                <Typography color="gray">Calculating...</Typography>
               )}
             </div>
           </div>

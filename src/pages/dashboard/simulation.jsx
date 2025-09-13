@@ -752,6 +752,24 @@ export function Simulation() {
         </div>
         )}
       </div>
+
+      {/* Simulating Status Message */}
+      {simLoading && (
+        <Card className="mb-6">
+          <CardBody className="text-center py-8">
+            <div className="flex flex-col items-center gap-4">
+              <Spinner className="h-8 w-8" color="blue" />
+              <Typography variant="h6" color="blue-gray" className="mb-2">
+                Processing Your Simulation
+              </Typography>
+              <Typography variant="small" color="gray" className="max-w-md">
+                You will be redirected soon to 3D model viewer of the result. The SMILES will appear below the 3D model.
+              </Typography>
+            </div>
+          </CardBody>
+        </Card>
+      )}
+
       {searchError && (
         <Alert color="red" className="mb-6">
           <div className="flex items-center gap-2">
