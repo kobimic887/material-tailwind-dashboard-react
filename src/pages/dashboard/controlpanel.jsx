@@ -45,6 +45,12 @@ export function ControlPanel() {
   const [message, setMessage] = React.useState('');
   const [messageType, setMessageType] = React.useState('');
 
+  // ADMET popup state
+  const [showAdmetPopup, setShowAdmetPopup] = React.useState(false);
+  const [admetData, setAdmetData] = React.useState(null);
+  const [admetLoading, setAdmetLoading] = React.useState(false);
+  const [currentSimulationId, setCurrentSimulationId] = React.useState('');
+
   // Function to fetch activities from API
   const fetchActivities = async () => {
     try {
@@ -142,6 +148,34 @@ export function ControlPanel() {
       setShowPricePopup(true);
     } finally {
       setPriceLoading(false);
+    }
+  };
+
+  // Function to fetch ADMET data from API
+  const fetchAdmetData = async (simulationId) => {
+    try {
+      setAdmetLoading(true);
+      setCurrentSimulationId(simulationId);
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(API_CONFIG.buildApiUrl(`/simulation/${simulationId}/admet`), {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setAdmetData(data);
+      setShowAdmetPopup(true);
+    } catch (err) {
+      console.error('Error fetching ADMET data:', err);
+      setAdmetData({ error: err.message });
+      setShowAdmetPopup(true);
+    } finally {
+      setAdmetLoading(false);
     }
   };
 
@@ -303,11 +337,12 @@ export function ControlPanel() {
               <table className="w-full min-w-[640px] table-auto">
                 <thead>
                   <tr>
-                    {["Simulation ID", "PDB ID", "SMILES", "Timestamp", "Status", "Price"].map((el, index) => (
+                    {["Simulation ID", "PDB ID", "SMILES", "Timestamp", "Status", "Price", "ADMET"].map((el, index) => (
                       <th 
                         key={el} 
                         className="border-b border-blue-gray-50 py-3 px-6 text-left"
                         style={index === 1 ? { width: '60px', minWidth: '60px', maxWidth: '60px' } : {}}
+                        title={el === "ADMET" ? "ADMET-AI is a simple, fast, and accurate web interface for predicting the Absorption, Distribution, Metabolism, Excretion, and Toxicity (ADMET) properties of molecules using machine learning models" : ""}
                       >
                         <Typography variant="small" className="text-[12px] font-medium uppercase text-blue-gray-400">
                           {el}
@@ -378,6 +413,24 @@ export function ControlPanel() {
                               className="text-sm py-1 px-2"
                             >
                               {priceLoading && (currentSmiles === (log.smiles || log.SMILES)) ? 'Loading...' : 'Show Price'}
+                            </Button>
+                          </td>
+                          <td className={className}>
+                            <Button
+                              variant="outlined"
+                              size="sm"
+                              color="green"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const simulationId = log.simulationKey || log.id;
+                                if (simulationId) {
+                                  fetchAdmetData(simulationId);
+                                }
+                              }}
+                              disabled={admetLoading || !log.simulationKey && !log.id}
+                              className="text-sm py-1 px-2"
+                            >
+                              {admetLoading && (currentSimulationId === (log.simulationKey || log.id)) ? 'Loading...' : 'ADMET'}
                             </Button>
                           </td>
                           {/* <td className={className}>
@@ -727,6 +780,271 @@ export function ControlPanel() {
                 </div>
               ) : (
                 <Typography color="gray">No data available</Typography>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADMET Popup Modal */}
+      {showAdmetPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[80vh] overflow-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <Typography variant="h5" color="blue-gray">
+                  ADMET Properties
+                </Typography>
+                <IconButton 
+                  variant="text" 
+                  onClick={() => setShowAdmetPopup(false)}
+                >
+                  <span className="text-xl">×</span>
+                </IconButton>
+              </div>
+              
+              <div className="mb-4">
+                <Typography variant="small" color="gray" className="font-mono">
+                  Simulation ID: {currentSimulationId}
+                </Typography>
+                {admetData?.simulationKey && (
+                  <Typography variant="small" color="gray" className="font-mono">
+                    Simulation Key: {admetData.simulationKey}
+                  </Typography>
+                )}
+                {admetData?.smiles && (
+                  <Typography variant="small" color="gray" className="font-mono">
+                    SMILES: {admetData.smiles}
+                  </Typography>
+                )}
+              </div>
+
+              {admetLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Spinner className="h-8 w-8" />
+                  <Typography className="ml-2">Loading ADMET data...</Typography>
+                </div>
+              ) : admetData?.error ? (
+                <Alert color="red">
+                  Error: {admetData.error}
+                </Alert>
+              ) : admetData?.admet ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Molecular Properties */}
+                  <Card className="shadow-sm">
+                    <CardHeader floated={false} shadow={false} className="p-4">
+                      <Typography variant="h6" color="blue-gray">
+                        Molecular Properties
+                      </Typography>
+                    </CardHeader>
+                    <CardBody className="p-4 pt-0">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">Molecular Weight:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.molecular_weight || 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">LogP:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.logP || 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">TPSA:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.tpsa || 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">H-Bond Acceptors:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.hydrogen_bond_acceptors || 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">H-Bond Donors:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.hydrogen_bond_donors || 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">Lipinski:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.Lipinski || 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">QED:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.QED ? admetData.admet.QED.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">Stereo Centers:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.stereo_centers || 'N/A'}</Typography>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+
+                  {/* Toxicity Predictions */}
+                  <Card className="shadow-sm">
+                    <CardHeader floated={false} shadow={false} className="p-4">
+                      <Typography variant="h6" color="blue-gray">
+                        Toxicity Predictions
+                      </Typography>
+                    </CardHeader>
+                    <CardBody className="p-4 pt-0">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">AMES:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.AMES ? admetData.admet.AMES.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">Carcinogens:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.Carcinogens_Lagunin ? admetData.admet.Carcinogens_Lagunin.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">Clinical Toxicity:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.ClinTox ? admetData.admet.ClinTox.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">DILI:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.DILI ? admetData.admet.DILI.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">Skin Reaction:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.Skin_Reaction ? admetData.admet.Skin_Reaction.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">hERG:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.hERG ? admetData.admet.hERG.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+
+                  {/* Pharmacokinetics */}
+                  <Card className="shadow-sm">
+                    <CardHeader floated={false} shadow={false} className="p-4">
+                      <Typography variant="h6" color="blue-gray">
+                        Pharmacokinetics
+                      </Typography>
+                    </CardHeader>
+                    <CardBody className="p-4 pt-0">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">BBB Martins:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.BBB_Martins ? admetData.admet.BBB_Martins.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">Bioavailability:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.Bioavailability_Ma ? admetData.admet.Bioavailability_Ma.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">HIA Hou:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.HIA_Hou ? admetData.admet.HIA_Hou.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">PAMPA NCATS:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.PAMPA_NCATS ? admetData.admet.PAMPA_NCATS.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">Pgp Broccatelli:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.Pgp_Broccatelli ? admetData.admet.Pgp_Broccatelli.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">Caco2 Wang:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.Caco2_Wang ? admetData.admet.Caco2_Wang.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+
+                  {/* CYP Enzyme Interactions */}
+                  <Card className="shadow-sm">
+                    <CardHeader floated={false} shadow={false} className="p-4">
+                      <Typography variant="h6" color="blue-gray">
+                        CYP Enzyme Interactions
+                      </Typography>
+                    </CardHeader>
+                    <CardBody className="p-4 pt-0">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">CYP1A2 Veith:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.CYP1A2_Veith ? admetData.admet.CYP1A2_Veith.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">CYP2C19 Veith:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.CYP2C19_Veith ? admetData.admet.CYP2C19_Veith.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">CYP2C9 Substrate:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.CYP2C9_Substrate_CarbonMangels ? admetData.admet.CYP2C9_Substrate_CarbonMangels.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">CYP2C9 Veith:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.CYP2C9_Veith ? admetData.admet.CYP2C9_Veith.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">CYP2D6 Substrate:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.CYP2D6_Substrate_CarbonMangels ? admetData.admet.CYP2D6_Substrate_CarbonMangels.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">CYP2D6 Veith:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.CYP2D6_Veith ? admetData.admet.CYP2D6_Veith.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">CYP3A4 Substrate:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.CYP3A4_Substrate_CarbonMangels ? admetData.admet.CYP3A4_Substrate_CarbonMangels.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                        <div className="flex justify-between">
+                          <Typography variant="small" color="gray">CYP3A4 Veith:</Typography>
+                          <Typography variant="small" className="font-medium">{admetData.admet.CYP3A4_Veith ? admetData.admet.CYP3A4_Veith.toFixed(3) : 'N/A'}</Typography>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+
+                  {/* Additional Properties */}
+                  <Card className="shadow-sm lg:col-span-2">
+                    <CardHeader floated={false} shadow={false} className="p-4">
+                      <Typography variant="h6" color="blue-gray">
+                        Additional Properties
+                      </Typography>
+                    </CardHeader>
+                    <CardBody className="p-4 pt-0">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <Typography variant="small" color="gray">LD50 Zhu:</Typography>
+                            <Typography variant="small" className="font-medium">{admetData.admet.LD50_Zhu ? admetData.admet.LD50_Zhu.toFixed(3) : 'N/A'}</Typography>
+                          </div>
+                          <div className="flex justify-between">
+                            <Typography variant="small" color="gray">Lipophilicity:</Typography>
+                            <Typography variant="small" className="font-medium">{admetData.admet.Lipophilicity_AstraZeneca ? admetData.admet.Lipophilicity_AstraZeneca.toFixed(3) : 'N/A'}</Typography>
+                          </div>
+                          <div className="flex justify-between">
+                            <Typography variant="small" color="gray">Solubility:</Typography>
+                            <Typography variant="small" className="font-medium">{admetData.admet.Solubility_AqSolDB ? admetData.admet.Solubility_AqSolDB.toFixed(3) : 'N/A'}</Typography>
+                          </div>
+                          <div className="flex justify-between">
+                            <Typography variant="small" color="gray">VDss Lombardo:</Typography>
+                            <Typography variant="small" className="font-medium">{admetData.admet.VDss_Lombardo ? admetData.admet.VDss_Lombardo.toFixed(3) : 'N/A'}</Typography>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <Typography variant="small" color="gray">Clearance Hepatocyte:</Typography>
+                            <Typography variant="small" className="font-medium">{admetData.admet.Clearance_Hepatocyte_AZ ? admetData.admet.Clearance_Hepatocyte_AZ.toFixed(3) : 'N/A'}</Typography>
+                          </div>
+                          <div className="flex justify-between">
+                            <Typography variant="small" color="gray">Clearance Microsome:</Typography>
+                            <Typography variant="small" className="font-medium">{admetData.admet.Clearance_Microsome_AZ ? admetData.admet.Clearance_Microsome_AZ.toFixed(3) : 'N/A'}</Typography>
+                          </div>
+                          <div className="flex justify-between">
+                            <Typography variant="small" color="gray">Half Life Obach:</Typography>
+                            <Typography variant="small" className="font-medium">{admetData.admet.Half_Life_Obach ? admetData.admet.Half_Life_Obach.toFixed(3) : 'N/A'}</Typography>
+                          </div>
+                          <div className="flex justify-between">
+                            <Typography variant="small" color="gray">PPBR AZ:</Typography>
+                            <Typography variant="small" className="font-medium">{admetData.admet.PPBR_AZ ? admetData.admet.PPBR_AZ.toFixed(3) : 'N/A'}</Typography>
+                          </div>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                </div>
+              ) : (
+                <Typography color="gray">No ADMET data available</Typography>
               )}
             </div>
           </div>

@@ -168,7 +168,7 @@ export function Configurator() {
               target="_black"
             >
               <Button variant="outlined" color="blue-gray" fullWidth>
-                Pyxis Discover
+                Pyxis Discovery
               </Button>
             </a>
           </div>

@@ -172,7 +172,7 @@ export function PaidPlansDescription() {
         'Unlimited users',
         'Unlimited parallel jobs',
         'Custom models, pipelines, visualizations',
-        'Pyxis-discover Teams',
+        'Pyxis-discovery Teams',
         'Contact for pricing'
       ],
       buttonText: 'Contact Us',
