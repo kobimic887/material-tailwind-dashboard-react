@@ -73,6 +73,7 @@ export function Simulation() {
   const currentPageRef = useRef(0);
   const initialLoadingRef = useRef(true);
   const isLoadingPageRef = useRef(false); // Prevent multiple simultaneous requests
+  const ketcherIframeRef = useRef(null);
 
   const navigate = useNavigate();
   
@@ -569,6 +570,30 @@ export function Simulation() {
     });
   };
 
+  const handleCopySmiles = async () => {
+    if (ketcherIframeRef.current) {
+      try {
+        const ketcher = ketcherIframeRef.current.contentWindow.ketcher;
+        if (ketcher) {
+          const smiles = await ketcher.getSmiles();
+          if (smiles) {
+            await navigator.clipboard.writeText(smiles);
+            setSearchCode(smiles); // Also update the search box
+            setShowClipboardPopup(true);
+            setTimeout(() => setShowClipboardPopup(false), 3000);
+          } else {
+            alert("No molecule drawn to get SMILES from.");
+          }
+        } else {
+          alert("Ketcher editor not available.");
+        }
+      } catch (err) {
+        console.error("Failed to get SMILES from Ketcher:", err);
+        alert("Failed to get SMILES. Make sure a molecule is drawn.");
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col pt-4 pb-4 bg-gray-50 w-full px-2 sm:px-4">
       {/* Hover Preview Tooltip */}
@@ -798,15 +823,82 @@ export function Simulation() {
       )}
 
       {queryType !== "text" && (
-        <div id="editor" style={{ display: "flex", width: "100%", height: "70vh" }}>
-          <div style={{ width: "100%", height: "70vh", background: "#f5f5f5" }}>
+        <div id="editor" style={{ display: "flex", flexDirection: "row", width: "100%", height: "70vh", gap: "16px" }}>
+          {/* Ketcher Editor - Half width */}
+          <div style={{ width: "50%", height: "70vh", background: "#f5f5f5" }}>
             <iframe
+              ref={ketcherIframeRef}
               src="/ketcher/index.html"
               title="Ketcher 2D Chemical Editor"
               style={{ width: "100%", height: "70vh", border: "2px solid #ccc", borderRadius: 8, background: "white" }}
               allowFullScreen
             />
-          </div>   
+          </div>
+          
+          {/* Controls Panel - Half width */}
+          <div className="flex flex-col gap-4 w-1/2 p-4 bg-white rounded-lg shadow-lg">
+            {/* Copy SMILES Button */}
+            <Button 
+              onClick={handleCopySmiles}
+              color="orange"
+              size="lg"
+              className="w-full"
+            >
+              Copy SMILES from Drawing
+            </Button>
+            
+            {/* Search section */}
+            <div className="flex flex-col gap-2">
+              <Typography variant="h6" color="blue-gray">Search Molecules</Typography>
+              <Input
+                label="Add molecule ID, SMILES, CAS Number, IUPAC name, InChI or InChIKey here"
+                value={searchCode}
+                onChange={e => setSearchCode(e.target.value)}
+                className="w-full"
+              />
+              <Button
+                size="lg"
+                color="green"
+                onClick={handleSearch}
+                disabled={searchLoading || !searchCode || selectedMolecules.size > 1}
+                className="flex items-center justify-center gap-3 w-full"
+              >
+                {searchLoading ? <Spinner className="h-5 w-5" /> : <CloudIcon className="h-5 w-5" />}
+                {searchLoading ? 'Searching...' : 'Search'}
+              </Button>
+            </div>
+
+            {/* Docking section */}
+            <div className="flex flex-col gap-4 p-4 rounded-lg bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 border border-blue-300">
+              <button
+                type="button"
+                className="text-blue-700 underline text-left w-fit focus:outline-none hover:text-blue-900 transition-colors"
+                tabIndex={0}
+                onClick={() => setShowSimInputs(v => !v)}
+              >
+                Run 1 Click Docking
+              </button>
+              {showSimInputs && (
+                <div className="flex flex-col gap-2">
+                  <Input
+                    label="PDB ID"
+                    value={simPdbId}
+                    onChange={e => setSimPdbId(e.target.value)}
+                    className="w-full"
+                  />
+                  <Button
+                    size="md"
+                    color="blue"
+                    onClick={handleSimulation}
+                    disabled={simLoading || !simPdbId || !searchCode}
+                    className="flex items-center justify-center gap-2 w-full"
+                  >
+                    {simLoading ? 'Simulating...' : 'Simulate'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
         <div id="results" style={{ width: "100%", height: "70vh", background: "#e3e8ef" }}>
