@@ -68,12 +68,56 @@
       label {
         margin-right: 20px;
       }
+
+      #copyBtn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        margin: 5px 0;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: background-color 0.3s ease;
+      }
+
+      #copyBtn:hover {
+        background-color: #0056b3;
+      }
+
+      #copyBtn:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+      }
+
+      #copySmilesBtn {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        margin: 5px 0;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: background-color 0.3s ease;
+      }
+
+      #copySmilesBtn:hover {
+        background-color: #1e7e34;
+      }
+
+      #copySmilesBtn:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+      }
     </style>
   </head>
   <body>
     <div class="columns">
       <div>
         <button>Open Modal</button>
+        <button id="copyBtn">Copy Molecule to Clipboard</button>
+        <button id="copySmilesBtn">Copy as Extended SMILES</button>
         <div class="inputs">
           <div>
             <label>Height</label>
@@ -94,6 +138,8 @@
     </div>
     <script defer>
       const button = document.querySelector('button')
+      const copyBtn = document.getElementById('copyBtn')
+      const copySmilesBtn = document.getElementById('copySmilesBtn')
       const textarea = document.querySelector('.molecule')
       const width = document.querySelector('.width')
       const height = document.querySelector('.height')
@@ -144,6 +190,102 @@
           iframe.contentWindow.ketcher.setMolecule(textarea.value)
         }
       })
+
+      // Copy to clipboard functionality
+      async function copyMoleculeToClipboard() {
+        if (window.ketcher) {
+          const molecule = await window.ketcher.getMolfile()
+          
+          if (navigator.clipboard && window.isSecureContext) {
+            try {
+              await navigator.clipboard.writeText(molecule)
+              copyBtn.textContent = 'Copied!'
+              setTimeout(() => {
+                copyBtn.textContent = 'Copy Molecule to Clipboard'
+              }, 2000)
+            } catch (err) {
+              console.error('Failed to copy with modern API:', err)
+              fallbackCopy(molecule)
+            }
+          } else {
+            fallbackCopy(molecule)
+          }
+        } else {
+          console.error('Ketcher not available')
+        }
+      }
+
+      async function copySmilesAsExtended() {
+        if (window.ketcher) {
+          try {
+            const smiles = await window.ketcher.getSmiles()
+            
+            if (navigator.clipboard && window.isSecureContext) {
+              try {
+                await navigator.clipboard.writeText(smiles)
+                copySmilesBtn.textContent = 'Copied!'
+                setTimeout(() => {
+                  copySmilesBtn.textContent = 'Copy as Extended SMILES'
+                }, 2000)
+              } catch (err) {
+                console.error('Failed to copy SMILES with modern API:', err)
+                fallbackCopy(smiles)
+              }
+            } else {
+              fallbackCopy(smiles)
+            }
+          } catch (err) {
+            console.error('Failed to get SMILES:', err)
+          }
+        } else {
+          console.error('Ketcher not available')
+        }
+      }
+
+      function fallbackCopy(text) {
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        
+        try {
+          document.execCommand('copy')
+          if (text.includes('V2000') || text.includes('M  END')) {
+            copyBtn.textContent = 'Copied!'
+            setTimeout(() => {
+              copyBtn.textContent = 'Copy Molecule to Clipboard'
+            }, 2000)
+          } else {
+            copySmilesBtn.textContent = 'Copied!'
+            setTimeout(() => {
+              copySmilesBtn.textContent = 'Copy as Extended SMILES'
+            }, 2000)
+          }
+        } catch (err) {
+          console.error('Fallback copy failed:', err)
+        }
+        
+        document.body.removeChild(textArea)
+      }
+
+      // Show success message
+      function showCopySuccess() {
+        const originalText = copyBtn.textContent
+        copyBtn.textContent = 'Copied!'
+        copyBtn.style.backgroundColor = '#4CAF50'
+        copyBtn.style.color = 'white'
+        
+        setTimeout(() => {
+          copyBtn.textContent = originalText
+          copyBtn.style.backgroundColor = ''
+          copyBtn.style.color = ''
+        }, 2000)
+      }
+
+      // Add event listeners for copy buttons
+      copyBtn.addEventListener('click', copyMoleculeToClipboard)
+      copySmilesBtn.addEventListener('click', copySmilesAsExtended)
     </script>
   </body>
 </html>

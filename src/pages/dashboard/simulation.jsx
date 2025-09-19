@@ -350,7 +350,10 @@ export function Simulation() {
         setSelectedMolecules(new Set());
       }
     } catch (err) {
-      setSearchError(`Failed to search: ${err.message}`);
+      setSearchError("not found");
+      setTimeout(() => {
+        setSearchError("");
+      }, 2000);
     } finally {
       setSearchLoading(false);
     }
@@ -771,11 +774,8 @@ export function Simulation() {
       )}
 
       {searchError && (
-        <Alert color="red" className="mb-6">
-          <div className="flex items-center gap-2">
-            <Typography variant="h6">Search Error:</Typography>
-            <Typography>{searchError}</Typography>
-          </div>
+        <Alert color="yellow" className="mb-6">
+          <Typography>{searchError}</Typography>
         </Alert>
       )}
       {searchResult && (
