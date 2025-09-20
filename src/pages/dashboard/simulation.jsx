@@ -366,12 +366,12 @@ export function Simulation() {
       setSimError("Please search for a molecule first to get the SMILES code for docking");
       return;
     }
-
+    let _searchSmiles = searchCode.replace(',', ';').trim();
     setSimLoading(true);
     setSimError("");
     setSimResult(null);
     try {
-      const params = new URLSearchParams({ pdbid: simPdbId, smiles: searchCode });
+      const params = new URLSearchParams({ pdbid: simPdbId, smiles: _searchSmiles });
       const token = localStorage.getItem('auth_token');
       const res = await fetch(API_CONFIG.buildApiUrl(`/simulation?${params.toString()}`), {
         method: "GET",
@@ -544,6 +544,21 @@ export function Simulation() {
     return null;
   };
 
+  // Helper function to format numeric values to 4 decimal places
+  const formatNumericValue = (value) => {
+    if (value === null || value === undefined || value === "N/A" || value === "") {
+      return "N/A";
+    }
+    
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) {
+      return "N/A";
+    }
+    
+    // Format to 4 decimal places and remove trailing zeros
+    return parseFloat(numValue.toFixed(6)).toString();
+  };
+
   // Handle checkbox selection
   const handleCheckboxChange = (molecule, isChecked) => {
     const moleculeId = molecule.ASINEX_ID || molecule.id || Math.random().toString(36).slice(2);
@@ -567,9 +582,53 @@ export function Simulation() {
         }
       });
       
-      setSearchCode(selectedSmiles.join(';'));
+      setSearchCode(selectedSmiles.join(','));
       return newSelected;
     });
+  };
+
+  // Handle select all/unselect all functionality
+  const handleSelectAll = (isChecked) => {
+    if (isChecked) {
+      // Select all molecules on current page
+      const newSelected = new Set();
+      const selectedSmiles = [];
+      
+      topMolecules.forEach(mol => {
+        const moleculeId = mol.ASINEX_ID || mol.id || Math.random().toString(36).slice(2);
+        const molSmiles = mol.SMILES_STRING || mol.SMILES || mol.smiles || '';
+        newSelected.add(moleculeId);
+        if (molSmiles) {
+          selectedSmiles.push(molSmiles);
+        }
+      });
+      
+      setSelectedMolecules(newSelected);
+      setSearchCode(selectedSmiles.join(','));
+    } else {
+      // Unselect all molecules
+      setSelectedMolecules(new Set());
+      setSearchCode('');
+    }
+  };
+
+  // Determine the state of the select all checkbox
+  const getSelectAllState = () => {
+    if (topMolecules.length === 0) return { checked: false, indeterminate: false };
+    
+    const totalMolecules = topMolecules.length;
+    const selectedCount = topMolecules.filter(mol => {
+      const moleculeId = mol.ASINEX_ID || mol.id || Math.random().toString(36).slice(2);
+      return selectedMolecules.has(moleculeId);
+    }).length;
+    
+    if (selectedCount === 0) {
+      return { checked: false, indeterminate: false };
+    } else if (selectedCount === totalMolecules) {
+      return { checked: true, indeterminate: false };
+    } else {
+      return { checked: false, indeterminate: true };
+    }
   };
 
   const handleCopySmiles = async () => {
@@ -923,7 +982,20 @@ export function Simulation() {
                 <table className="w-full text-left">
                   <thead>
                     <tr>
-                      <th className="p-2 font-bold">Select</th>
+                      <th className="p-2 font-bold">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={getSelectAllState().checked}
+                            ref={(el) => {
+                              if (el) el.indeterminate = getSelectAllState().indeterminate;
+                            }}
+                            onChange={(e) => handleSelectAll(e.target.checked)}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <span>Select</span>
+                        </div>
+                      </th>
                       <th className="p-2 font-bold">#</th>
                       <th className="p-2 font-bold">ID</th>
                       <th className="p-2 font-bold">IUPAC Name</th>
@@ -1022,8 +1094,8 @@ export function Simulation() {
                           {(mol.INCHIKEY || "N/A").toString().slice(0,moleculeLimit)}{(mol.INCHIKEY || "N/A").toString().length > moleculeLimit ? '...' : ''}
                         </td>
                         <td className="p-2" title={mol.BRUTTO_FORMULA || "N/A"}>{(mol.BRUTTO_FORMULA || "N/A").toString().slice(0,moleculeLimit)}{(mol.BRUTTO_FORMULA || "N/A").toString().length > moleculeLimit ? '...' : ''}</td>
-                        <td className="p-2" title={mol.MW_STRUCTURE || "N/A"}>{(mol.MW_STRUCTURE || "N/A").toString().slice(0,moleculeLimit)}{(mol.MW_STRUCTURE || "N/A").toString().length > moleculeLimit ? '...' : ''}</td>
-                        <td className="p-2" title={mol.AVAILABLE_MG || "N/A"}>{(mol.AVAILABLE_MG || "N/A").toString().slice(0,moleculeLimit)}{(mol.AVAILABLE_MG || "N/A").toString().length > moleculeLimit ? '...' : ''}</td>
+                        <td className="p-2" title={formatNumericValue(mol.MW_STRUCTURE)}>{formatNumericValue(mol.MW_STRUCTURE).toString().slice(0,moleculeLimit)}{formatNumericValue(mol.MW_STRUCTURE).toString().length > moleculeLimit ? '...' : ''}</td>
+                        <td className="p-2" title={formatNumericValue(mol.AVAILABLE_MG)}>{formatNumericValue(mol.AVAILABLE_MG).toString().slice(0,moleculeLimit)}{formatNumericValue(mol.AVAILABLE_MG).toString().length > moleculeLimit ? '...' : ''}</td>
                         <td className="p-2 cursor-pointer group" title={mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-"}
                           onClick={() => addToCart(mol, 1, mol.PRICE_1MG)}
                         >
