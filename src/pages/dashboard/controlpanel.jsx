@@ -177,6 +177,11 @@ export function ControlPanel() {
       const data = await response.json();
       setAdmetData(data);
       setShowAdmetPopup(true);
+      
+      // Reload simulation logs after 2 seconds
+      setTimeout(() => {
+        fetchUserSimulationLogs();
+      }, 2000);
     } catch (err) {
       console.error('Error fetching ADMET data:', err);
       setAdmetData({ error: err.message });

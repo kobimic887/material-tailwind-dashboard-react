@@ -454,6 +454,8 @@ export function Simulation() {
   const saveCartToStorage = (cartData) => {
     try {
       localStorage.setItem('moleculeCart', JSON.stringify(cartData));
+      // Dispatch custom event to notify navbar of cart update
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (error) {
       console.error('Error saving cart to storage:', error);
     }
@@ -939,11 +941,12 @@ export function Simulation() {
                   </thead>
                   <tbody>
                     {topMolecules.map((mol, idx) => {
-                      const moleculeId = mol.ASINEX_ID || mol.id || Math.random().toString(36).slice(2);
+                      const moleculeId = mol.ASINEX_ID || mol.id || `molecule-${idx}`;
+                      const uniqueKey = `${moleculeId}-${idx}`;
                       const isChecked = selectedMolecules.has(moleculeId);
                       
                       return (
-                        <tr key={moleculeId} className="border-b">
+                        <tr key={uniqueKey} className="border-b">
                           <td className="p-2">
                             <input
                               type="checkbox"
