@@ -371,14 +371,23 @@ export function Simulation() {
     setSimError("");
     setSimResult(null);
     try {
-      const params = new URLSearchParams({ pdbid: simPdbId, smiles: _searchSmiles });
       const token = localStorage.getItem('auth_token');
-      const res = await fetch(API_CONFIG.buildApiUrl(`/simulation?${params.toString()}`), {
-        method: "GET",
+      
+      // Create JSON payload
+      const requestBody = {
+        pdbid: simPdbId,
+        smiles: encodeURIComponent(_searchSmiles)
+      };
+      
+      const res = await fetch(API_CONFIG.buildApiUrl('/simulation'), {
+        method: "POST",
         headers: {
+          'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
+        body: JSON.stringify(requestBody)
       });
+
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const result = await res.json();
       setSimResult(result);
