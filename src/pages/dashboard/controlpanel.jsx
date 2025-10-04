@@ -129,6 +129,18 @@ export function ControlPanel() {
     return log.admet && typeof log.admet === 'object' && Object.keys(log.admet).length > 0;
   };
 
+  // Helper function to decode URL-encoded SMILES
+  const decodeSmiles = (smiles) => {
+    if (!smiles || smiles === 'N/A') return 'N/A';
+    try {
+      return decodeURIComponent(smiles);
+    } catch (error) {
+      // If decoding fails, return original string
+      console.warn('Failed to decode SMILES:', smiles, error);
+      return smiles;
+    }
+  };
+
   // Function to fetch price data from API
   const fetchPriceData = async (smiles) => {
     try {
@@ -391,9 +403,9 @@ export function ControlPanel() {
                               {(log.pdbid || log.pdbId || 'N/A').toString().substring(0, 10)}
                             </Typography>
                           </td>
-                          <td className={className} onClick={() => handleViewInMolstar(log)} title={log.smiles || log.SMILES || 'N/A'}>
+                          <td className={className} onClick={() => handleViewInMolstar(log)} title={decodeSmiles(log.smiles || log.SMILES || 'N/A')}>
                             <Typography variant="small" className="text-xs font-medium text-blue-gray-600 font-mono hover:text-blue-600" style={{ fontSize: '12px', lineHeight: '1.3' }}>
-                              {(log.smiles || log.SMILES || 'N/A').toString().substring(0, 15)}
+                              {decodeSmiles(log.smiles || log.SMILES || 'N/A').toString().substring(0, 15)}
                             </Typography>
                           </td>
                           <td className={className} onClick={() => handleViewInMolstar(log)}>
