@@ -167,7 +167,7 @@ export function PaidPlans() {
   const createCheckoutSession = async (plan, isYearly) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`https://${window.location.hostname}:3000/create-checkout-session`, {
+      const response = await fetch(`https://${window.location.hostname}:3000/create-checkout-session-onetime`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
