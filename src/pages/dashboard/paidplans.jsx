@@ -35,8 +35,11 @@ export function PaidPlans() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success')) {
-      issueSimulationTokens(50);
-      setMessage('Payment received! Your subscription is now active.');
+      const planName = urlParams.get('plan');
+      const selectedPlan = plans.find(p => p.name === planName);
+      const credits = selectedPlan?.credits || 50;
+      issueSimulationTokens(credits);
+      setMessage('Payment received! Your have successfully subscribed to the plan.');
       setMessageType('success');
     } else if (urlParams.get('canceled')) {
       setMessage('Payment was canceled. You can try again anytime.');
@@ -50,6 +53,7 @@ export function PaidPlans() {
       subtitle: 'Affordable access for anyone to understand the concept',
       popular: false,
       description: 'Affordable access for anyone to understand the concept',
+      credits: 4,
       features: [
         'Trial',
         '4 credits',        
@@ -67,6 +71,7 @@ export function PaidPlans() {
       price: 20,
       popular: false,
       description: 'The best choice for active research projects needing more power.',
+      credits: 50,
       features: [
         '50 credits',
         'Medium job priority',
@@ -84,6 +89,7 @@ export function PaidPlans() {
       price: 40,
       popular: false,
       description: 'The best choice for active research projects needing more power.',
+      credits: 300,
       features: [
         '300 credits',
         'Medium job priority',
@@ -102,6 +108,7 @@ export function PaidPlans() {
       price: 80,
       popular: false,
       description: 'The powerhouse plan for professionals needing large-scale computation.',
+      credits: 720,
       features: [
         'Commercial Use',
         '720 credits',
@@ -124,7 +131,7 @@ export function PaidPlans() {
 
     if (plan.name === 'Trial') {
       // Handle trial
-      issueSimulationTokens(4);
+      issueSimulationTokens(plan.credits);
       setMessage('Your subscription is now active.');
       setMessageType('success');
       return;
