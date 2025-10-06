@@ -39,7 +39,7 @@ export function PaidPlans() {
       const selectedPlan = plans.find(p => p.name === planName);
       const credits = selectedPlan?.credits || 50;
       issueSimulationTokens(credits);
-      setMessage('Payment received! Your have successfully subscribed to the plan.');
+      setMessage('Payment received! Your have successfully subscribed to the plan: ' + planName);
       setMessageType('success');
     } else if (urlParams.get('canceled')) {
       setMessage('Payment was canceled. You can try again anytime.');
