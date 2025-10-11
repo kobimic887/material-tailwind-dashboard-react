@@ -579,6 +579,85 @@ const HideMenu =()=>{
     }
   };
 
+  // Function to download molecule as SDF file
+  const downloadMoleculeAsSDF = async (molecule, event) => {
+    // Stop event propagation to prevent row click
+    event.stopPropagation();
+    
+    const simulationKey = localStorage.getItem('molstar_simulation_key');
+    const smiles = molecule.smiles;
+    
+    if (!smiles || smiles === 'N/A') {
+      setMessage('No SMILES data available for this molecule');
+      setMessageType('error');
+      setTimeout(() => {
+        setMessage('');
+        setMessageType('');
+      }, 3000);
+      return;
+    }
+
+    if (!simulationKey) {
+      setMessage('No simulation key found. Cannot fetch SDF data.');
+      setMessageType('error');
+      setTimeout(() => {
+        setMessage('');
+        setMessageType('');
+      }, 3000);
+      return;
+    }
+
+    try {
+      setMessage(`Downloading SDF for ${molecule.name}...`);
+      setMessageType('info');
+
+      // Fetch the SDF data from the API
+      const sdfSpecUrl = API_CONFIG.buildApiUrl(`/sanitizedspecificsdf/${simulationKey}/${encodeURIComponent(smiles)}`);
+      const response = await fetch(sdfSpecUrl);
+      
+      if (response.ok) {
+        const sdfText = await response.text();
+        
+        // Create a blob from the SDF text
+        const blob = new Blob([sdfText], { type: 'chemical/x-mdl-sdfile' });
+        
+        // Create a download link
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        
+        // Generate filename from molecule name and ID
+        const filename = `${molecule.name.replace(/[^a-z0-9]/gi, '_')}_${molecule.id}.sdf`;
+        link.download = filename;
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        setMessage(`Successfully downloaded ${filename}`);
+        setMessageType('success');
+        setTimeout(() => {
+          setMessage('');
+          setMessageType('');
+        }, 3000);
+      } else {
+        throw new Error(`Failed to fetch SDF: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error downloading SDF:', error);
+      setMessage(`Failed to download SDF: ${error.message}`);
+      setMessageType('error');
+      setTimeout(() => {
+        setMessage('');
+        setMessageType('');
+      }, 5000);
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Main Molstar Card */}
@@ -739,6 +818,11 @@ const HideMenu =()=>{
                           SMILES
                         </Typography>
                       </th>
+                      <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-3">
+                        <Typography variant="small" color="blue-gray" className="font-bold leading-none">
+                          Actions
+                        </Typography>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -810,6 +894,22 @@ const HideMenu =()=>{
                             <Typography variant="small" color="blue-gray" className="font-mono text-xs max-w-xs truncate" title={molecule.smiles}>
                               {molecule.smiles}
                             </Typography>
+                          </td>
+                          
+                          <td className={classes} onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              size="sm"
+                              variant="outlined"
+                              color="blue"
+                              className="flex items-center gap-1 text-xs px-2 py-1"
+                              onClick={(e) => downloadMoleculeAsSDF(molecule, e)}
+                              title="Download molecule as SDF file"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                              </svg>
+                              Save SDF
+                            </Button>
                           </td>
                         </tr>
                       );
