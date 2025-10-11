@@ -273,20 +273,23 @@ export function Molstar3D() {
       loadSdfData(sdfUrl);
     }
 
-    // Auto-load PDB file if simulation parameter is present
-    if (simulationParam) {
-      const pdbUrl = API_CONFIG.buildApiUrl(`/sanitizedpdb/${simulationParam}`);
-      console.log('Auto-loading PDB from simulation parameter:', pdbUrl);
+    // Auto-load PDB file from RCSB if pdb parameter is present
+    if (pdbParam) {
+      const pdbUrl = `https://files.rcsb.org/download/${pdbParam}.pdb`;
+      console.log('Auto-loading PDB from RCSB:', pdbUrl);
       
-      // Store the URLs and simulation key in localStorage
+      // Store the URLs and PDB code in localStorage
       localStorage.setItem('molstar_pdb_url', pdbUrl);
-      localStorage.setItem('molstar_simulation_key', simulationParam);
+      localStorage.setItem('molstar_pdb_code', pdbParam);
+      if (simulationParam) {
+        localStorage.setItem('molstar_simulation_key', simulationParam);
+      }
       
       // Load PDB into Molstar after iframe is ready
       const loadPdbWhenReady = () => {
         if (molstarRef.current) {
           setTimeout(() => {
-            console.log('Loading PDB structure from URL parameter:', pdbUrl);
+            console.log('Loading PDB structure from RCSB:', pdbUrl);
             molstarRef.current.contentWindow.postMessage({
               type: 'loadStructureFromUrl',
               url: pdbUrl,
@@ -351,13 +354,14 @@ export function Molstar3D() {
     let pdbUrl = localStorage.getItem('molstar_pdb_url');
     let sdfUrl = localStorage.getItem('molstar_sdf_url');
     const simulationKey = localStorage.getItem('molstar_simulation_key');
+    const pdbCode = localStorage.getItem('molstar_pdb_code');
 
-    console.log('localStorage URLs:', { pdbUrl, sdfUrl, simulationKey });
+    console.log('localStorage URLs:', { pdbUrl, sdfUrl, simulationKey, pdbCode });
 
-    // Check and fix localhost URLs if necessary
-    if (pdbUrl && simulationKey) {
-      const newPdbUrl = API_CONFIG.buildApiUrl(`/sanitizedpdb/${simulationKey}`);
-      console.log('Rebuilding localhost PDB URL:', pdbUrl, '->', newPdbUrl);
+    // If we have a PDB code, always use RCSB URL
+    if (pdbCode) {
+      const newPdbUrl = `https://files.rcsb.org/download/${pdbCode}.pdb`;
+      console.log('Rebuilding PDB URL from RCSB:', pdbCode, '->', newPdbUrl);
       localStorage.setItem('molstar_pdb_url', newPdbUrl);
       pdbUrl = newPdbUrl;
     }
@@ -452,12 +456,12 @@ export function Molstar3D() {
 
   const loadPDBStructure = () => {
     let pdbUrl = localStorage.getItem('molstar_pdb_url');
-    const simulationKey = localStorage.getItem('molstar_simulation_key');
+    const pdbCode = localStorage.getItem('molstar_pdb_code');
     
-    // Check and fix localhost URL if necessary
-    if (pdbUrl && pdbUrl.includes('localhost') && simulationKey) {
-      const newPdbUrl = API_CONFIG.buildApiUrl(`/sanitizedpdb/${simulationKey}`);
-      console.log('Rebuilding localhost PDB URL in loadPDBStructure:', pdbUrl, '->', newPdbUrl);
+    // If we have a PDB code, always use RCSB URL
+    if (pdbCode) {
+      const newPdbUrl = `https://files.rcsb.org/download/${pdbCode}.pdb`;
+      console.log('Loading PDB from RCSB:', newPdbUrl);
       localStorage.setItem('molstar_pdb_url', newPdbUrl);
       pdbUrl = newPdbUrl;
     }
