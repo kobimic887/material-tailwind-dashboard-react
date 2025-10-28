@@ -1,10 +1,25 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Typography, Card, CardHeader, CardBody, Button } from "@material-tailwind/react";
 import { pyxisImages } from "@/data/pyxisImages";
 
 export function MainHome() {
+  // Redirect this route to the public website
+  useEffect(() => {
+    // Use replace to avoid adding an extra history entry
+    window.location.replace("https://www.pyxis-discovery.com/");
+  }, []);
+
   return (
     <div className="about-us-page">
+      {/* Fallback content shown briefly while redirecting */}
+      <section className="py-16 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold mb-2">Redirecting…</h1>
+          <p className="text-blue-gray-600">Taking you to pyxis-discovery.com</p>
+        </div>
+      </section>
+      {/* The content below will usually not render because of the immediate redirect,
+          but is preserved for reference and potential future reinstatement. */}
       {/* Hero Section */}
       <section
         className="py-5 text-white d-flex align-items-center justify-content-center"
