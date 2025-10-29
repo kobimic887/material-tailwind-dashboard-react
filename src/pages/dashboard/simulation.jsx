@@ -49,6 +49,10 @@ export function Simulation() {
   const [queryType, setQueryType] = useState("draw"); // Default to Draw molecule
   const [topLimit, setTopLimit] = useState(8); // Add topLimit state
   const [moleculeLimit, setMoleculeLimit] = useState(30); // Add moleculeLimit state
+  const [similarityThreshold, setSimilarityThreshold] = useState(0.7); // Similarity threshold (0-1)
+  const [molWeightMin, setMolWeightMin] = useState(0); // Molecular weight minimum (0-1000)
+  const [molWeightMax, setMolWeightMax] = useState(1000); // Molecular weight maximum (0-1000)
+  const [lastFromId, setLastFromId] = useState(0); // Track last fromId for pagination
 
   const [mculeSmiles, setMculeSmiles] = useState(""); // For drawing in mcule component
 
@@ -229,44 +233,64 @@ export function Simulation() {
     setCurrentPage(0);
     setAllMolecules([]);
     setHasMore(true);
+    setLastFromId(0); // Reset fromId to 0 for new search
     
     // Clear selected molecules when doing a new search
     setSelectedMolecules(new Set());
     
     try {
-      let searchMode = 3;
-      if (searchType === "similarity") searchMode = 3;
-      else if (searchType === "substructure") searchMode = 2;
-      else if (searchType === "exact") searchMode = 1;
-      
       const token = localStorage.getItem('auth_token');
-      const query = encodeURIComponent(searchCode);
-      
-      let res;
-      // Use different API endpoint for exact search
-      if (searchType === "exact") {
-        res = await fetch(API_CONFIG.buildApiUrl(`/asinex/exact/${query}`), {
-          method: "GET",
-          headers: { 
-            'accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-        });
-      } else if (searchType === "substructure" || searchType === "similarity") {
-        res = await fetch(API_CONFIG.buildApiUrl(`/asinex/substructure/0_50/${query}`), {
-          method: "GET",
-          headers: { 
-            'accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-        });
+      const rawQuery = (searchCode || '').trim();
+
+      // Map UI searchType to API method names
+      const methodMap = {
+        similarity: 'similarity',
+        substructure: 'substructure',
+        structure: 'structure',
+        bas: 'bas',
+        molweight: 'mw', // UI uses 'molweight', API uses 'mw'
+        mw: 'mw'
+      };
+      const method = methodMap[searchType] || 'similarity';
+
+      // Use lastFromId for pagination (starts at 0 for new search)
+      const fromId = lastFromId;
+
+      // Prepare request body with pagination parameters
+      let requestBody = {
+        fromId: fromId,
+        pageSize: 10
+      };
+
+      // Add method-specific parameters
+      if (searchType === 'bas') {
+        // BAS search uses 'bas' parameter instead of 'smiles'
+        requestBody.bas = rawQuery;
+      } else if (searchType === 'similarity') {
+        // Similarity search uses 'smiles' and 'threshold'
+        requestBody.smiles = rawQuery;
+        requestBody.threshold = similarityThreshold;
+      } else if (searchType === 'molweight' || searchType === 'mw') {
+        // Molecular weight search uses 'smiles' and weight range
+        requestBody.smiles = rawQuery;
+        requestBody.mwFrom = molWeightMin;
+        requestBody.mwTo = molWeightMax;
       } else {
-        // Use regular search API for similarity
-        res = await fetch(API_CONFIG.buildApiUrl(`/mol-price/search?query=${query}&limit=10&skip=0`), {
-          method: "GET",
-          headers: { 'accept': 'application/json' },
-        });
+        // Other searches (substructure, structure) use 'smiles'
+        requestBody.smiles = rawQuery;
       }
+
+      // POST to /api3/{method} with JSON body
+      const url = API_CONFIG.buildApiUrl(`/api3/${method}`);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'accept': '*/*',
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(requestBody)
+      });
       
       if (!res.ok) {
         const errorText = await res.text();
@@ -319,6 +343,15 @@ export function Simulation() {
         setTopMolecules(formattedMolecules);
         // Clear selected molecules when loading new search results
         setSelectedMolecules(new Set());
+        
+        // Update lastFromId to the maximum id_number from the response for next page
+        if (formattedMolecules.length > 0) {
+          const maxId = Math.max(...formattedMolecules.map(m => {
+            const id = m.ASINEX_ID || '0';
+            return parseInt(id) || 0;
+          }));
+          setLastFromId(maxId);
+        }
       } else if (result.id || result.id_number) {
         // Single object format (new format)
         const formattedMolecule = {
@@ -787,13 +820,169 @@ export function Simulation() {
             <input
               type="radio"
               name="searchType"
-              value="exact"
-              checked={searchType === "exact"}
-              onChange={() => setSearchType("exact")}
+              value="structure"
+              checked={searchType === "structure"}
+              onChange={() => setSearchType("structure")}
             />
-            <span>Exact</span>
+            <span>Structure</span>
+          </label>
+          <label className="flex items-center gap-1 w-full sm:w-auto">
+            <input
+              type="radio"
+              name="searchType"
+              value="bas"
+              checked={searchType === "bas"}
+              onChange={() => setSearchType("bas")}
+            />
+            <span>BAS</span>
+          </label>
+          <label className="flex items-center gap-1 w-full sm:w-auto">
+            <input
+              type="radio"
+              name="searchType"
+              value="molweight"
+              checked={searchType === "molweight"}
+              onChange={() => setSearchType("molweight")}
+            />
+            <span>Mol weight</span>
           </label>
         </div>
+        
+        {/* Similarity Threshold Slider */}
+        {searchType === "similarity" && (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mb-2 w-full p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <Typography variant="small" color="blue-gray" className="font-semibold min-w-fit">
+              Similarity Threshold:
+            </Typography>
+            <div className="flex items-center gap-4 w-full sm:w-auto flex-1">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={similarityThreshold}
+                onChange={(e) => setSimilarityThreshold(parseFloat(e.target.value))}
+                className="flex-1 h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                style={{ minWidth: '150px' }}
+              />
+              <div className="flex items-center justify-center min-w-[60px] px-3 py-1 bg-blue-600 text-white rounded-lg font-bold text-lg">
+                {similarityThreshold.toFixed(1)}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Molecular Weight Range Sliders */}
+        {searchType === "molweight" && (
+          <div className="flex flex-col gap-3 mb-2 w-full p-4 bg-green-50 rounded-lg border border-green-200 molecular-weight-range">
+            <Typography variant="small" color="blue-gray" className="font-semibold">
+              Molecular Weight Range:
+            </Typography>
+            
+            <div className="flex items-center gap-4 w-full">
+              {/* Min value display */}
+              <div className="flex items-center justify-center min-w-[80px] px-3 py-1 bg-green-600 text-white rounded-lg font-bold text-lg">
+                {parseFloat(molWeightMin).toFixed(2)}
+              </div>
+              
+              {/* Dual range slider container */}
+              <div className="flex-1 relative" style={{ minWidth: '200px' }}>
+                {/* Background track */}
+                <div className="absolute w-full h-2 bg-green-200 rounded-lg" style={{ top: '50%', transform: 'translateY(-50%)' }}></div>
+                
+                {/* Active range highlight */}
+                <div 
+                  className="absolute h-2 bg-green-600 rounded-lg" 
+                  style={{ 
+                    left: `${(molWeightMin / 1000) * 100}%`,
+                    width: `${((molWeightMax - molWeightMin) / 1000) * 100}%`,
+                    top: '50%',
+                    transform: 'translateY(-50%)'
+                  }}
+                ></div>
+                
+                {/* Max slider (placed first, lower z-index) */}
+                <input
+                  type="range"
+                  min="0"
+                  max="1000"
+                  step="0.01"
+                  value={molWeightMax}
+                  onChange={(e) => {
+                    const newMax = parseFloat(e.target.value);
+                    if (newMax >= molWeightMin) {
+                      setMolWeightMax(newMax);
+                    }
+                  }}
+                  className="absolute w-full appearance-none bg-transparent cursor-pointer"
+                  style={{
+                    zIndex: 3,
+                    height: '24px',
+                    top: '50%',
+                    transform: 'translateY(-50%)'
+                  }}
+                />
+                
+                {/* Min slider (placed second, higher z-index) */}
+                <input
+                  type="range"
+                  min="0"
+                  max="1000"
+                  step="0.01"
+                  value={molWeightMin}
+                  onChange={(e) => {
+                    const newMin = parseFloat(e.target.value);
+                    if (newMin <= molWeightMax) {
+                      setMolWeightMin(newMin);
+                    }
+                  }}
+                  className="absolute w-full appearance-none bg-transparent cursor-pointer"
+                  style={{
+                    zIndex: 4,
+                    height: '24px',
+                    top: '50%',
+                    transform: 'translateY(-50%)'
+                  }}
+                />
+              </div>
+              
+              {/* Max value display */}
+              <div className="flex items-center justify-center min-w-[80px] px-3 py-1 bg-green-600 text-white rounded-lg font-bold text-lg">
+                {parseFloat(molWeightMax).toFixed(2)}
+              </div>
+            </div>
+            
+            <style dangerouslySetInnerHTML={{__html: `
+              .molecular-weight-range input[type="range"] {
+                pointer-events: none;
+              }
+              
+              .molecular-weight-range input[type="range"]::-webkit-slider-thumb {
+                appearance: none;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background: #16a34a;
+                cursor: pointer;
+                border: 2px solid white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                pointer-events: auto;
+              }
+              
+              .molecular-weight-range input[type="range"]::-moz-range-thumb {
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background: #16a34a;
+                cursor: pointer;
+                border: 2px solid white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                pointer-events: auto;
+              }
+            `}} />
+          </div>
+        )}
+        
         {queryType !== "draw" && (
         <div className="flex flex-col lg:flex-row gap-4 w-full">
           {/* Search section */}
@@ -1039,12 +1228,12 @@ export function Simulation() {
                           <td className="p-2">{idx + 1}</td>
                         <td
                           className="p-2 cursor-pointer hover:bg-blue-100"
-                          title={mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "N/A"}
-                          onClick={() => setSearchCode(mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "")}
+                          title={mol.ASINEX_ID ? String(mol.ASINEX_ID).replace(/^ASN/i, "") : "N/A"}
+                          onClick={() => setSearchCode(mol.ASINEX_ID ? String(mol.ASINEX_ID).replace(/^ASN/i, "") : "")}
                           onMouseEnter={(e) => handleMouseEnter(extractSmiles(mol), e, "mcule ID")}
                           onMouseLeave={handleMouseLeave}
                         >
-                          {(mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "N/A").toString().slice(0,moleculeLimit)}{(mol.ASINEX_ID ? mol.ASINEX_ID.replace(/^ASN/i, "") : "N/A").toString().length > moleculeLimit ? '...' : ''}
+                          {(mol.ASINEX_ID ? String(mol.ASINEX_ID).replace(/^ASN/i, "") : "N/A").toString().slice(0,moleculeLimit)}{(mol.ASINEX_ID ? String(mol.ASINEX_ID).replace(/^ASN/i, "") : "N/A").toString().length > moleculeLimit ? '...' : ''}
                         </td>
                         <td
                           className="p-2 cursor-pointer hover:bg-blue-100"
