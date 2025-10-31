@@ -53,6 +53,8 @@ export function Simulation() {
   const [molWeightMin, setMolWeightMin] = useState(0); // Molecular weight minimum (0-1000)
   const [molWeightMax, setMolWeightMax] = useState(1000); // Molecular weight maximum (0-1000)
   const [lastFromId, setLastFromId] = useState(0); // Track last fromId for pagination
+  const [isSearchActive, setIsSearchActive] = useState(false); // Track if search is active
+  const [lastSearchQuery, setLastSearchQuery] = useState(""); // Track last search query
 
   const [mculeSmiles, setMculeSmiles] = useState(""); // For drawing in mcule component
 
@@ -78,6 +80,7 @@ export function Simulation() {
   const initialLoadingRef = useRef(true);
   const isLoadingPageRef = useRef(false); // Prevent multiple simultaneous requests
   const ketcherIframeRef = useRef(null);
+  const isSearchActiveRef = useRef(false);
 
   const navigate = useNavigate();
   
@@ -97,6 +100,10 @@ export function Simulation() {
   useEffect(() => {
     initialLoadingRef.current = initialLoading;
   }, [initialLoading]);
+
+  useEffect(() => {
+    isSearchActiveRef.current = isSearchActive;
+  }, [isSearchActive]);
 
   const fetchApiData = async () => {
     setLoading(true);
@@ -159,6 +166,14 @@ export function Simulation() {
       const result = await res.json();
       console.log('Fetched molecules from /asinex/all:', result);
       
+      // Check if response fromId matches request (if using pagination with fromId)
+      // Note: /asinex/all uses page-based pagination, but check in case API returns fromId
+      if (result.fromId !== undefined && page > 0 && result.fromId === lastFromId) {
+        console.log('Received same fromId - no new data available');
+        setHasMore(false);
+        return;
+      }
+      
       let formattedMolecules = [];
       
       // Handle different response formats
@@ -202,6 +217,9 @@ export function Simulation() {
         setTopMolecules(formattedMolecules);
         // Clear selected molecules when loading new data (not appending)
         setSelectedMolecules(new Set());
+        // Reset search state when starting fresh browse mode
+        setIsSearchActive(false);
+        setLastSearchQuery("");
       }
       
       // Check if we have more data (if we got less than 10, we're at the end)
@@ -300,6 +318,13 @@ export function Simulation() {
       //setSearchResult(result);
       console.log('Search result data structure:', result); // Debug log
       
+      // Check if response fromId matches request fromId (meaning we've hit the end)
+      if (result.fromId !== undefined && result.fromId === fromId) {
+        console.log('Received same fromId as request - no new data available');
+        setHasMore(false);
+        return;
+      }
+      
       // Handle the new response structure
       if (result.data) {
         // Single result with data object (old format)
@@ -318,7 +343,8 @@ export function Simulation() {
           IUPAC_NAME: molecule.iupac_name || "N/A",
           INCHI: molecule.inchi || "N/A", 
           INCHIKEY: molecule.inchikey || "N/A",
-          PRICE_2MG: molecule.price_2mg || "N/A"
+          PRICE_2MG: molecule.price_2mg || "N/A",
+          SIMILARITY: molecule.similarity || molecule.Similarity || null
         };
         setTopMolecules([formattedMolecule]);
         // Clear selected molecules when loading new search results
@@ -338,7 +364,8 @@ export function Simulation() {
           IUPAC_NAME: molecule.iupac_name || "N/A",
           INCHI: molecule.inchi || "N/A", 
           INCHIKEY: molecule.inchikey || "N/A",
-          PRICE_2MG: molecule.price_2mg || "N/A"
+          PRICE_2MG: molecule.price_2mg || "N/A",
+          SIMILARITY: molecule.similarity || molecule.Similarity || null
         }));
         setTopMolecules(formattedMolecules);
         // Clear selected molecules when loading new search results
@@ -367,7 +394,8 @@ export function Simulation() {
           IUPAC_NAME: result.iupac_name || "N/A",
           INCHI: result.inchi || "N/A", 
           INCHIKEY: result.inchikey || "N/A",
-          PRICE_2MG: result.price_2mg || "N/A"
+          PRICE_2MG: result.price_2mg || "N/A",
+          SIMILARITY: result.similarity || result.Similarity || null
         };
         setTopMolecules([formattedMolecule]);
         // Clear selected molecules when loading new search results  
@@ -390,6 +418,120 @@ export function Simulation() {
       }, 2000);
     } finally {
       setSearchLoading(false);
+      setIsSearchActive(true); // Mark search as active
+      setLastSearchQuery(searchCode); // Store the search query
+    }
+  };
+
+  // Function to load more search results (for pagination during scroll)
+  const loadMoreSearchResults = async () => {
+    if (!isSearchActive || !lastSearchQuery) return;
+    
+    setTopLoading(true);
+    
+    try {
+      const token = localStorage.getItem('auth_token');
+      const rawQuery = lastSearchQuery.trim();
+
+      // Map UI searchType to API method names
+      const methodMap = {
+        similarity: 'similarity',
+        substructure: 'substructure',
+        structure: 'structure',
+        bas: 'bas',
+        molweight: 'mw',
+        mw: 'mw'
+      };
+      const method = methodMap[searchType] || 'similarity';
+
+      // Prepare request body with pagination parameters
+      let requestBody = {
+        fromId: lastFromId,
+        pageSize: 10
+      };
+
+      // Add method-specific parameters
+      if (searchType === 'bas') {
+        requestBody.bas = rawQuery;
+      } else if (searchType === 'similarity') {
+        requestBody.smiles = rawQuery;
+        requestBody.threshold = similarityThreshold;
+      } else if (searchType === 'molweight' || searchType === 'mw') {
+        requestBody.smiles = rawQuery;
+        requestBody.mwFrom = molWeightMin;
+        requestBody.mwTo = molWeightMax;
+      } else {
+        requestBody.smiles = rawQuery;
+      }
+
+      // POST to /api3/{method} with JSON body
+      const url = API_CONFIG.buildApiUrl(`/api3/${method}`);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'accept': '*/*',
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      
+      const result = await res.json();
+      
+      // Check if response fromId matches request fromId (meaning we've hit the end)
+      if (result.fromId !== undefined && result.fromId === lastFromId) {
+        console.log('Received same fromId as request - no new data available');
+        setHasMore(false);
+        return;
+      }
+      
+      // Handle array response
+      if (Array.isArray(result)) {
+        const formattedMolecules = result.map(molecule => ({
+          ASINEX_ID: molecule.id_number || molecule.id,
+          SMILES_STRING: molecule.smiles_string,
+          BRUTTO_FORMULA: molecule.brutto_formula,
+          MW_STRUCTURE: molecule.mol_weight,
+          AVAILABLE_MG: molecule.available_mg,
+          PRICE_1MG: molecule.price_1mg,
+          PRICE_5MG: molecule.price_5mg,
+          PRICE_10MG: molecule.price_10mg,
+          IUPAC_NAME: molecule.iupac_name || "N/A",
+          INCHI: molecule.inchi || "N/A", 
+          INCHIKEY: molecule.inchikey || "N/A",
+          PRICE_2MG: molecule.price_2mg || "N/A",
+          SIMILARITY: molecule.similarity || molecule.Similarity || null
+        }));
+        
+        // Append to existing molecules
+        setTopMolecules(prev => [...prev, ...formattedMolecules]);
+        
+        // Update lastFromId to the maximum id_number from the response for next page
+        if (formattedMolecules.length > 0) {
+          const maxId = Math.max(...formattedMolecules.map(m => {
+            const id = m.ASINEX_ID || '0';
+            return parseInt(id) || 0;
+          }));
+          setLastFromId(maxId);
+        }
+        
+        // Check if we have more data
+        if (formattedMolecules.length < 10) {
+          setHasMore(false);
+        }
+      } else {
+        // No more results
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error('Failed to load more search results:', err);
+      setHasMore(false);
+    } finally {
+      setTopLoading(false);
     }
   };
 
@@ -449,6 +591,7 @@ export function Simulation() {
   // Auto-fetch on component mount
   useEffect(() => {
     // Load initial molecules when component mounts
+    setIsSearchActive(false); // Not in search mode initially
     fetchAllMolecules(0, false);
   }, []); // Only run once on mount
 
@@ -472,8 +615,14 @@ export function Simulation() {
           !initialLoadingRef.current &&
           !isLoadingPageRef.current // Additional check
         ) {
-          console.log('Scroll triggered - Loading next page:', currentPageRef.current + 1);
-          fetchAllMolecules(currentPageRef.current + 1, true);
+          // Check if we're in search mode or browsing all molecules
+          if (isSearchActiveRef.current) {
+            console.log('Scroll triggered - Loading more search results');
+            loadMoreSearchResults();
+          } else {
+            console.log('Scroll triggered - Loading next page:', currentPageRef.current + 1);
+            fetchAllMolecules(currentPageRef.current + 1, true);
+          }
         }
       }, 250); // 250ms debounce
     };
@@ -1195,6 +1344,7 @@ export function Simulation() {
                         </div>
                       </th>
                       <th className="p-2 font-bold">#</th>
+                      {searchType === "similarity" && <th className="p-2 font-bold">Similarity</th>}
                       <th className="p-2 font-bold">ID</th>
                       <th className="p-2 font-bold">IUPAC Name</th>
                       <th className="p-2 font-bold">SMILES</th>
@@ -1226,6 +1376,11 @@ export function Simulation() {
                             />
                           </td>
                           <td className="p-2">{idx + 1}</td>
+                          {searchType === "similarity" && (
+                            <td className="p-2 font-bold text-blue-600" title={mol.SIMILARITY ? `Similarity: ${mol.SIMILARITY}` : "N/A"}>
+                              {mol.SIMILARITY !== null && mol.SIMILARITY !== undefined ? parseFloat(mol.SIMILARITY).toFixed(3) : "N/A"}
+                            </td>
+                          )}
                         <td
                           className="p-2 cursor-pointer hover:bg-blue-100"
                           title={mol.ASINEX_ID ? String(mol.ASINEX_ID).replace(/^ASN/i, "") : "N/A"}

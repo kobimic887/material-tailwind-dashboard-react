@@ -336,7 +336,7 @@ Please contact the customer at ${userEmail} to process this order.
         </div>
 
         {/* Center - Search Bar */}
-        <div id="navbar-center" className="flex-1 max-w-md mx-4">
+        {/* <div id="navbar-center" className="flex-1 max-w-md mx-4">
           <div className={`${showMobileSearch ? 'block' : 'hidden md:block'}`}>
             <Input
               id="search-input"
@@ -349,7 +349,7 @@ Please contact the customer at ${userEmail} to process this order.
               icon={<MagnifyingGlassIcon className="h-5 w-5" />}
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Right Side - Actions and User Menu */}
         <div id="navbar-right" className="flex items-center gap-2">
