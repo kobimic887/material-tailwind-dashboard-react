@@ -412,7 +412,7 @@ export function Simulation() {
         setSelectedMolecules(new Set());
       }
     } catch (err) {
-      setSearchError("not found");
+      setSearchError("Not found, please try again later");
       setTimeout(() => {
         setSearchError("");
       }, 2000);
