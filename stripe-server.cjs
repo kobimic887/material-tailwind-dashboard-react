@@ -71,14 +71,41 @@ app.post('/api/create-checkout-session', async (req, res) => {
   }
 });
 
-// Create checkout session for one-time payment (paid plans)
+// Create checkout session for one-time payment (paid plans and molecule cart)
 app.post('/create-checkout-session-onetime', async (req, res) => {
   try {
-    const { planName, price } = req.body;
+    const { planName, price, cartItems, totalAmount, description } = req.body;
     
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
+    let lineItems = [];
+    let successUrl = '';
+    let cancelUrl = '';
+    let metadata = {};
+
+    // Handle molecule cart checkout
+    if (cartItems && cartItems.length > 0) {
+      lineItems = cartItems.map(item => ({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: item.name || 'Molecule',
+            description: `${item.amount}mg - ${item.smiles ? item.smiles.substring(0, 50) : 'Chemical compound'}`,
+          },
+          unit_amount: Math.round((item.totalPrice || item.price || 0) * 100), // Convert to cents
+        },
+        quantity: 1,
+      }));
+      
+      successUrl = `${req.headers.origin}/dashboard/simulation?payment=success`;
+      cancelUrl = `${req.headers.origin}/dashboard/simulation?payment=canceled`;
+      metadata = {
+        type: 'molecule_purchase',
+        itemCount: cartItems.length,
+        totalAmount: totalAmount.toFixed(2)
+      };
+    } 
+    // Handle plan purchase
+    else if (planName && price) {
+      lineItems = [
         {
           price_data: {
             currency: 'usd',
@@ -90,14 +117,25 @@ app.post('/create-checkout-session-onetime', async (req, res) => {
           },
           quantity: 1,
         },
-      ],
-      mode: 'payment',
-      success_url: `${req.headers.origin}/dashboard/paidplans?success=true&plan=${planName}`,
-      cancel_url: `${req.headers.origin}/dashboard/paidplans?canceled=true`,
-      metadata: {
+      ];
+      
+      successUrl = `${req.headers.origin}/dashboard/paidplans?success=true&plan=${planName}`;
+      cancelUrl = `${req.headers.origin}/dashboard/paidplans?canceled=true`;
+      metadata = {
         plan: planName,
         type: 'one_time_purchase'
-      }
+      };
+    } else {
+      return res.status(400).json({ error: 'Invalid request: must provide either planName/price or cartItems' });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      metadata: metadata
     });
 
     res.json({ url: session.url });

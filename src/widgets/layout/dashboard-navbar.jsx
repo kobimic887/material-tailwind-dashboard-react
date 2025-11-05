@@ -317,7 +317,7 @@ Please contact the customer at ${userEmail} to process this order.
       const token = localStorage.getItem('auth_token');
       
       // Create checkout session
-      const response = await fetch(`https://${window.location.hostname}:3000/create-checkout-session-molecules`, {
+      const response = await fetch(`https://${window.location.hostname}:3000/create-checkout-session-onetime`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
