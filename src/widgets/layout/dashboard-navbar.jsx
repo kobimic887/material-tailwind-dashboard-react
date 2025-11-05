@@ -29,6 +29,10 @@ import {
   setOpenConfigurator,
   setOpenSidenav,
 } from "@/context";
+import { loadStripe } from '@stripe/stripe-js';
+
+// Initialize Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 import React, { useState, useEffect } from "react";
 import { API_CONFIG, getAuthToken } from "@/utils/constants";
 
@@ -289,6 +293,63 @@ Please contact the customer at ${userEmail} to process this order.
     }
   };
 
+  const handleCheckout = async () => {
+    try {
+      // Check if Stripe is configured
+      if (!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
+        alert('Stripe is not configured. Please check the setup instructions.');
+        return;
+      }
+
+      if (cartItems.length === 0) {
+        alert('Your cart is empty!');
+        return;
+      }
+
+      // Calculate total
+      const total = cartItems.reduce((sum, item) => sum + (item.totalPrice || item.price || 0), 0);
+
+      // Create a description of cart items for Stripe
+      const itemsDescription = cartItems.map((item, index) => 
+        `${index + 1}. ${item.name || 'Molecule'} - ${item.amount}mg: $${(item.totalPrice || item.price || 0).toFixed(2)}`
+      ).join('; ');
+
+      const token = localStorage.getItem('auth_token');
+      
+      // Create checkout session
+      const response = await fetch(`https://${window.location.hostname}:3000/create-checkout-session-molecules`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          cartItems: cartItems,
+          totalAmount: total,
+          description: itemsDescription
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
+      }
+
+      const result = await response.json();
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // Redirect to checkout
+      window.location.href = result.url;
+      
+    } catch (error) {
+      console.error('Error during checkout:', error);
+      alert(`Failed to start checkout: ${error.message}`);
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("user_info");
@@ -450,8 +511,13 @@ Please contact the customer at ${userEmail} to process this order.
               </div>
               {cartItems.length > 0 && (
                 <div className="p-3 border-t border-blue-gray-100 space-y-2">
-                  <Button fullWidth color="blue" size="sm">
-                    Checkout
+                  <Button 
+                    fullWidth 
+                    color="blue" 
+                    size="sm"
+                    onClick={handleCheckout}
+                  >
+                    Checkout with Stripe
                   </Button>
                   <Button 
                     fullWidth 

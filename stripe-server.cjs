@@ -32,7 +32,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Create checkout session endpoint
+// Create checkout session endpoint (for subscriptions)
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
     const { planName, price, isYearly } = req.body;
@@ -71,6 +71,84 @@ app.post('/api/create-checkout-session', async (req, res) => {
   }
 });
 
+// Create checkout session for one-time payment (paid plans)
+app.post('/create-checkout-session-onetime', async (req, res) => {
+  try {
+    const { planName, price } = req.body;
+    
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `${planName} Plan`,
+              description: `One-time payment for ${planName} credits`,
+            },
+            unit_amount: Math.round(price * 100), // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${req.headers.origin}/dashboard/paidplans?success=true&plan=${planName}`,
+      cancel_url: `${req.headers.origin}/dashboard/paidplans?canceled=true`,
+      metadata: {
+        plan: planName,
+        type: 'one_time_purchase'
+      }
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Error creating one-time checkout session:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create checkout session for one-time payment (molecule purchase)
+app.post('/create-checkout-session-molecules', async (req, res) => {
+  try {
+    const { cartItems, totalAmount, description } = req.body;
+    
+    if (!cartItems || cartItems.length === 0) {
+      return res.status(400).json({ error: 'Cart is empty' });
+    }
+
+    // Create line items from cart
+    const lineItems = cartItems.map(item => ({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: item.name || 'Molecule',
+          description: `${item.amount}mg - ${item.smiles ? item.smiles.substring(0, 50) : 'Chemical compound'}`,
+        },
+        unit_amount: Math.round((item.totalPrice || item.price || 0) * 100), // Convert to cents
+      },
+      quantity: 1,
+    }));
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: `${req.headers.origin}/dashboard/simulation?payment=success`,
+      cancel_url: `${req.headers.origin}/dashboard/simulation?payment=canceled`,
+      metadata: {
+        type: 'molecule_purchase',
+        itemCount: cartItems.length,
+        totalAmount: totalAmount.toFixed(2)
+      }
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Error creating molecule checkout session:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get session details endpoint
 app.get('/api/checkout-session/:sessionId', async (req, res) => {
   try {
@@ -78,6 +156,34 @@ app.get('/api/checkout-session/:sessionId', async (req, res) => {
     res.json(session);
   } catch (error) {
     console.error('Error retrieving session:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Issue simulation tokens endpoint
+app.post('/api/issueSimulationTokens', async (req, res) => {
+  try {
+    const { simulationTokens } = req.body;
+    
+    if (!simulationTokens || typeof simulationTokens !== 'number') {
+      return res.status(400).json({ error: 'Invalid simulation tokens amount' });
+    }
+
+    // In a real application, you would:
+    // 1. Verify the user's authentication token
+    // 2. Update the database with the new token count
+    // 3. Return the updated token count
+    
+    // For now, we'll just return a success response
+    // The client will handle updating localStorage
+    res.json({ 
+      success: true, 
+      tokens: simulationTokens,
+      message: 'Simulation tokens issued successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error issuing simulation tokens:', error);
     res.status(500).json({ error: error.message });
   }
 });

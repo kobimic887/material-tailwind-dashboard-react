@@ -105,6 +105,36 @@ export function Simulation() {
     isSearchActiveRef.current = isSearchActive;
   }, [isSearchActive]);
 
+  // Check for payment success/cancel from URL params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    
+    if (paymentStatus === 'success') {
+      setMessage('Payment successful! Your order has been received. We will contact you shortly to process your order.');
+      setMessageType('success');
+      // Clear the cart after successful payment
+      localStorage.removeItem('moleculeCart');
+      setCart([]);
+      window.dispatchEvent(new Event('cartUpdated'));
+      
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Scroll to top to show message
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (paymentStatus === 'canceled') {
+      setMessage('Payment was canceled. Your cart items are still saved.');
+      setMessageType('error');
+      
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Scroll to top to show message
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, []);
+
   const fetchApiData = async () => {
     setLoading(true);
     setError('');
