@@ -1354,12 +1354,12 @@ export function Simulation() {
             <Alert color="red" className="mb-4">{topError}</Alert>
           )}
           {!initialLoading && !topError && topMolecules.length > 0 && (
-            <Card className="mb-4">
-              <CardBody>
+            <Card className="mb-4 overflow-auto" style={{ maxHeight: "70vh" }}>
+              <CardBody className="p-0">
                 <table className="w-full text-left">
-                  <thead>
+                  <thead className="sticky top-0 bg-white z-10 shadow-sm">
                     <tr>
-                      <th className="p-2 font-bold">
+                      <th className="p-2 font-bold bg-white">
                         <div className="flex items-center gap-2">
                           <input
                             type="checkbox"
@@ -1373,20 +1373,20 @@ export function Simulation() {
                           <span>Select</span>
                         </div>
                       </th>
-                      <th className="p-2 font-bold">#</th>
-                      {searchType === "similarity" && <th className="p-2 font-bold">Similarity</th>}
-                      <th className="p-2 font-bold">ID</th>
-                      <th className="p-2 font-bold">IUPAC Name</th>
-                      <th className="p-2 font-bold">SMILES</th>
-                      <th className="p-2 font-bold">InChI</th>
-                      <th className="p-2 font-bold">InChIKey</th>
-                      <th className="p-2 font-bold">Formula</th>
-                      <th className="p-2 font-bold">MW</th>
-                      <th className="p-2 font-bold">Available (mg)</th>
-                      <th className="p-2 font-bold">Price 1mg</th>
-                      <th className="p-2 font-bold">Price 2mg</th>
-                      <th className="p-2 font-bold">Price 5mg</th>
-                      <th className="p-2 font-bold">Price 10mg</th>
+                      <th className="p-2 font-bold bg-white">#</th>
+                      {searchType === "similarity" && <th className="p-2 font-bold bg-white">Similarity</th>}
+                      <th className="p-2 font-bold bg-white">ID</th>
+                      <th className="p-2 font-bold bg-white">IUPAC Name</th>
+                      <th className="p-2 font-bold bg-white">SMILES</th>
+                      <th className="p-2 font-bold bg-white">InChI</th>
+                      <th className="p-2 font-bold bg-white">InChIKey</th>
+                      <th className="p-2 font-bold bg-white">Formula</th>
+                      <th className="p-2 font-bold bg-white">MW</th>
+                      <th className="p-2 font-bold bg-white">Available (mg)</th>
+                      <th className="p-2 font-bold bg-white">Price 1mg</th>
+                      <th className="p-2 font-bold bg-white">Price 2mg</th>
+                      <th className="p-2 font-bold bg-white">Price 5mg</th>
+                      <th className="p-2 font-bold bg-white">Price 10mg</th>
                     </tr>
                   </thead>
                   <tbody>

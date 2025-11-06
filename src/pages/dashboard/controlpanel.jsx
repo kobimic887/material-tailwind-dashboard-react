@@ -360,14 +360,14 @@ export function ControlPanel() {
                 </Menu>
               </div>
             </CardHeader>
-            <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
-              <table className="w-full min-w-[640px] table-auto">
-                <thead>
+            <CardBody className="overflow-x-scroll px-0 pt-0 pb-2" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+              <table className="w-full min-w-[640px] table-auto" id="results">
+                <thead className="sticky top-0 bg-white z-10 shadow-sm">
                   <tr>
                     {["Simulation ID", "PDB ID", "SMILES", "Timestamp", "Status", "Price", "ADMET"].map((el, index) => (
                       <th 
                         key={el} 
-                        className="border-b border-blue-gray-50 py-3 px-6 text-left"
+                        className="border-b border-blue-gray-50 py-3 px-6 text-left bg-white"
                         style={index === 1 ? { width: '60px', minWidth: '60px', maxWidth: '60px' } : {}}
                         title={el === "ADMET" ? "ADMET-AI is a simple, fast, and accurate web interface for predicting the Absorption, Distribution, Metabolism, Excretion, and Toxicity (ADMET) properties of molecules using machine learning models" : ""}
                       >
