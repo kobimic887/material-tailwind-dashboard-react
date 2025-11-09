@@ -104,11 +104,11 @@ export function SignIn() {
         <form className="mt-8 mb-2 mx-auto w-full max-w-md lg:max-w-lg" onSubmit={handleSubmit}>
           <div className="mb-1 flex flex-col gap-6">
             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-              Email
+              User Name
             </Typography>
             <Input
               size="lg"
-              placeholder="email@example.com"
+              placeholder="username"
               value={email}
               onChange={e => setEmail(e.target.value)}
               className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
