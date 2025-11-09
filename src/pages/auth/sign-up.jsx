@@ -14,6 +14,9 @@ export function SignUp() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [organization, setOrganization] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [billingAddress, setBillingAddress] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -34,7 +37,15 @@ export function SignUp() {
       const res = await fetch(API_CONFIG.buildApiUrl('/signup'), {
         method: "POST",
         headers: { "Content-Type": "application/json", accept: "*/*" },
-        body: JSON.stringify({ username, password, email, organization }),
+        body: JSON.stringify({ 
+          username, 
+          password, 
+          email, 
+          organization,
+          phoneNumber,
+          shippingAddress,
+          billingAddress
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Signup failed");
@@ -152,6 +163,57 @@ export function SignUp() {
               placeholder="Organization Name"
               value={organization}
               onChange={(e) => setOrganization(e.target.value)}
+              className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
+              labelProps={{
+                className: "before:content-none after:content-none",
+              }}
+            />
+            <Typography
+              variant="small"
+              color="blue-gray"
+              className="-mb-3 font-medium"
+            >
+              Phone Number <span className="text-gray-500 font-normal">(Optional)</span>
+            </Typography>
+            <Input
+              size="lg"
+              placeholder="+1 (555) 123-4567"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
+              labelProps={{
+                className: "before:content-none after:content-none",
+              }}
+            />
+            <Typography
+              variant="small"
+              color="blue-gray"
+              className="-mb-3 font-medium"
+            >
+              Shipping Address <span className="text-gray-500 font-normal">(Optional)</span>
+            </Typography>
+            <Input
+              size="lg"
+              placeholder="Street, City, State, ZIP, Country"
+              value={shippingAddress}
+              onChange={(e) => setShippingAddress(e.target.value)}
+              className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
+              labelProps={{
+                className: "before:content-none after:content-none",
+              }}
+            />
+            <Typography
+              variant="small"
+              color="blue-gray"
+              className="-mb-3 font-medium"
+            >
+              Billing Address <span className="text-gray-500 font-normal">(Optional)</span>
+            </Typography>
+            <Input
+              size="lg"
+              placeholder="Street, City, State, ZIP, Country"
+              value={billingAddress}
+              onChange={(e) => setBillingAddress(e.target.value)}
               className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
               labelProps={{
                 className: "before:content-none after:content-none",
