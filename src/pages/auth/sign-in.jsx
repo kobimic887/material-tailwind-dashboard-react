@@ -19,6 +19,55 @@ export function SignIn() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  const handleDemoLogin = async () => {
+    setEmail("tester123");
+    setPassword("Tester!23");
+    setError("");
+    setSuccess(false);
+    
+    setLoading(true);
+    try {
+      const res = await fetch(API_CONFIG.buildApiUrl('/signin'), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", accept: "*/*" },
+        body: JSON.stringify({ username: "tester123", password: "Tester!23" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Signin failed");
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("access_token", data.token);
+        localStorage.setItem("user_info", JSON.stringify(data.user || { username: "tester123" }));
+        
+        if (data.user) {
+          login(data.user.email || "tester123", "Tester!23");
+        }
+        
+        // Store IP address for tester123 user
+        try {
+          const ipResponse = await fetch('https://api.ipify.org?format=json');
+          const ipData = await ipResponse.json();
+          if (ipData.ip) {
+            sessionStorage.setItem('tester123_ip', ipData.ip);
+            sessionStorage.setItem('tester123_login_time', new Date().toISOString());
+            console.log('Tester123 IP stored:', ipData.ip);
+          }
+        } catch (ipErr) {
+          console.error('Failed to fetch IP address:', ipErr);
+        }
+        
+        setSuccess(true);
+        navigate("/dashboard/controlpanel");
+      } else {
+        setError("Invalid credentials");
+      }
+    } catch (err) {
+      setError(err.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -42,6 +91,21 @@ export function SignIn() {
         // Use auth context login for consistency
         if (data.user) {
           login(data.user.email || email, password);
+        }
+        
+        // Store IP address for tester123 user
+        if (email === "tester123") {
+          try {
+            const ipResponse = await fetch('https://api.ipify.org?format=json');
+            const ipData = await ipResponse.json();
+            if (ipData.ip) {
+              sessionStorage.setItem('tester123_ip', ipData.ip);
+              sessionStorage.setItem('tester123_login_time', new Date().toISOString());
+              console.log('Tester123 IP stored:', ipData.ip);
+            }
+          } catch (ipErr) {
+            console.error('Failed to fetch IP address:', ipErr);
+          }
         }
         
         setSuccess(true);
@@ -94,6 +158,14 @@ export function SignIn() {
       <div className="w-full lg:w-3/5 flex flex-col justify-center px-4 py-8 lg:px-12 lg:py-24">
       
         <div className="text-center">
+          <Button
+            onClick={handleDemoLogin}
+            disabled={loading}
+            className="mb-6 mx-auto"
+            style={{ backgroundColor: "#b4b239" }}
+          >
+            Proceed to Demo
+          </Button>
           <Typography variant="h2" className="text-2xl lg:text-4xl font-bold mb-4">
             Sign In
           </Typography>
