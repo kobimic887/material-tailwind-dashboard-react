@@ -328,8 +328,8 @@ export function Simulation() {
         requestBody.smiles = rawQuery;
       }
 
-      // POST to /api3/{method} with JSON body
-      const url = API_CONFIG.buildApiUrl(`/api3/${method}`);
+      // POST to /api4/{method} with JSON body
+      const url = API_CONFIG.buildApiUrl(`/api4/${method}`);
       const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -494,8 +494,8 @@ export function Simulation() {
         requestBody.smiles = rawQuery;
       }
 
-      // POST to /api3/{method} with JSON body
-      const url = API_CONFIG.buildApiUrl(`/api3/${method}`);
+      // POST to /api4/{method} with JSON body
+      const url = API_CONFIG.buildApiUrl(`/api4/${method}`);
       const res = await fetch(url, {
         method: 'POST',
         headers: {
