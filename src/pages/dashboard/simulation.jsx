@@ -18,6 +18,7 @@ import {
 import { ShoppingCartIcon } from '@heroicons/react/24/solid';
 import ProfessionalMoleculeViewer from '../../components/ProfessionalMoleculeViewer';
 import { API_CONFIG } from "@/utils/constants";
+import { convertPriceToEuro, formatPrice } from '@/utils/algo/algo';
 
 export function Simulation() {
   // Popup state for clipboard copy
@@ -72,6 +73,11 @@ export function Simulation() {
   
   // Checkbox selection state
   const [selectedMolecules, setSelectedMolecules] = useState(new Set());
+  
+  // Currency conversion state
+  const [currency, setCurrency] = useState('USD');
+  const [exchangeRate, setExchangeRate] = useState(1);
+  const [userCountry, setUserCountry] = useState('US');
 
   // Refs to prevent infinite loops in scroll handler
   const hasMoreRef = useRef(true);
@@ -618,6 +624,21 @@ export function Simulation() {
     }
   }, [simResult, navigate]);
 
+  // Fetch currency info on mount
+  useEffect(() => {
+    const initCurrency = async () => {
+      try {
+        const result = await convertPriceToEuro(1);
+        setCurrency(result.currency);
+        setExchangeRate(result.exchangeRate);
+        setUserCountry(result.country);
+      } catch (error) {
+        console.error('Failed to initialize currency:', error);
+      }
+    };
+    initCurrency();
+  }, []);
+
   // Auto-fetch on component mount
   useEffect(() => {
     // Load initial molecules when component mounts
@@ -778,6 +799,17 @@ export function Simulation() {
     
     // Format to 4 decimal places and remove trailing zeros
     return parseFloat(numValue.toFixed(6)).toString();
+  };
+
+  // Helper function to convert and format price with currency
+  const formatPriceWithCurrency = (priceUSD) => {
+    if (!priceUSD || priceUSD === "N/A") return "N/A";
+    
+    const numPrice = parseFloat(priceUSD);
+    if (isNaN(numPrice)) return "N/A";
+    
+    const convertedPrice = numPrice * exchangeRate;
+    return formatPrice(convertedPrice, currency);
   };
 
   // Handle checkbox selection
@@ -1384,7 +1416,6 @@ export function Simulation() {
                       <th className="p-2 font-bold bg-white">MW</th>
                       <th className="p-2 font-bold bg-white">Available (mg)</th>
                       <th className="p-2 font-bold bg-white">Price 1mg</th>
-                      <th className="p-2 font-bold bg-white">Price 2mg</th>
                       <th className="p-2 font-bold bg-white">Price 5mg</th>
                       <th className="p-2 font-bold bg-white">Price 10mg</th>
                     </tr>
@@ -1479,10 +1510,10 @@ export function Simulation() {
                         <td className="p-2" title={mol.BRUTTO_FORMULA || "N/A"}>{(mol.BRUTTO_FORMULA || "N/A").toString().slice(0,moleculeLimit)}{(mol.BRUTTO_FORMULA || "N/A").toString().length > moleculeLimit ? '...' : ''}</td>
                         <td className="p-2" title={formatNumericValue(mol.MW_STRUCTURE)}>{formatNumericValue(mol.MW_STRUCTURE).toString().slice(0,moleculeLimit)}{formatNumericValue(mol.MW_STRUCTURE).toString().length > moleculeLimit ? '...' : ''}</td>
                         <td className="p-2" title={formatNumericValue(mol.AVAILABLE_MG)}>{formatNumericValue(mol.AVAILABLE_MG).toString().slice(0,moleculeLimit)}{formatNumericValue(mol.AVAILABLE_MG).toString().length > moleculeLimit ? '...' : ''}</td>
-                        <td className="p-2 cursor-pointer group" title={mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-"}
+                        <td className="p-2 cursor-pointer group" title={mol.PRICE_1MG ? formatPriceWithCurrency(mol.PRICE_1MG) : "-"}
                           onClick={() => addToCart(mol, 1, mol.PRICE_1MG)}
                         >
-                          <span>{(mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-").toString().slice(0,moleculeLimit)}{(mol.PRICE_1MG ? `$${mol.PRICE_1MG}` : "-").toString().length > moleculeLimit ? '...' : ''}</span>
+                          <span>{(mol.PRICE_1MG ? formatPriceWithCurrency(mol.PRICE_1MG) : "-").toString().slice(0,moleculeLimit)}{(mol.PRICE_1MG ? formatPriceWithCurrency(mol.PRICE_1MG) : "-").toString().length > moleculeLimit ? '...' : ''}</span>
                           {mol.PRICE_1MG && (
                             <ShoppingCartIcon
                               className="inline-block h-5 w-5 text-green-600 ml-2 cursor-pointer opacity-70 group-hover:opacity-100"
@@ -1490,21 +1521,10 @@ export function Simulation() {
                             />
                           )}
                         </td>
-                        <td className="p-2 cursor-pointer group" title={mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-"}
-                          onClick={() => addToCart(mol, 2, mol.PRICE_2MG)}
-                        >
-                          <span>{(mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-").toString().slice(0,moleculeLimit)}{(mol.PRICE_2MG ? `$${mol.PRICE_2MG}` : "-").toString().length > moleculeLimit ? '...' : ''}</span>
-                          {mol.PRICE_2MG && (
-                            <ShoppingCartIcon
-                              className="inline-block h-5 w-5 text-green-600 ml-2 cursor-pointer opacity-70 group-hover:opacity-100"
-                              title="Add 2mg to cart"
-                            />
-                          )}
-                        </td>
-                        <td className="p-2 cursor-pointer group" title={mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-"}
+                        <td className="p-2 cursor-pointer group" title={mol.PRICE_5MG ? formatPriceWithCurrency(mol.PRICE_5MG) : "-"}
                           onClick={() => addToCart(mol, 5, mol.PRICE_5MG)}
                         >
-                          <span>{(mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-").toString().slice(0,moleculeLimit)}{(mol.PRICE_5MG ? `$${mol.PRICE_5MG}` : "-").toString().length > moleculeLimit ? '...' : ''}</span>
+                          <span>{(mol.PRICE_5MG ? formatPriceWithCurrency(mol.PRICE_5MG) : "-").toString().slice(0,moleculeLimit)}{(mol.PRICE_5MG ? formatPriceWithCurrency(mol.PRICE_5MG) : "-").toString().length > moleculeLimit ? '...' : ''}</span>
                           {mol.PRICE_5MG && (
                             <ShoppingCartIcon
                               className="inline-block h-5 w-5 text-green-600 ml-2 cursor-pointer opacity-70 group-hover:opacity-100"
@@ -1512,10 +1532,10 @@ export function Simulation() {
                             />
                           )}
                         </td>
-                        <td className="p-2 cursor-pointer group" title={mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-"}
+                        <td className="p-2 cursor-pointer group" title={mol.PRICE_10MG ? formatPriceWithCurrency(mol.PRICE_10MG) : "-"}
                           onClick={() => addToCart(mol, 10, mol.PRICE_10MG)}
                         >
-                          <span>{(mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-").toString().slice(0,moleculeLimit)}{(mol.PRICE_10MG ? `$${mol.PRICE_10MG}` : "-").toString().length > moleculeLimit ? '...' : ''}</span>
+                          <span>{(mol.PRICE_10MG ? formatPriceWithCurrency(mol.PRICE_10MG) : "-").toString().slice(0,moleculeLimit)}{(mol.PRICE_10MG ? formatPriceWithCurrency(mol.PRICE_10MG) : "-").toString().length > moleculeLimit ? '...' : ''}</span>
                           {mol.PRICE_10MG && (
                             <ShoppingCartIcon
                               className="inline-block h-5 w-5 text-green-600 ml-2 cursor-pointer opacity-70 group-hover:opacity-100"
