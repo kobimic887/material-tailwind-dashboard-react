@@ -27,10 +27,24 @@ export function SignIn() {
     
     setLoading(true);
     try {
+      // Fetch user IP address
+      let userIp = null;
+      try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        userIp = ipData.ip;
+      } catch (ipErr) {
+        console.error('Failed to fetch IP address:', ipErr);
+      }
+
       const res = await fetch(API_CONFIG.buildApiUrl('/signin'), {
         method: "POST",
         headers: { "Content-Type": "application/json", accept: "*/*" },
-        body: JSON.stringify({ username: "tester123", password: "Tester!23" }),
+        body: JSON.stringify({ 
+          username: "tester123", 
+          password: "Tester!23",
+          ip_address: userIp
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Signin failed");
@@ -75,10 +89,24 @@ export function SignIn() {
     
     setLoading(true);
     try {
+      // Fetch user IP address
+      let userIp = null;
+      try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        userIp = ipData.ip;
+      } catch (ipErr) {
+        console.error('Failed to fetch IP address:', ipErr);
+      }
+
       const res = await fetch(API_CONFIG.buildApiUrl('/signin'), {
         method: "POST",
         headers: { "Content-Type": "application/json", accept: "*/*" },
-        body: JSON.stringify({ username: email, password }),
+        body: JSON.stringify({ 
+          username: email, 
+          password,
+          ip_address: userIp
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Signin failed");

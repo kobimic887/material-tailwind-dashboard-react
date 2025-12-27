@@ -90,6 +90,80 @@ export function Simulation() {
 
   const navigate = useNavigate();
   
+  // Helper function to check if current user is tester
+  const isTestUser = () => {
+    try {
+      const userInfo = localStorage.getItem('user_info');
+      if (userInfo) {
+        const user = JSON.parse(userInfo);
+        return user.username === 'tester123' || user.email === 'tester123';
+      }
+    } catch (err) {
+      console.error('Error checking user info:', err);
+    }
+    return false;
+  };
+
+  // Helper function to get test user's IP
+  const getTestUserIp = () => {
+    try {
+      const simulationPairs = localStorage.getItem('molstar_simulation_pairs');
+      if (simulationPairs) {
+        const pairs = JSON.parse(simulationPairs);
+        // Get the first IP from simulation pairs that belongs to this user
+        const userIp = Object.values(pairs)[0]?.userIp;
+        return userIp;
+      }
+    } catch (err) {
+      console.error('Error getting test user IP:', err);
+    }
+    return null;
+  };
+
+  // Filter function for test user by IP
+  const filterForTestUserByIp = (data) => {
+    if (!isTestUser()) {
+      // Not a test user, return all data
+      return data;
+    }
+
+    const testUserIp = getTestUserIp();
+    if (!testUserIp) {
+      // No IP found, return all data
+      return data;
+    }
+
+    try {
+      const simulationPairs = localStorage.getItem('molstar_simulation_pairs');
+      if (!simulationPairs) {
+        return data;
+      }
+
+      const pairs = JSON.parse(simulationPairs);
+      
+      // Get all simulation keys that match the test user's IP
+      const matchingKeys = Object.keys(pairs).filter(key => 
+        pairs[key].userIp === testUserIp
+      );
+
+      // Filter data to only include items with matching simulation keys
+      // This assumes data items have a simulationKey or similar identifier
+      const filtered = data.filter(item => {
+        // Check if item has a simulation key that matches
+        if (item.simulationKey) {
+          return matchingKeys.includes(item.simulationKey);
+        }
+        // If no simulation key, include the item (for backward compatibility)
+        return true;
+      });
+
+      return filtered;
+    } catch (err) {
+      console.error('Error filtering for test user:', err);
+      return data;
+    }
+  };
+  
   // Update refs when state changes
   useEffect(() => {
     hasMoreRef.current = hasMore;
@@ -615,12 +689,47 @@ export function Simulation() {
       const pdbUrl = API_CONFIG.buildApiUrl(`/sanitizedpdb/${simResult.simulationKey}`);      
       const sdfUrl = API_CONFIG.buildApiUrl(`/sanitizedminimalsdf/${simResult.simulationKey}`);
       
-      // Store URLs in localStorage and navigate to Molstar3D
-      localStorage.setItem('molstar_pdb_url', pdbUrl);
-      localStorage.setItem('molstar_sdf_url', sdfUrl);
-      localStorage.setItem('molstar_simulation_key', simResult.simulationKey);
+      // Fetch user IP address
+      const storeSimulationData = async () => {
+        let currentUserIp = null;
+        try {
+          const ipResponse = await fetch('https://api.ipify.org?format=json');
+          const ipData = await ipResponse.json();
+          currentUserIp = ipData.ip;
+        } catch (ipErr) {
+          console.error('Failed to fetch IP address:', ipErr);
+        }
+        
+        // Store URLs in localStorage and navigate to Molstar3D
+        localStorage.setItem('molstar_pdb_url', pdbUrl);
+        localStorage.setItem('molstar_sdf_url', sdfUrl);
+        localStorage.setItem('molstar_simulation_key', simResult.simulationKey);
+        
+        // Get existing simulation pairs dictionary or create new one
+        let simulationPairs = {};
+        try {
+          const existingPairs = localStorage.getItem('molstar_simulation_pairs');
+          if (existingPairs) {
+            simulationPairs = JSON.parse(existingPairs);
+          }
+        } catch (err) {
+          console.error('Failed to parse existing simulation pairs:', err);
+        }
+        
+        // Add new simulation pair to dictionary with simulationKey as key
+        simulationPairs[simResult.simulationKey] = {
+          simulationKey: simResult.simulationKey,
+          userIp: currentUserIp,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Store updated dictionary
+        localStorage.setItem('molstar_simulation_pairs', JSON.stringify(simulationPairs));
+        
+        navigate('/dashboard/molstar3d');
+      };
       
-      navigate('/dashboard/molstar3d');
+      storeSimulationData();
     }
   }, [simResult, navigate]);
 
