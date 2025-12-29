@@ -96,6 +96,7 @@ export function ControlPanel() {
       }
       
       const data = await response.json();
+      
       setUserSimulationLogs(data);
       console.log('Simulation logs data:', data); // Debug log to see data structure
     } catch (err) {
@@ -502,127 +503,7 @@ export function ControlPanel() {
             </CardBody>
           </Card>
 
-          {/* Projects Table
-          <Card className="border border-blue-gray-100 shadow-sm">
-            <CardHeader
-              floated={false}
-              shadow={false}
-              color="transparent"
-              className="m-0 flex items-center justify-between p-6"
-            >
-              <div>
-                <Typography variant="h6" color="blue-gray" className="mb-1">
-                  Projects Overview
-                </Typography>
-                <Typography
-                  variant="small"
-                  className="flex items-center gap-1 font-normal text-blue-gray-600"
-                >
-                  <CheckCircleIcon strokeWidth={3} className="h-4 w-4 text-blue-gray-200" />
-                  <strong>{activityData.projects?.length || 0}</strong> active projects
-                </Typography>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outlined" size="sm" className="flex items-center gap-2">
-                  <ArrowDownTrayIcon className="h-4 w-4" />
-                  Export
-                </Button>
-                <Menu placement="left-start">
-                  <MenuHandler>
-                    <IconButton size="sm" variant="text" color="blue-gray">
-                      <EllipsisVerticalIcon strokeWidth={3} className="h-6 w-6" />
-                    </IconButton>
-                  </MenuHandler>
-                  <MenuList>
-                    <MenuItem>Refresh Data</MenuItem>
-                    <MenuItem>Create Project</MenuItem>
-                    <MenuItem>Archive Completed</MenuItem>
-                  </MenuList>
-                </Menu>
-              </div>
-            </CardHeader>
-            <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
-              <table className="w-full min-w-[640px] table-auto">
-                <thead>
-                  <tr>
-                    {["Project", "Owner", "Created Date", "Simulations", "Status", "Progress"].map((el) => (
-                      <th key={el} className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                        <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
-                          {el}
-                        </Typography>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {activityData.projects?.length === 0 ? (
-                    <tr>
-                      <td colSpan="6" className="py-8 text-center">
-                        <Typography variant="small" color="gray">No projects found</Typography>
-                      </td>
-                    </tr>
-                  ) : (
-                    activityData.projects?.map((project, key) => {
-                      const projectSimulations = activityData.simulations?.filter(
-                        sim => sim.user?.username === project.userid
-                      )?.length || 0;
-                      const progress = Math.min(100, projectSimulations * 25);
-                      const className = `py-3 px-5 ${key === activityData.projects.length - 1 ? "" : "border-b border-blue-gray-50"}`;
-                      
-                      return (
-                        <tr key={project.name || key}>
-                          <td className={className}>
-                            <div className="flex items-center gap-4">
-                              <Avatar src="/img/logo-ct.png" alt={project.name} size="sm" variant="rounded" />
-                              <Typography variant="small" color="blue-gray" className="font-bold">
-                                {project.name}
-                              </Typography>
-                            </div>
-                          </td>
-                          <td className={className}>
-                            <Typography variant="small" className="text-xs font-medium text-blue-gray-600">
-                              {project.userid}
-                            </Typography>
-                          </td>
-                          <td className={className}>
-                            <Typography variant="small" className="text-xs font-medium text-blue-gray-600">
-                              {formatDate(project.createdAt)}
-                            </Typography>
-                          </td>
-                          <td className={className}>
-                            <Typography variant="small" className="text-xs font-medium text-blue-gray-600">
-                              {projectSimulations} simulations
-                            </Typography>
-                          </td>
-                          <td className={className}>
-                            <Chip
-                              variant="gradient"
-                              color={progress >= 75 ? "green" : progress >= 50 ? "blue" : "orange"}
-                              value={progress >= 75 ? "Completed" : progress >= 50 ? "In Progress" : "Starting"}
-                              className="py-0.5 px-2 text-[11px] font-medium w-fit"
-                            />
-                          </td>
-                          <td className={className}>
-                            <div className="w-16">
-                              <Typography variant="small" className="mb-1 block text-xs font-medium text-blue-gray-600">
-                                {progress}%
-                              </Typography>
-                              <Progress
-                                value={progress}
-                                variant="gradient"
-                                color={progress >= 75 ? "green" : "blue"}
-                                className="h-1"
-                              />
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </CardBody>
-          </Card> */}
+         
 
 
         </div>

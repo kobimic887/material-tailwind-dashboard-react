@@ -40,6 +40,9 @@ export function Simulation() {
   const [simResult, setSimResult] = useState(null);
   const [simLoading, setSimLoading] = useState(false);
   const [simError, setSimError] = useState("");
+  const [diffDockResult, setDiffDockResult] = useState(null);
+  const [diffDockLoading, setDiffDockLoading] = useState(false);
+  const [diffDockError, setDiffDockError] = useState("");
   const [message, setMessage] = useState('');
     const [messageType, setMessageType] = useState(''); // 'success', 'error', or ''
   const [topMolecules, setTopMolecules] = useState([]);
@@ -680,6 +683,50 @@ export function Simulation() {
       setSimError(`Failed to simulate: ${err.message}`);
     } finally {
       setSimLoading(false);
+    }
+  };
+
+  const handleDiffDock = async () => {
+    // Check if we have a SMILES from the search
+    if (!searchCode) {
+      setDiffDockError("Please search for a molecule first to get the SMILES code for DiffDock");
+      return;
+    }
+    let _searchSmiles = searchCode.replace(',', ';').trim();
+    setDiffDockLoading(true);
+    setDiffDockError("");
+    setDiffDockResult(null);
+    try {
+      const token = localStorage.getItem('auth_token');
+      
+      // Create JSON payload for DiffDock
+      const requestBody = {
+        protein: simPdbId,
+        ligand: _searchSmiles
+      };
+      
+      const res = await fetch(API_CONFIG.buildApiUrl('/diffdock/generate'), {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      const result = await res.json();
+      setDiffDockResult(result);
+      setMessage('DiffDock simulation completed successfully!');
+      setMessageType('success');
+      setTimeout(() => {
+        setMessage('');
+        setMessageType('');
+      }, 5000);
+    } catch (err) {
+      setDiffDockError(`Failed to run DiffDock: ${err.message}`);
+    } finally {
+      setDiffDockLoading(false);
     }
   };
 
@@ -1328,14 +1375,25 @@ export function Simulation() {
 
           {/* Docking section */}
           <div className="w-full lg:w-1/2 flex flex-col gap-4 p-6 rounded-lg shadow-lg bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 border border-blue-300 self-start">
-            <button
-              type="button"
-              className="text-blue-700 underline text-left mb-2 w-fit focus:outline-none hover:text-blue-900 transition-colors"
-              tabIndex={0}
-              onClick={() => setShowSimInputs(v => !v)}
-            >
-              Run 1 Click Docking
-            </button>
+            <div className="flex gap-4 items-center">
+              <button
+                type="button"
+                className="text-blue-700 underline text-left w-fit focus:outline-none hover:text-blue-900 transition-colors"
+                tabIndex={0}
+                onClick={() => setShowSimInputs(v => !v)}
+              >
+                Run 1 Click Docking
+              </button>
+              <button
+                type="button"
+                className="text-purple-700 underline text-left w-fit focus:outline-none hover:text-purple-900 transition-colors font-semibold"
+                tabIndex={0}
+                onClick={handleDiffDock}
+                disabled={diffDockLoading || !simPdbId || !searchCode}
+              >
+                {diffDockLoading ? 'Running DiffDock...' : 'DiffDock'}
+              </button>
+            </div>
             {showSimInputs && (
               <div id="simulation-inputs" className="flex items-center gap-0">
                 <Input
@@ -1449,14 +1507,25 @@ export function Simulation() {
 
             {/* Docking section */}
             <div className="flex flex-col gap-4 p-4 rounded-lg bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 border border-blue-300">
-              <button
-                type="button"
-                className="text-blue-700 underline text-left w-fit focus:outline-none hover:text-blue-900 transition-colors"
-                tabIndex={0}
-                onClick={() => setShowSimInputs(v => !v)}
-              >
-                Run 1 Click Docking
-              </button>
+              <div className="flex gap-4 items-center">
+                <button
+                  type="button"
+                  className="text-blue-700 underline text-left w-fit focus:outline-none hover:text-blue-900 transition-colors"
+                  tabIndex={0}
+                  onClick={() => setShowSimInputs(v => !v)}
+                >
+                  Run 1 Click Docking
+                </button>
+                <button
+                  type="button"
+                  className="text-purple-700 underline text-left w-fit focus:outline-none hover:text-purple-900 transition-colors font-semibold"
+                  tabIndex={0}
+                  onClick={handleDiffDock}
+                  disabled={diffDockLoading || !simPdbId || !searchCode}
+                >
+                  {diffDockLoading ? 'Running DiffDock...' : 'DiffDock'}
+                </button>
+              </div>
               {showSimInputs && (
                 <div className="flex flex-col gap-2">
                   <Input
@@ -1738,6 +1807,47 @@ export function Simulation() {
                 </a>
               </div>
             )}
+          </CardBody>
+        </Card>
+      )}
+      {diffDockLoading && (
+        <Card className="mb-6">
+          <CardBody className="text-center py-8">
+            <div className="flex flex-col items-center gap-4">
+              <Spinner className="h-8 w-8" color="purple" />
+              <Typography variant="h6" color="blue-gray" className="mb-2">
+                Running DiffDock Simulation
+              </Typography>
+              <Typography variant="small" color="gray" className="max-w-md">
+                Please wait while DiffDock processes your protein-ligand docking...
+              </Typography>
+            </div>
+          </CardBody>
+        </Card>
+      )}
+      {diffDockError && (
+        <Alert color="red" className="mb-6">
+          <div className="flex items-center gap-2">
+            <Typography variant="h6">DiffDock Error:</Typography>
+            <Typography>{diffDockError}</Typography>
+          </div>
+        </Alert>
+      )}
+      {diffDockResult && (
+        <Card className="mb-6">
+          <CardHeader
+            variant="gradient"
+            color="purple"
+            className="mb-4 grid h-12 place-items-center"
+          >
+            <Typography variant="h6" color="white">
+              DiffDock Result
+            </Typography>
+          </CardHeader>
+          <CardBody>
+            <pre className="whitespace-pre-wrap text-sm font-mono bg-white p-4 rounded border overflow-auto max-h-48">
+              {JSON.stringify(diffDockResult, null, 2)}
+            </pre>
           </CardBody>
         </Card>
       )}
