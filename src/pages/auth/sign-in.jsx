@@ -71,7 +71,7 @@ export function SignIn() {
         }
         
         setSuccess(true);
-        navigate("/dashboard/controlpanel");
+        navigate("/dashboard/simulation");
       } else {
         setError("Invalid credentials");
       }

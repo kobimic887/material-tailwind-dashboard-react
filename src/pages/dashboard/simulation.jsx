@@ -26,6 +26,7 @@ export function Simulation() {
   const [loading, setLoading] = useState(false);
   // State for toggling simulation inputs
   const [showSimInputs, setShowSimInputs] = useState(false);
+  const [showDiffDockInputs, setShowDiffDockInputs] = useState(false);
   const [response, setResponse] = useState(null);
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -37,6 +38,7 @@ export function Simulation() {
   const [searchError, setSearchError] = useState("");
 
   const [simPdbId, setSimPdbId] = useState("");
+  const [diffDockPdbId, setDiffDockPdbId] = useState("");
   const [simResult, setSimResult] = useState(null);
   const [simLoading, setSimLoading] = useState(false);
   const [simError, setSimError] = useState("");
@@ -69,6 +71,7 @@ export function Simulation() {
   const [allMolecules, setAllMolecules] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [pageSize, setPageSize] = useState(10);
   
   // Hover preview state
   const [hoveredPreview, setHoveredPreview] = useState(null);
@@ -254,17 +257,16 @@ export function Simulation() {
     }
     
     isLoadingPageRef.current = true;
-    
     try {
       if (!append) {
         setTopLoading(true);
         setTopError("");
       }
       
-      console.log(`Fetching page ${page} from /asinex/all/${page}_10`);
+      console.log(`Fetching page ${page} from /asinex/all/${page}_${pageSize}`);
       
       const token = localStorage.getItem('auth_token');
-      const res = await fetch(API_CONFIG.buildApiUrl(`/asinex/all/${page}_10`), {
+      const res = await fetch(API_CONFIG.buildApiUrl(`/asinex/all/${page}_${pageSize}`), {
         method: "GET",
         headers: { 
           'accept': 'application/json',
@@ -335,8 +337,8 @@ export function Simulation() {
         setLastSearchQuery("");
       }
       
-      // Check if we have more data (if we got less than 10, we're at the end)
-      if (formattedMolecules.length < 10) {
+      // Check if we have more data (if we got less than pageSize, we're at the end)
+      if (formattedMolecules.length < pageSize) {
         setHasMore(false);
         console.log('No more data available');
       } else {
@@ -390,7 +392,7 @@ export function Simulation() {
       // Prepare request body with pagination parameters
       let requestBody = {
         fromId: fromId,
-        pageSize: 10
+        pageSize: pageSize
       };
 
       // Add method-specific parameters
@@ -560,7 +562,7 @@ export function Simulation() {
       // Prepare request body with pagination parameters
       let requestBody = {
         fromId: lastFromId,
-        pageSize: 10
+        pageSize: pageSize
       };
 
       // Add method-specific parameters
@@ -633,7 +635,7 @@ export function Simulation() {
         }
         
         // Check if we have more data
-        if (formattedMolecules.length < 10) {
+        if (formattedMolecules.length < pageSize) {
           setHasMore(false);
         }
       } else {
@@ -701,7 +703,7 @@ export function Simulation() {
       
       // Create JSON payload for DiffDock
       const requestBody = {
-        protein: simPdbId,
+        protein: diffDockPdbId,
         ligand: _searchSmiles
       };
       
@@ -1388,10 +1390,9 @@ export function Simulation() {
                 type="button"
                 className="text-purple-700 underline text-left w-fit focus:outline-none hover:text-purple-900 transition-colors font-semibold"
                 tabIndex={0}
-                onClick={handleDiffDock}
-                disabled={diffDockLoading || !simPdbId || !searchCode}
+                onClick={() => setShowDiffDockInputs(v => !v)}
               >
-                {diffDockLoading ? 'Running DiffDock...' : 'DiffDock'}
+                DiffDock
               </button>
             </div>
             {showSimInputs && (
@@ -1400,7 +1401,7 @@ export function Simulation() {
                   label="PDB ID"
                   value={simPdbId}
                   onChange={e => setSimPdbId(e.target.value)}
-                  className="w-full max-w-xs border border-black"
+                  className="w-full max-w-xs"
                 />
                 <Button
                   size="md"
@@ -1410,6 +1411,25 @@ export function Simulation() {
                   className="items-center gap-2"
                 >
                   {simLoading ? 'Simulating...' : 'Simulate'}
+                </Button>
+              </div>
+            )}
+            {showDiffDockInputs && (
+              <div id="diffdock-inputs" className="flex items-center gap-0">
+                <Input
+                  label="PDB ID"
+                  value={diffDockPdbId}
+                  onChange={e => setDiffDockPdbId(e.target.value)}
+                  className="w-full max-w-xs"
+                />
+                <Button
+                  size="md"
+                  color="purple"
+                  onClick={handleDiffDock}
+                  disabled={diffDockLoading || !diffDockPdbId || !searchCode}
+                  className="items-center gap-2"
+                >
+                  {diffDockLoading ? 'Running DiffDock...' : 'Run'}
                 </Button>
               </div>
             )}
@@ -1460,20 +1480,20 @@ export function Simulation() {
       )}
 
       {queryType !== "text" && (
-        <div id="editor" style={{ display: "flex", flexDirection: "row", width: "100%", height: "70vh", gap: "16px" }}>
+        <div id="editor" style={{ display: "flex", flexDirection: "row", width: "100%", height: "63vh", gap: "16px" }}>
           {/* Ketcher Editor - Half width */}
-          <div style={{ width: "50%", height: "70vh", background: "#f5f5f5" }}>
+          <div style={{ width: "50%", height: "63vh", background: "#f5f5f5" }}>
             <iframe
               ref={ketcherIframeRef}
               src="/ketcher/index.html"
               title="Ketcher 2D Chemical Editor"
-              style={{ width: "100%", height: "70vh", border: "2px solid #ccc", borderRadius: 8, background: "white" }}
+              style={{ width: "100%", height: "63vh", border: "2px solid #ccc", borderRadius: 8, background: "white" }}
               allowFullScreen
             />
           </div>
           
           {/* Controls Panel - Half width */}
-          <div className="flex flex-col gap-4 w-1/2 p-4 bg-white rounded-lg shadow-lg">
+          <div id="controls-panel" className="flex flex-col gap-4 w-1/2 p-4 bg-white rounded-lg shadow-lg">
             {/* Copy SMILES Button */}
             <Button 
               onClick={handleCopySmiles}
@@ -1520,10 +1540,9 @@ export function Simulation() {
                   type="button"
                   className="text-purple-700 underline text-left w-fit focus:outline-none hover:text-purple-900 transition-colors font-semibold"
                   tabIndex={0}
-                  onClick={handleDiffDock}
-                  disabled={diffDockLoading || !simPdbId || !searchCode}
+                  onClick={() => setShowDiffDockInputs(v => !v)}
                 >
-                  {diffDockLoading ? 'Running DiffDock...' : 'DiffDock'}
+                  DiffDock
                 </button>
               </div>
               {showSimInputs && (
@@ -1545,6 +1564,52 @@ export function Simulation() {
                   </Button>
                 </div>
               )}
+              {showDiffDockInputs && (
+                <div className="flex flex-col gap-2">
+                  <Input
+                    label="PDB ID"
+                    value={diffDockPdbId}
+                    onChange={e => setDiffDockPdbId(e.target.value)}
+                    className="w-full"
+                  />
+                  <Button
+                    size="md"
+                    color="purple"
+                    onClick={handleDiffDock}
+                    disabled={diffDockLoading || !diffDockPdbId || !searchCode}
+                    className="flex items-center justify-center gap-2 w-full"
+                  >
+                    {diffDockLoading ? 'Running DiffDock...' : 'Run'}
+                  </Button>
+                </div>
+              )}
+            </div>
+            
+            {/* Page Size Selector */}
+            <div className="flex flex-col gap-2 p-3 rounded-lg bg-gray-50 border border-gray-200">
+              <Typography variant="small" color="blue-gray" className="font-semibold">
+                Results per page:
+              </Typography>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  // Reset to first page when changing page size
+                  setCurrentPage(0);
+                  setAllMolecules([]);
+                  setTopMolecules([]);
+                  setHasMore(true);
+                  // Refetch with new page size
+                  if (!isSearchActive) {
+                    fetchAllMolecules(0, false);
+                  }
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
             </div>
           </div>
         </div>
