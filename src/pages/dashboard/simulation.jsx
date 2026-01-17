@@ -39,6 +39,7 @@ export function Simulation() {
 
   const [simPdbId, setSimPdbId] = useState("");
   const [diffDockPdbId, setDiffDockPdbId] = useState("");
+  const [diffDockLigandId, setDiffDockLigandId] = useState("");
   const [simResult, setSimResult] = useState(null);
   const [simLoading, setSimLoading] = useState(false);
   const [simError, setSimError] = useState("");
@@ -689,12 +690,15 @@ export function Simulation() {
   };
 
   const handleDiffDock = async () => {
-    // Check if we have a SMILES from the search
-    if (!searchCode) {
-      setDiffDockError("Please search for a molecule first to get the SMILES code for DiffDock");
+    // Check if we have both PDB ID and Ligand ID
+    if (!diffDockPdbId) {
+      setDiffDockError("Please provide a PDB ID for DiffDock");
       return;
     }
-    let _searchSmiles = searchCode.replace(',', ';').trim();
+    if (!diffDockLigandId) {
+      setDiffDockError("Please provide a Ligand ID for DiffDock");
+      return;
+    }
     setDiffDockLoading(true);
     setDiffDockError("");
     setDiffDockResult(null);
@@ -704,7 +708,7 @@ export function Simulation() {
       // Create JSON payload for DiffDock
       const requestBody = {
         protein: diffDockPdbId,
-        ligand: _searchSmiles
+        ligand: diffDockLigandId
       };
       
       const res = await fetch(API_CONFIG.buildApiUrl('/diffdock/generate'), {
@@ -781,6 +785,20 @@ export function Simulation() {
       storeSimulationData();
     }
   }, [simResult, navigate]);
+
+  // Redirect to RDKit Molecule Viewer when DiffDock results are available
+  useEffect(() => {
+    if (diffDockResult) {
+      // Store DiffDock result data in localStorage for the molecule viewer
+      localStorage.setItem('diffdock_result', JSON.stringify(diffDockResult));
+      localStorage.setItem('diffdock_pdb_id', diffDockPdbId);
+      localStorage.setItem('diffdock_ligand_id', diffDockLigandId);
+      localStorage.setItem('diffdock_timestamp', new Date().toISOString());
+      
+      // Navigate to molecule viewer
+      navigate('/dashboard/moleculeviewer');
+    }
+  }, [diffDockResult, diffDockPdbId, diffDockLigandId, navigate]);
 
   // Fetch currency info on mount
   useEffect(() => {
@@ -1415,19 +1433,25 @@ export function Simulation() {
               </div>
             )}
             {showDiffDockInputs && (
-              <div id="diffdock-inputs" className="flex items-center gap-0">
+              <div id="diffdock-inputs" className="flex flex-col gap-2">
                 <Input
                   label="PDB ID"
                   value={diffDockPdbId}
                   onChange={e => setDiffDockPdbId(e.target.value)}
-                  className="w-full max-w-xs"
+                  className="w-full"
+                />
+                <Input
+                  label="Ligand ID"
+                  value={diffDockLigandId}
+                  onChange={e => setDiffDockLigandId(e.target.value)}
+                  className="w-full"
                 />
                 <Button
                   size="md"
                   color="purple"
                   onClick={handleDiffDock}
-                  disabled={diffDockLoading || !diffDockPdbId || !searchCode}
-                  className="items-center gap-2"
+                  disabled={diffDockLoading || !diffDockPdbId || !diffDockLigandId}
+                  className="items-center gap-2 w-full"
                 >
                   {diffDockLoading ? 'Running DiffDock...' : 'Run'}
                 </Button>
@@ -1572,11 +1596,17 @@ export function Simulation() {
                     onChange={e => setDiffDockPdbId(e.target.value)}
                     className="w-full"
                   />
+                   <Input
+                    label="LIGAND ID"
+                    value={diffDockLigandId}
+                    onChange={e => setDiffDockLigandId(e.target.value)}
+                    className="w-full"
+                  />
                   <Button
                     size="md"
                     color="purple"
                     onClick={handleDiffDock}
-                    disabled={diffDockLoading || !diffDockPdbId || !searchCode}
+                    disabled={diffDockLoading || !diffDockPdbId || !diffDockLigandId}
                     className="flex items-center justify-center gap-2 w-full"
                   >
                     {diffDockLoading ? 'Running DiffDock...' : 'Run'}

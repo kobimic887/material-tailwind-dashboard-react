@@ -105,6 +105,110 @@ export function MoleculeViewer() {
     setTimeout(initRDKit, 1000);
   }, []);
 
+  // Check for DiffDock results from localStorage
+  useEffect(() => {
+    const checkDiffDockResult = () => {
+      try {
+        const diffDockResultStr = localStorage.getItem('diffdock_result');
+        const diffDockPdbId = localStorage.getItem('diffdock_pdb_id');
+        const diffDockLigandId = localStorage.getItem('diffdock_ligand_id');
+        
+        if (diffDockResultStr) {
+          console.log('DiffDock result found in localStorage');
+          const diffDockData = JSON.parse(diffDockResultStr);
+          console.log('DiffDock data:', diffDockData);
+          console.log('PDB ID:', diffDockPdbId);
+          console.log('Ligand ID:', diffDockLigandId);
+          
+          // Try multiple possible keys for structure data
+          let structureData = null;
+          let smilesData = null;
+          
+          // Check all possible structure formats
+          if (diffDockData.sdf) structureData = diffDockData.sdf;
+          else if (diffDockData.structure) structureData = diffDockData.structure;
+          else if (diffDockData.pdb) structureData = diffDockData.pdb;
+          else if (diffDockData.mol) structureData = diffDockData.mol;
+          else if (diffDockData.result && typeof diffDockData.result === 'string') structureData = diffDockData.result;
+          
+          // Check for SMILES
+          if (diffDockData.smiles) smilesData = diffDockData.smiles;
+          else if (diffDockData.ligand_smiles) smilesData = diffDockData.ligand_smiles;
+          else if (diffDockData.ligand) smilesData = diffDockData.ligand;
+          
+          console.log('Found structure data:', !!structureData);
+          console.log('Found SMILES data:', smilesData);
+          
+          if (structureData) {
+            // If we have structure data, render it directly
+            console.log('Rendering structure data...');
+            setCurrentSmiles(diffDockLigandId || 'DiffDock Result');
+            
+            setTimeout(() => {
+              if (viewer3dRef.current) {
+                try {
+                  viewer3dRef.current.clear();
+                  // Try different format types
+                  const formats = ['sdf', 'pdb', 'mol'];
+                  let rendered = false;
+                  
+                  for (const format of formats) {
+                    try {
+                      viewer3dRef.current.addModel(structureData, format);
+                      viewer3dRef.current.setStyle({}, getStyleConfig());
+                      viewer3dRef.current.zoomTo();
+                      viewer3dRef.current.render();
+                      rendered = true;
+                      console.log(`Successfully rendered as ${format}`);
+                      break;
+                    } catch (e) {
+                      console.log(`Failed to render as ${format}:`, e.message);
+                      viewer3dRef.current.clear();
+                    }
+                  }
+                  
+                  if (!rendered) {
+                    setError('Could not render DiffDock structure data');
+                  }
+                } catch (err) {
+                  console.error('Error rendering:', err);
+                  setError(`Failed to render DiffDock result: ${err.message}`);
+                }
+              } else {
+                console.error('Viewer not initialized');
+                setError('3D viewer not initialized');
+              }
+            }, 1500);
+          } else if (smilesData) {
+            // If we have SMILES, use the existing visualization function
+            console.log('Using SMILES:', smilesData);
+            setSmilesInput(smilesData);
+            setTimeout(() => {
+              visualizeMolecule();
+            }, 1500);
+          } else {
+            // No recognizable data format
+            console.error('DiffDock result does not contain recognizable structure data');
+            console.log('Available keys:', Object.keys(diffDockData));
+            setError('DiffDock result does not contain structure data. Check console for details.');
+          }
+          
+          // Clear the localStorage after loading
+          localStorage.removeItem('diffdock_result');
+          localStorage.removeItem('diffdock_pdb_id');
+          localStorage.removeItem('diffdock_ligand_id');
+          localStorage.removeItem('diffdock_timestamp');
+        }
+      } catch (error) {
+        console.error('Error loading DiffDock result:', error);
+        setError(`Error loading DiffDock result: ${error.message}`);
+      }
+    };
+    
+    // Check after a delay to ensure viewer is initialized
+    setTimeout(checkDiffDockResult, 2000);
+  }, []);
+
   const initializeViewer = () => {
     if (viewerRef.current && window.$3Dmol) {
       viewer3dRef.current = window.$3Dmol.createViewer(viewerRef.current, {
