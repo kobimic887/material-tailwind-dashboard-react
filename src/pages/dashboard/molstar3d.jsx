@@ -240,6 +240,13 @@ export function Molstar3D() {
     return cart.length;
   };
 
+  // Build a blob URL from text content so Molstar can load inline structures
+  const createObjectUrlFromString = (content, mimeType = 'text/plain') => {
+    if (!content) return null;
+    const blob = new Blob([content], { type: mimeType });
+    return URL.createObjectURL(blob);
+  };
+
   useEffect(() => {
     // Clear any localhost URLs from localStorage on component mount
     const clearLocalhostUrls = () => {
@@ -355,6 +362,12 @@ export function Molstar3D() {
     let sdfUrl = localStorage.getItem('molstar_sdf_url');
     const simulationKey = localStorage.getItem('molstar_simulation_key');
     const pdbCode = localStorage.getItem('molstar_pdb_code');
+    const diffdockProtein = localStorage.getItem('diffdock_protein');
+    const diffdockLigand = localStorage.getItem('diffdock_ligand');
+    const diffdockLigandPosition = localStorage.getItem('diffdock_ligand_position');
+    const diffdockProteinUrl = createObjectUrlFromString(diffdockProtein, 'chemical/x-pdb');
+    const diffdockLigandUrl = createObjectUrlFromString(diffdockLigand, 'chemical/x-mdl-molfile');
+    const diffdockLigandPositionUrl = createObjectUrlFromString(diffdockLigandPosition, 'chemical/x-mdl-molfile');
 
     console.log('localStorage URLs:', { pdbUrl, sdfUrl, simulationKey, pdbCode });
 
@@ -405,48 +418,93 @@ export function Molstar3D() {
 
     window.addEventListener('message', handleMessage);
 
-    if (pdbUrl && sdfUrl && simulationKey) {
-      const handleIframeLoad = () => {
-        // Wait a bit more for Molstar to fully initialize
+    const loadDiffDockStructures = () => {
+      if (!molstarRef.current) return;
+      const target = molstarRef.current.contentWindow;
+      target.postMessage({ type: 'clearStructure' }, '*');
+      if (diffdockProteinUrl) {
+        console.log('Loading DiffDock protein from blob URL');
+        target.postMessage({
+          type: 'loadStructureFromUrl',
+          url: diffdockProteinUrl,
+          format: 'pdb'
+        }, '*');
+      }
+      if (diffdockLigandPositionUrl) {
+        console.log('Loading DiffDock ligand with positioning from blob URL');
+        // Small delay to ensure protein is in place before ligand overlays
         setTimeout(() => {
-          if (molstarRef.current) {
-            console.log('Loading PDB structure:', pdbUrl);
-            // Load PDB structure first
-            molstarRef.current.contentWindow.postMessage({
-              type: 'loadStructureFromUrl',
-              url: pdbUrl,
-              format: 'pdb'
-            }, '*');
-            // Collapse Molstar main menu by clicking the toggle button twice
-              setTimeout(() => {
-              if (molstarRef.current && molstarRef.current.contentWindow) {
-                molstarRef.current.contentWindow.eval(`
-                  (function() {
-                    var btn = document.querySelector('.msp-btn.msp-btn-icon.msp-btn-link-toggle-off.msp-transparent-bg');
-                    if (btn) { btn.click(); setTimeout(() => btn.click(), 100); }
-                  })();
-                `);
-              }
-            }, 700); // Delay to ensure PDB is loaded and UI is ready
-          }
-        }, 2000);
-      };
-
-      // Add load event listener to iframe
-      if (molstarRef.current) {
-        molstarRef.current.addEventListener('load', handleIframeLoad);
+          target.postMessage({
+            type: 'loadStructureFromUrl',
+            url: diffdockLigandPositionUrl,
+            format: 'mol'
+          }, '*');
+        }, 500);
       }
 
-      return () => {
-        if (molstarRef.current) {
-          molstarRef.current.removeEventListener('load', handleIframeLoad);
+      // Collapse Molstar main menu by toggling twice
+      setTimeout(() => {
+        if (molstarRef.current && molstarRef.current.contentWindow) {
+          molstarRef.current.contentWindow.eval(`
+            (function() {
+              var btn = document.querySelector('.msp-btn.msp-btn-icon.msp-btn-link-toggle-off.msp-transparent-bg');
+              if (btn) { btn.click(); setTimeout(() => btn.click(), 100); }
+            })();
+          `);
         }
-        window.removeEventListener('message', handleMessage);
-      };
+      }, 700);
+    };
+
+    const loadDefaultStructures = () => {
+      if (!molstarRef.current || !pdbUrl) return;
+      const target = molstarRef.current.contentWindow;
+      console.log('Loading PDB structure:', pdbUrl);
+      target.postMessage({
+        type: 'loadStructureFromUrl',
+        url: pdbUrl,
+        format: 'pdb'
+      }, '*');
+      setTimeout(() => {
+        if (molstarRef.current && molstarRef.current.contentWindow) {
+          molstarRef.current.contentWindow.eval(`
+            (function() {
+              var btn = document.querySelector('.msp-btn.msp-btn-icon.msp-btn-link-toggle-off.msp-transparent-bg');
+              if (btn) { btn.click(); setTimeout(() => btn.click(), 100); }
+            })();
+          `);
+        }
+      }, 700);
+    };
+
+    const handleIframeLoad = () => {
+      // Wait a bit more for Molstar to fully initialize
+      setTimeout(() => {
+        if (!molstarRef.current) return;
+        if (diffdockProteinUrl || diffdockLigandPositionUrl) {
+          loadDiffDockStructures();
+        } else if (pdbUrl && sdfUrl && simulationKey) {
+          loadDefaultStructures();
+        }
+      }, 2000);
+    };
+
+    if (molstarRef.current) {
+      molstarRef.current.addEventListener('load', handleIframeLoad);
+    }
+
+    // If iframe is already loaded, try to load structures immediately
+    if (molstarRef.current && molstarRef.current.contentWindow && (diffdockProteinUrl || diffdockLigandPositionUrl || (pdbUrl && sdfUrl && simulationKey))) {
+      handleIframeLoad();
     }
 
     return () => {
+      if (molstarRef.current) {
+        molstarRef.current.removeEventListener('load', handleIframeLoad);
+      }
       window.removeEventListener('message', handleMessage);
+      if (diffdockProteinUrl) URL.revokeObjectURL(diffdockProteinUrl);
+      if (diffdockLigandUrl) URL.revokeObjectURL(diffdockLigandUrl);
+      if (diffdockLigandPositionUrl) URL.revokeObjectURL(diffdockLigandPositionUrl);
     };
   }, []);
 
@@ -763,7 +821,7 @@ const HideMenu =()=>{
       </div>
       
       {/* SDF Results Table - Always Below the iframe */}
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0" id="dockResultsSection" style={{ display: localStorage.getItem('diffdock_protein') || localStorage.getItem('diffdock_ligand_position') ? 'none' : 'block' }}>
         {sdfData.length > 0 && (
           <Card className="mx-4 mb-4">
             <div className="p-4 bg-white max-h-96 overflow-y-auto">

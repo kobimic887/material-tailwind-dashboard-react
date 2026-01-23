@@ -795,8 +795,22 @@ export function Simulation() {
       localStorage.setItem('diffdock_ligand_id', diffDockLigandId);
       localStorage.setItem('diffdock_timestamp', new Date().toISOString());
       
+      // Extract and store protein and ligand data for Molstar3D
+      if (diffDockResult.protein) {
+        localStorage.setItem('diffdock_protein', diffDockResult.protein);
+      }
+      if (diffDockResult.ligand) {
+        localStorage.setItem('diffdock_ligand', diffDockResult.ligand);
+      }
+      if (diffDockResult.ligand_positions && diffDockResult.ligand_positions.length > 0) {
+        localStorage.setItem('diffdock_ligand_position', diffDockResult.ligand_positions[0]);
+      }
+      if (diffDockResult.position_confidence && diffDockResult.position_confidence.length > 0) {
+        localStorage.setItem('diffdock_confidence_score', diffDockResult.position_confidence[0].toString());
+      }
+      
       // Navigate to molecule viewer
-      navigate('/dashboard/moleculeviewer');
+      navigate('/dashboard/molstar3d');
     }
   }, [diffDockResult, diffDockPdbId, diffDockLigandId, navigate]);
 
