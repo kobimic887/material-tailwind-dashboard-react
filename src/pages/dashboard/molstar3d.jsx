@@ -820,6 +820,89 @@ const HideMenu =()=>{
         </Card>
       </div>
       
+      {/* DiffDock Results Section - Shows when DiffDock data is present */}
+      <div className="flex-shrink-0" id="diffDockResultsSection" style={{ display: localStorage.getItem('diffdock_protein') || localStorage.getItem('diffdock_ligand_position') ? 'block' : 'none' }}>
+        <Card className="mx-4 mb-4">
+          <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-lg">
+            <div className="flex items-center justify-between mb-4">
+              <Typography variant="h6" color="purple" className="font-semibold">
+                DiffDock Protein-Ligand Docking Results
+              </Typography>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Confidence Score */}
+              {localStorage.getItem('diffdock_confidence_score') && (
+                <div className="p-4 bg-white rounded-lg border border-purple-200 shadow-sm">
+                  <Typography variant="small" color="gray" className="font-medium mb-2">
+                    Confidence Score
+                  </Typography>
+                  <div className="flex items-center gap-3">
+                    <Typography variant="h5" color="purple" className="font-bold">
+                      {parseFloat(localStorage.getItem('diffdock_confidence_score')).toFixed(4)}
+                    </Typography>
+                    <Chip
+                      value={parseFloat(localStorage.getItem('diffdock_confidence_score')) > 0.5 ? 'High Confidence' : 'Medium Confidence'}
+                      variant="ghost"
+                      color={parseFloat(localStorage.getItem('diffdock_confidence_score')) > 0.5 ? 'green' : 'amber'}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* PDB ID */}
+              {localStorage.getItem('diffdock_pdb_id') && (
+                <div className="p-4 bg-white rounded-lg border border-purple-200 shadow-sm">
+                  <Typography variant="small" color="gray" className="font-medium mb-2">
+                    Protein (PDB ID)
+                  </Typography>
+                  <Typography variant="small" color="blue-gray" className="font-mono">
+                    {localStorage.getItem('diffdock_pdb_id')}
+                  </Typography>
+                </div>
+              )}
+              
+              {/* Ligand ID */}
+              {localStorage.getItem('diffdock_ligand_id') && (
+                <div className="p-4 bg-white rounded-lg border border-purple-200 shadow-sm">
+                  <Typography variant="small" color="gray" className="font-medium mb-2">
+                    Ligand ID
+                  </Typography>
+                  <Typography variant="small" color="blue-gray" className="font-mono">
+                    {localStorage.getItem('diffdock_ligand_id')}
+                  </Typography>
+                </div>
+              )}
+              
+              {/* Timestamp */}
+              {localStorage.getItem('diffdock_timestamp') && (
+                <div className="p-4 bg-white rounded-lg border border-purple-200 shadow-sm">
+                  <Typography variant="small" color="gray" className="font-medium mb-2">
+                    Generated
+                  </Typography>
+                  <Typography variant="small" color="blue-gray" className="font-mono text-xs">
+                    {new Date(localStorage.getItem('diffdock_timestamp')).toLocaleString()}
+                  </Typography>
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-4 flex gap-2">
+              <Button
+                size="sm"
+                variant="outlined"
+                color="purple"
+                onClick={handleBackToSimulation}
+                className="text-sm"
+              >
+                Back to Simulation
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+      
       {/* SDF Results Table - Always Below the iframe */}
       <div className="flex-shrink-0" id="dockResultsSection" style={{ display: localStorage.getItem('diffdock_protein') || localStorage.getItem('diffdock_ligand_position') ? 'none' : 'block' }}>
         {sdfData.length > 0 && (

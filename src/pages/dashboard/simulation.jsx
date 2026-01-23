@@ -690,15 +690,26 @@ export function Simulation() {
   };
 
   const handleDiffDock = async () => {
+    let ligand_file_type = "sdf";
     // Check if we have both PDB ID and Ligand ID
     if (!diffDockPdbId) {
       setDiffDockError("Please provide a PDB ID for DiffDock");
       return;
     }
-    if (!diffDockLigandId) {
-      setDiffDockError("Please provide a Ligand ID for DiffDock");
+    
+    // If no Ligand ID provided, try to use SMILES from search input
+    let ligandId = diffDockLigandId;
+    if (!ligandId && searchCode) {
+      ligandId = searchCode;
+      ligand_file_type = "mol2";
+
+    }
+    
+    if (!ligandId) {
+      setDiffDockError("Please provide a Ligand ID for DiffDock or search for a molecule");
       return;
     }
+    
     setDiffDockLoading(true);
     setDiffDockError("");
     setDiffDockResult(null);
@@ -708,7 +719,8 @@ export function Simulation() {
       // Create JSON payload for DiffDock
       const requestBody = {
         protein: diffDockPdbId,
-        ligand: diffDockLigandId
+        ligand: ligandId,
+        ligandFileType: ligand_file_type || "sdf"
       };
       
       const res = await fetch(API_CONFIG.buildApiUrl('/diffdock/generate'), {
@@ -1464,7 +1476,7 @@ export function Simulation() {
                   size="md"
                   color="purple"
                   onClick={handleDiffDock}
-                  disabled={diffDockLoading || !diffDockPdbId || !diffDockLigandId}
+                  disabled={diffDockLoading || !diffDockPdbId || (!diffDockLigandId && !searchCode)}
                   className="items-center gap-2 w-full"
                 >
                   {diffDockLoading ? 'Running DiffDock...' : 'Run'}
@@ -1620,7 +1632,7 @@ export function Simulation() {
                     size="md"
                     color="purple"
                     onClick={handleDiffDock}
-                    disabled={diffDockLoading || !diffDockPdbId || !diffDockLigandId}
+                    disabled={diffDockLoading || !diffDockPdbId || (!diffDockLigandId && !searchCode)}
                     className="flex items-center justify-center gap-2 w-full"
                   >
                     {diffDockLoading ? 'Running DiffDock...' : 'Run'}
