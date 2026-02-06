@@ -680,15 +680,22 @@ export function Simulation() {
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      
+      clearDiffDockStorage();
       const result = await res.json();
       setSimResult(result);
+
     } catch (err) {
       setSimError(`Failed to simulate: ${err.message}`);
     } finally {
       setSimLoading(false);
     }
   };
-
+    const clearDiffDockStorage = () => {
+      localStorage.removeItem('diffdock_protein');
+      localStorage.removeItem('diffdock_ligand');
+      localStorage.removeItem('diffdock_ligand_position');
+    }
   const handleDiffDock = async () => {
     let ligand_file_type = "sdf";
     // Check if we have both PDB ID and Ligand ID
@@ -704,7 +711,48 @@ export function Simulation() {
       ligand_file_type = "mol2";
 
     }
-    
+   
+      try {
+          // Initialize RDKit if not already loaded
+          if (!window.RDKit || !window.initRDKitModule) {
+            // Dynamically load RDKit.js
+            await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://unpkg.com/@rdkit/rdkit/dist/RDKit_minimal.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+            });
+            
+            // Wait a moment for the script to fully load
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+          
+          // Wait for RDKit to initialize
+          if (window.initRDKitModule) {
+            const rdkit = await window.initRDKitModule();
+            if (!rdkit) {
+              throw new Error("RDKit failed to initialize");
+            }
+            
+            // Convert SMILES to SDF
+            const mol = rdkit.get_mol(searchCode);
+            if (mol && mol.is_valid()) {
+              ligandId = mol.get_molblock();
+              ligand_file_type = "sdf";
+              mol.delete(); // Clean up RDKit molecule object
+            } else {
+              throw new Error("Invalid SMILES structure");
+            }
+          } else {
+            throw new Error("RDKit module not available");
+          }
+        } catch (err) {
+          console.error("Failed to convert SMILES to SDF:", err);
+          console.warn("Failed to convert SMILES to SDF format. Using SMILES directly.");       
+          ligand_file_type = "sdf";
+        }
+      
     if (!ligandId) {
       setDiffDockError("Please provide a Ligand ID for DiffDock or search for a molecule");
       return;

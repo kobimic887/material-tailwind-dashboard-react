@@ -10,6 +10,9 @@ export default defineConfig({
     'process.env': {},
     global: 'window',
   },
+  optimizeDeps: {
+    exclude: ['.git']
+  },
   server: {
     host:'0.0.0.0',
     https: false,
@@ -25,13 +28,19 @@ export default defineConfig({
       },
     },
     watch: {
-      ignored: ['**/.git/**', '**/node_modules/**', '**/.env*', '**/dist/**']
+      ignored: ['**/.git/**', '**/node_modules/**', '**/.env*', '**/dist/**', '**/.git']
+    },
+    fs: {
+      strict: true,
+      allow: ['.'],
+      deny: ['.git', '.git/**']
     }
   },
   build: {
     rollupOptions: {
       external: (id) => {
-        // Only externalize actual npm packages, not internal files
+        // Exclude .git directory and only externalize actual npm packages
+        if (id.includes('.git')) return true;
         return /^[^.\/]/.test(id);
       }
     }
