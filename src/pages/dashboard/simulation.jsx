@@ -706,11 +706,12 @@ export function Simulation() {
     
     // If no Ligand ID provided, try to use SMILES from search input
     let ligandId = diffDockLigandId;
-    if (!ligandId && searchCode) {
-      ligandId = searchCode;
+
+    if (diffDockLigandId) {
+      
       ligand_file_type = "mol2";
 
-    }
+    }else{
    
       try {
           // Initialize RDKit if not already loaded
@@ -752,7 +753,7 @@ export function Simulation() {
           console.warn("Failed to convert SMILES to SDF format. Using SMILES directly.");       
           ligand_file_type = "sdf";
         }
-      
+    }
     if (!ligandId) {
       setDiffDockError("Please provide a Ligand ID for DiffDock or search for a molecule");
       return;
@@ -866,7 +867,10 @@ export function Simulation() {
         localStorage.setItem('diffdock_ligand_position', diffDockResult.ligand_positions[0]);
       }
       if (diffDockResult.position_confidence && diffDockResult.position_confidence.length > 0) {
-        localStorage.setItem('diffdock_confidence_score', diffDockResult.position_confidence[0].toString());
+        const confidenceScore = diffDockResult.position_confidence[0];
+        if (confidenceScore !== null && confidenceScore !== undefined) {
+          localStorage.setItem('diffdock_confidence_score', confidenceScore.toString());
+        }
       }
       
       // Navigate to molecule viewer
