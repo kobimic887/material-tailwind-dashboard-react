@@ -1,7 +1,10 @@
-const express = require('express');
-const path = require('path');
-const { createProxyMiddleware } = require('http-proxy-middleware');
-const signupHandler = require('./src/api/signup.js').default;
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import signupHandler from './src/api/signup.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
