@@ -6,3 +6,4 @@ export * from "@/pages/dashboard/controlpanel";
 export * from "@/pages/dashboard/simulation";
 export * from "@/pages/dashboard/moleculeviewer";
 export * from "@/pages/dashboard/molstar3d";
+export { default as GenerateMolecules } from "@/pages/dashboard/generate-molecules";

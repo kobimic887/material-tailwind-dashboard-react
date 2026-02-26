@@ -19,6 +19,7 @@ import {
   Simulation,
   MoleculeViewer,
   Molstar3D,
+  GenerateMolecules
   } from "@/pages/dashboard";
 import {
   MainHome,  
@@ -147,12 +148,15 @@ export const routes = [
         path: "/moleculeviewer",
         element: <MoleculeViewer />,
       },      
-
-      
+      {
+        icon: <CloudIcon {...icon} />,
+        name: "Generate Molecules",
+        path: "/generate-molecules",
+        element: <GenerateMolecules />,
+      },
     ],
   },
   {
-    
     layout: "auth",
     pages: [
       {

@@ -705,55 +705,9 @@ export function Simulation() {
     }
     
     // If no Ligand ID provided, try to use SMILES from search input
-    let ligandId = diffDockLigandId;
+    let ligandId = searchCode;
 
-    if (diffDockLigandId) {
-      
-      ligand_file_type = "mol2";
-
-    }else{
-   
-      try {
-          // Initialize RDKit if not already loaded
-          if (!window.RDKit || !window.initRDKitModule) {
-            // Dynamically load RDKit.js
-            await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://unpkg.com/@rdkit/rdkit/dist/RDKit_minimal.js';
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-            });
-            
-            // Wait a moment for the script to fully load
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-          
-          // Wait for RDKit to initialize
-          if (window.initRDKitModule) {
-            const rdkit = await window.initRDKitModule();
-            if (!rdkit) {
-              throw new Error("RDKit failed to initialize");
-            }
-            
-            // Convert SMILES to SDF
-            const mol = rdkit.get_mol(searchCode);
-            if (mol && mol.is_valid()) {
-              ligandId = mol.get_molblock();
-              ligand_file_type = "sdf";
-              mol.delete(); // Clean up RDKit molecule object
-            } else {
-              throw new Error("Invalid SMILES structure");
-            }
-          } else {
-            throw new Error("RDKit module not available");
-          }
-        } catch (err) {
-          console.error("Failed to convert SMILES to SDF:", err);
-          console.warn("Failed to convert SMILES to SDF format. Using SMILES directly.");       
-          ligand_file_type = "sdf";
-        }
-    }
+  
     if (!ligandId) {
       setDiffDockError("Please provide a Ligand ID for DiffDock or search for a molecule");
       return;
