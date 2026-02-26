@@ -33,8 +33,23 @@ const GenerateMolecules = () => {
         molecules = data;
       } else if (data.molecules && Array.isArray(data.molecules)) {
         molecules = data.molecules;
+      } else if (data.molecules && typeof data.molecules === 'string') {
+        try {
+          const parsed = JSON.parse(data.molecules);
+          if (Array.isArray(parsed)) molecules = parsed;
+        } catch (e) {
+          // keep as string fallback
+          molecules = [data.molecules];
+        }
       } else if (data.results && Array.isArray(data.results)) {
         molecules = data.results;
+      } else if (data.results && typeof data.results === 'string') {
+        try {
+          const parsed = JSON.parse(data.results);
+          if (Array.isArray(parsed)) molecules = parsed;
+        } catch (e) {
+          molecules = [data.results];
+        }
       } else if (data.smiles) {
         molecules = Array.isArray(data.smiles) ? data.smiles : [data.smiles];
       } else if (typeof data === "string") {
@@ -53,7 +68,7 @@ const GenerateMolecules = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto bg-white rounded shadow">
+    <div className="p-6 w-full bg-white rounded shadow">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <h2 className="text-2xl font-bold mb-4">Generate Molecules</h2>
@@ -162,17 +177,101 @@ const GenerateMolecules = () => {
             <div className="text-sm text-gray-500">No molecules returned.</div>
           )}
 
-          <div className="space-y-3">
-            {results && results.map((smi, idx) => {
-              const smilesStr = typeof smi === 'string' ? smi : (smi.smiles || JSON.stringify(smi));
-              const imgUrl = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(smilesStr)}/PNG?record_type=2d&image_size=200x150`;
-              return (
-                <div key={`${idx}-${smilesStr}`} className="flex items-center gap-3 border rounded p-2">
-                  <img src={imgUrl} alt={`structure-${idx}`} className="w-40 h-auto object-contain" />
-                  <div className="text-sm break-words">{smilesStr}</div>
-                </div>
-              )
-            })}
+          <div className="overflow-x-auto">
+            {results && results.length > 0 && (typeof results[0] === 'object' && (results[0].sample || results[0].smiles || results[0].score !== undefined)) ? (
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Structure</th>
+                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Score</th>  
+                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">SMILES</th>                 
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {results.map((item, idx) => {
+                    const smilesStr = (item && (item.sample || item.smiles)) || (typeof item === 'string' ? item : JSON.stringify(item));
+                    const score = item && (item.score ?? item.scoring ?? item.value);
+                    const imgUrl = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(smilesStr)}/PNG?record_type=2d&image_size=200x150`;
+                    return (
+                      <tr key={`row-${idx}`}>
+                        <td className="px-4 py-3 align-top">
+                          <div className="border border-gray-300 rounded overflow-hidden bg-white" style={{ width: '200px', height: '150px' }}>
+                            <img
+                              src={imgUrl}
+                              alt={`structure-${idx}`}
+                              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                              onError={(e) => {
+                                console.warn('Failed to load molecule image for SMILES:', smilesStr, 'URL:', e.target.src);
+                                if (!e.target.getAttribute('data-fallback-attempted')) {
+                                  e.target.setAttribute('data-fallback-attempted', '1');
+                                  const simplifiedSmiles = smilesStr.replace(/[^\w\[\]()@=#+\-\/\\]/g, '');
+                                  if (simplifiedSmiles !== smilesStr) {
+                                    e.target.src = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(simplifiedSmiles)}/PNG?record_type=2d&image_size=200x150`;
+                                    return;
+                                  }
+                                }
+                                if (e.target.getAttribute('data-fallback-attempted') === '1') {
+                                  e.target.setAttribute('data-fallback-attempted', '2');
+                                  e.target.src = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(smilesStr)}/PNG?image_size=small`;
+                                  return;
+                                }
+                                e.target.style.display = 'none';
+                                if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                            <div className="flex items-center justify-center bg-gray-50 text-gray-500 text-sm w-full h-full" style={{ display: 'none' }}>
+                              <div className="text-center">
+                                <div>Structure Preview</div>
+                                <div className="text-xs mt-1">Service Unavailable</div>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 align-top">{score !== undefined && score !== null ? Number(score).toFixed(4) : '-'}</td>                
+                        <td className="px-4 py-3 align-top break-words" style={{maxWidth: '40%'}}>{smilesStr}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <div className="space-y-3">
+                {results && results.map((smi, idx) => {
+                  const smilesStr = typeof smi === 'string' ? smi : (smi.smiles || JSON.stringify(smi));
+                  const imgUrl = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(smilesStr)}/PNG?record_type=2d&image_size=200x150`;
+                  return (
+                    <div key={`${idx}-${smilesStr}`} className="flex items-center gap-3 border rounded p-2">
+                      <div className="border border-gray-300 rounded overflow-hidden bg-white" style={{ width: '200px', height: '150px' }}>
+                        <img src={imgUrl} alt={`structure-${idx}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e) => {
+                          if (!e.target.getAttribute('data-fallback-attempted')) {
+                            e.target.setAttribute('data-fallback-attempted', '1');
+                            const simplifiedSmiles = smilesStr.replace(/[^\w\[\]()@=#+\-\/\\]/g, '');
+                            if (simplifiedSmiles !== smilesStr) {
+                              e.target.src = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(simplifiedSmiles)}/PNG?record_type=2d&image_size=200x150`;
+                              return;
+                            }
+                          }
+                          if (e.target.getAttribute('data-fallback-attempted') === '1') {
+                            e.target.setAttribute('data-fallback-attempted', '2');
+                            e.target.src = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(smilesStr)}/PNG?image_size=small`;
+                            return;
+                          }
+                          e.target.style.display = 'none';
+                          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                        }} />
+                        <div className="flex items-center justify-center bg-gray-50 text-gray-500 text-sm w-full h-full" style={{ display: 'none' }}>
+                          <div className="text-center">
+                            <div>Structure Preview</div>
+                            <div className="text-xs mt-1">Service Unavailable</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-sm break-words">{smilesStr}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
