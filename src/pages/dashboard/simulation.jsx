@@ -821,7 +821,7 @@ export function Simulation() {
         localStorage.setItem('diffdock_ligand_position', diffDockResult.ligand_positions[0]);
       }
       if (diffDockResult.position_confidence && diffDockResult.position_confidence.length > 0) {
-        const confidenceScore = diffDockResult.position_confidence[0];
+        const confidenceScore = diffDockResult.position_confidence[diffDockResult.position_confidence.length - 1]; // Get confidence score of the last position
         if (confidenceScore !== null && confidenceScore !== undefined) {
           localStorage.setItem('diffdock_confidence_score', confidenceScore.toString());
         }

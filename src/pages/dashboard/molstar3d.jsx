@@ -842,9 +842,9 @@ const HideMenu =()=>{
                       {parseFloat(localStorage.getItem('diffdock_confidence_score')).toFixed(4)}
                     </Typography>
                     <Chip
-                      value={parseFloat(localStorage.getItem('diffdock_confidence_score')) > 0.5 ? 'High Confidence' : 'Medium Confidence'}
+                      value={parseFloat(localStorage.getItem('diffdock_confidence_score')) < -8 ? 'High Confidence' : 'Medium Confidence'}
                       variant="ghost"
-                      color={parseFloat(localStorage.getItem('diffdock_confidence_score')) > 0.5 ? 'green' : 'amber'}
+                      color={parseFloat(localStorage.getItem('diffdock_confidence_score')) < -8 ? 'green' : 'amber'}
                       size="sm"
                     />
                   </div>
