@@ -19,7 +19,8 @@ import {
   Simulation,
   MoleculeViewer,
   Molstar3D,
-  GenerateMolecules
+  GenerateMolecules,
+  ProteinFolding,
   } from "@/pages/dashboard";
 import {
   MainHome,  
@@ -153,6 +154,12 @@ export const routes = [
         name: "Generate Molecules",
         path: "/generate-molecules",
         element: <GenerateMolecules />,
+      },
+      {
+        icon: <Square2StackIcon {...icon} />,
+        name: "Protein Folding",
+        path: "/protein-folding",
+        element: <ProteinFolding />,
       },
     ],
   },
