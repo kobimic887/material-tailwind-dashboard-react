@@ -9,6 +9,7 @@ import {
   Square2StackIcon,
   CubeTransparentIcon,
   CloudIcon,
+  ArrowPathIcon
 } from "@heroicons/react/24/solid";
 import {
   DashboardHome,
@@ -22,6 +23,7 @@ import {
   GenerateMolecules,
   ProteinFolding,
   } from "@/pages/dashboard";
+import { DeepSimilarity } from "@/pages/dashboard";
 import {
   MainHome,  
   Services,
@@ -151,15 +153,21 @@ export const routes = [
       },      
       {
         icon: <CloudIcon {...icon} />,
-        name: "Generate Molecules",
+        name: "MOLMIM Generate Molecules",
         path: "/generate-molecules",
         element: <GenerateMolecules />,
       },
-      {
+       {
         icon: <Square2StackIcon {...icon} />,
         name: "Protein Folding",
         path: "/protein-folding",
         element: <ProteinFolding />,
+      },
+      {
+        icon: <ArrowPathIcon {...icon} />,
+        name: "deep similarity",
+        path: "/deep-similarity",
+        element: <DeepSimilarity />,
       },
     ],
   },
@@ -185,3 +193,105 @@ export const routes = [
 ];
 
 export default routes;
+
+/*
+AcademicCapIcon
+AdjustmentsHorizontalIcon
+ArrowDownIcon
+ArrowPathIcon
+BeakerIcon
+BellIcon
+BoltIcon
+BookmarkIcon
+BriefcaseIcon
+BuildingLibraryIcon
+CakeIcon
+CalendarIcon
+CameraIcon
+ChartBarIcon
+ChatBubbleLeftIcon
+CheckCircleIcon
+ChevronDownIcon
+CircleStackIcon
+ClipboardIcon
+ClockIcon
+CloudIcon
+CodeBracketIcon
+CogIcon
+CubeTransparentIcon
+CurrencyDollarIcon
+DevicePhoneMobileIcon
+DocumentIcon
+EnvelopeIcon
+ExclamationCircleIcon
+EyeIcon
+FaceSmileIcon
+FlagIcon
+GiftIcon
+GlobeAltIcon
+HandThumbUpIcon
+HeartIcon
+HomeIcon
+IdentificationIcon
+InboxIcon
+InformationCircleIcon
+KeyIcon
+LightBulbIcon
+LinkIcon
+LockClosedIcon
+MagnifyingGlassIcon
+MapIcon
+MegaphoneIcon
+MinusIcon
+MoonIcon
+NewspaperIcon
+PaintBrushIcon
+PaperAirplaneIcon
+PauseIcon
+PencilIcon
+PhoneIcon
+PhotoIcon
+PlayIcon
+PlusIcon
+PowerIcon
+PresentationChartBarIcon
+PrinterIcon
+PuzzlePieceIcon
+QrCodeIcon
+QuestionMarkCircleIcon
+RectangleStackIcon
+RocketLaunchIcon
+RssIcon
+ScaleIcon
+ScissorsIcon
+ServerStackIcon
+ShareIcon
+ShieldCheckIcon
+ShoppingCartIcon
+SignalIcon
+SparklesIcon
+SpeakerWaveIcon
+Square2StackIcon
+StarIcon
+StopIcon
+SunIcon
+SwatchIcon
+TableCellsIcon
+TagIcon
+TicketIcon
+TrashIcon
+TrophyIcon
+TruckIcon
+TvIcon
+UserCircleIcon
+UserGroupIcon
+UserIcon
+VariableIcon
+VideoCameraIcon
+ViewColumnsIcon
+WalletIcon
+WifiIcon
+WindowIcon
+WrenchIcon
+XMarkIcon
+*/

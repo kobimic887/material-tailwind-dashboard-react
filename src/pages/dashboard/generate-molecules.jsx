@@ -201,7 +201,23 @@ const GenerateMolecules = () => {
                               alt={`structure-${idx}`}
                               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                               onError={(e) => {
-                                console.warn('Failed to load molecule image for SMILES:', smilesStr, 'URL:', e.target.src);
+                                // Retry logic for failed image loads (400 status)
+                                const maxRetries = 5;
+                                let retryCount = parseInt(e.target.getAttribute('data-retry-count') || '0', 10);
+                                if (!e.target.getAttribute('data-retry-timer')) {
+                                  e.target.setAttribute('data-retry-timer', '1');
+                                }
+                                // Only retry for 400 status images (PubChem returns blank PNG)
+                                if (retryCount < maxRetries) {
+                                  setTimeout(() => {
+                                    retryCount++;
+                                    e.target.setAttribute('data-retry-count', retryCount);
+                                    // Try reloading the image
+                                    e.target.src = `${imgUrl}?retry=${retryCount}`;
+                                  }, 1000);
+                                  return;
+                                }
+                                // Fallback logic after retries
                                 if (!e.target.getAttribute('data-fallback-attempted')) {
                                   e.target.setAttribute('data-fallback-attempted', '1');
                                   const simplifiedSmiles = smilesStr.replace(/[^\w\[\]()@=#+\-\/\\]/g, '');
@@ -243,6 +259,21 @@ const GenerateMolecules = () => {
                     <div key={`${idx}-${smilesStr}`} className="flex items-center gap-3 border rounded p-2">
                       <div className="border border-gray-300 rounded overflow-hidden bg-white" style={{ width: '200px', height: '150px' }}>
                         <img src={imgUrl} alt={`structure-${idx}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e) => {
+                          // Retry logic for failed image loads (400 status)
+                          const maxRetries = 5;
+                          let retryCount = parseInt(e.target.getAttribute('data-retry-count') || '0', 10);
+                          if (!e.target.getAttribute('data-retry-timer')) {
+                            e.target.setAttribute('data-retry-timer', '1');
+                          }
+                          if (retryCount < maxRetries) {
+                            setTimeout(() => {
+                              retryCount++;
+                              e.target.setAttribute('data-retry-count', retryCount);
+                              e.target.src = `${imgUrl}?retry=${retryCount}`;
+                            }, 1000);
+                            return;
+                          }
+                          // Fallback logic after retries
                           if (!e.target.getAttribute('data-fallback-attempted')) {
                             e.target.setAttribute('data-fallback-attempted', '1');
                             const simplifiedSmiles = smilesStr.replace(/[^\w\[\]()@=#+\-\/\\]/g, '');
