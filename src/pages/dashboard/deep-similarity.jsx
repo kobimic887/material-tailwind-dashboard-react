@@ -14,6 +14,9 @@ import { API_CONFIG } from "@/utils/constants";
 export function DeepSimilarity() {
   const [searchType, setSearchType] = useState("exact");
   const [searchQuery, setSearchQuery] = useState("");
+  const [threshold, setThreshold] = useState(0.5);
+  const [fingerprintType, setFingerprintType] = useState("morgan");
+  const [similarityMetric, setSimilarityMetric] = useState("tanimoto");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,7 +33,7 @@ export function DeepSimilarity() {
       if (searchType === "exact") {
         url = API_CONFIG.buildUrl(`/tanimoto/v1/search/exact?smiles=${smiles}`);
       } else if (searchType === "similarity") {
-        url = API_CONFIG.buildUrl(`/tanimoto/v1/search/similarity?smiles=${smiles}`);
+        url = API_CONFIG.buildUrl(`/tanimoto/v1/search/similarity?smiles=${smiles}&threshold=${threshold}&fingerprint_type=${fingerprintType}&similarity_metric=${similarityMetric}`);
       } else if (searchType === "substructure") {
         url = API_CONFIG.buildUrl(`/tanimoto/v1/search/substructure?smiles=${smiles}`);
       }
@@ -75,6 +78,58 @@ export function DeepSimilarity() {
             {loading ? <Spinner size="sm" /> : "Search"}
           </Button>
         </div>
+        
+        {searchType === "similarity" && (
+          <div className="flex gap-4 mb-4 items-center flex-wrap">
+            <div className="flex flex-col gap-1">
+              <Typography variant="small" color="blue-gray" className="font-medium">
+                Threshold: {threshold}
+              </Typography>
+              <input
+                type="range"
+                min="0.1"
+                max="1.0"
+                step="0.1"
+                value={threshold}
+                onChange={(e) => setThreshold(parseFloat(e.target.value))}
+                className="w-32"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1">
+              <Typography variant="small" color="blue-gray" className="font-medium">
+                Fingerprint
+              </Typography>
+              <select
+                value={fingerprintType}
+                onChange={e => setFingerprintType(e.target.value)}
+                className="border border-blue-gray-300 rounded px-2 py-1 text-sm"
+              >
+                <option value="morgan">Morgan (ECFP4)</option>
+                <option value="maccs">MACCS</option>
+                <option value="feat_morgan">Feature Morgan (FCFP4)</option>
+                <option value="atom_pair">Atom Pair</option>
+                <option value="torsion">Topological Torsion</option>
+                <option value="rdkit">RDKit</option>
+              </select>
+            </div>
+            
+            <div className="flex flex-col gap-1">
+              <Typography variant="small" color="blue-gray" className="font-medium">
+                Metric
+              </Typography>
+              <select
+                value={similarityMetric}
+                onChange={e => setSimilarityMetric(e.target.value)}
+                className="border border-blue-gray-300 rounded px-2 py-1 text-sm"
+              >
+                <option value="tanimoto">Tanimoto</option>
+                <option value="dice">Dice</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         {error && <Alert color="red">{error}</Alert>}
         {results.length > 0 && (
           <Typography variant="small" className="mb-4 text-blue-gray-600">
