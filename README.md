@@ -49,6 +49,21 @@ This repository now combines the React frontend and the merged backend API into 
 - Backend API: `http://localhost:3000`
 - API docs: `http://localhost:3000/api-docs`
 
+### Docker
+
+You can run the merged app with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+Services:
+
+- Frontend (Nginx serving built app): `http://localhost:5173`
+- Backend API: `http://localhost:3000`
+
+The backend reads environment from `.env`, so create it first from `.env.example`.
+
 ### Redirect Approval-Ready Feature
 
 The merged app includes approval-ready redirect access endpoints:
